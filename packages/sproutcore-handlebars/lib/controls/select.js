@@ -52,9 +52,9 @@ SC.Select = SC.CollectionView.extend({
         value;
 
     if (get(this, 'multiple') && get(this, 'multiple') !== "false") {
-      value = selectedOptions.toArray().map(function(el) { return get(views[el.id], 'content'); });
+      value = selectedOptions.toArray().map(function(el) { return get(views[el.id], 'content').value; });
     } else {
-      value = get(views[selectedOptions.prop('id')], 'content');
+      value = get(views[selectedOptions.prop('id')], 'content').value;
     }
 
     set(this, 'value', value);
