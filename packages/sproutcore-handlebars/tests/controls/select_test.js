@@ -168,7 +168,6 @@ test("should allow multiple selection", function() {
   select.destroy();
 });
 
-// FIXME: This test is failing and I'm not sure why...
 test("selected option(s) should be updateable", function() {
   var select, options = [SC.Object.create({label: 'California', value: 'CA'}),
                          SC.Object.create({label: 'Oregon', value: 'OR', selected: true}),
@@ -184,13 +183,12 @@ test("selected option(s) should be updateable", function() {
   SC.run(function() {
     options.forEach(function(el) { el.set('selected', false); });
     options[0].set('selected', true);
-    select.change();
   });
 
   SC.run(function() {
     options[1].set('selected', true);
-    select.change();
   });
+  select.change();
 
   equals(select.get('value').length, 2);
   equals(select.get('value')[0], options[0]);
