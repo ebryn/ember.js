@@ -14,3 +14,4 @@ require("ember-handlebars/helpers/template");
 require("ember-handlebars/helpers/action");
 require("ember-handlebars/helpers/yield");
 require("ember-handlebars/helpers/outlet");
+require("ember-handlebars/helpers/group");

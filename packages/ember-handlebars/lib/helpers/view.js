@@ -135,6 +135,12 @@ EmberHandlebars.ViewHelper = Ember.Object.create({
 
     var viewOptions = this.propertiesFromHTMLOptions(options, thisContext);
     var currentView = data.view;
+
+    // Since we don't have a view backing #each, we need to manually pass the context.
+    if (Ember.VIEW_PRESERVES_CONTEXT && data.insideEach) {
+      viewOptions._context = thisContext;
+    }
+
     viewOptions.templateData = options.data;
 
     if (fn) {

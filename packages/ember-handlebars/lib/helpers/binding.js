@@ -22,38 +22,50 @@ function bind(property, options, preserveContext, shouldDisplay, valueNormalizer
       fn = options.fn,
       inverse = options.inverse,
       view = data.view,
-      currentContext = this,
       pathRoot, path, normalized;
 
-  normalized = normalizePath(currentContext, property, data);
+  normalized = normalizePath(this, property, data);
 
   pathRoot = normalized.root;
   path = normalized.path;
 
+  // FIXME: Look into why I'm doing this.
+  if (this instanceof Number || this instanceof String) {
+    return this;
+
   // Set up observers for observable objects
-  if ('object' === typeof this) {
-    // Create the view that will wrap the output of this template/property
-    // and add it to the nearest view's childViews array.
-    // See the documentation of Ember._HandlebarsBoundView for more.
-    var bindView = view.createChildView(Ember._HandlebarsBoundView, {
-      preserveContext: preserveContext,
-      shouldDisplayFunc: shouldDisplay,
-      valueNormalizerFunc: valueNormalizer,
-      displayTemplate: fn,
-      inverseTemplate: inverse,
-      path: path,
-      pathRoot: pathRoot,
-      previousContext: currentContext,
-      isEscaped: !options.hash.unescaped,
-      templateData: options.data
-    });
+  } else if ('object' === typeof this) {
+    var observer;
+    if (data.insideGroup) {
+      observer = function() {
+        Ember.run.once(view, 'rerender');
+      };
 
-    view.appendChild(bindView);
+      data.buffer.push(getPath(pathRoot, path, options));
+    } else {
+      // Create the view that will wrap the output of this template/property
+      // and add it to the nearest view's childViews array.
+      // See the documentation of Ember._HandlebarsBoundView for more.
+      var bindView = view.createChildView(Ember._HandlebarsBoundView, {
+        preserveContext: preserveContext,
+        shouldDisplayFunc: shouldDisplay,
+        valueNormalizerFunc: valueNormalizer,
+        displayTemplate: fn,
+        inverseTemplate: inverse,
+        path: path,
+        pathRoot: pathRoot,
+        previousContext: this,
+        isEscaped: !options.hash.unescaped,
+        templateData: options.data
+      });
 
-    /** @private */
-    var observer = function() {
-      Ember.run.once(bindView, 'rerenderIfNeeded');
-    };
+      view.appendChild(bindView);
+
+      /** @private */
+      observer = function() {
+        Ember.run.once(bindView, 'rerenderIfNeeded');
+      };
+    }
 
     // Observes the given property on the context and
     // tells the Ember._HandlebarsBoundView to re-render. If property
@@ -254,7 +266,7 @@ EmberHandlebars.registerHelper('bindAttr', function(options) {
   // Handle classes differently, as we can bind multiple classes
   var classBindings = attrs['class'];
   if (classBindings !== null && classBindings !== undefined) {
-    var classResults = EmberHandlebars.bindClasses(this, classBindings, view, dataId, options);
+    var classResults = EmberHandlebars.bindClasses(ctx, classBindings, view, dataId, options);
     ret.push('class="' + Handlebars.Utils.escapeExpression(classResults.join(' ')) + '"');
     delete attrs['class'];
   }
