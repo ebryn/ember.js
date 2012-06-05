@@ -1,6 +1,8 @@
+/*global ENV:true*/
 require('ember-handlebars/ext');
 
-var EmberHandlebars = Ember.Handlebars, getPath = EmberHandlebars.getPath, get = Ember.get;
+var EmberHandlebars = Ember.Handlebars, getPath = EmberHandlebars.getPath, get = Ember.get,
+    fmt = Ember.String.fmt;
 
 var ActionHelper = EmberHandlebars.ActionHelper = {
   registeredActions: {}
@@ -174,6 +176,14 @@ EmberHandlebars.registerHelper('action', function(actionName, options) {
 
   context = hash.context ? getPath(this, hash.context, options) : options.contexts[0];
 
-  var actionId = ActionHelper.registerAction(actionName, eventName, target, view, context);
-  return new EmberHandlebars.SafeString('data-ember-action="' + actionId + '"');
+  var output = [],
+      actionId = ActionHelper.registerAction(actionName, eventName, target, view, context);
+
+  output.push('data-ember-action="' + actionId + '"');
+
+  if (ENV && ENV.ACTION_TOUCH_SUPPORT) {
+    output.push(fmt('on%@="void(0)"', [eventName]));
+  }
+
+  return new EmberHandlebars.SafeString(output.join(" "));
 });

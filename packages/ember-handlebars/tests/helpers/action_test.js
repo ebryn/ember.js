@@ -369,3 +369,15 @@ test("should allow a context to be specified", function() {
 
   equal(passedContext, model, "the action was called with the passed context");
 });
+
+test("should conditionally support touch", function() {
+  window.ENV.ACTION_TOUCH_SUPPORT = true;
+
+  view = Ember.View.create({
+    template: Ember.Handlebars.compile('<div {{action doit}}></div>')
+  });
+
+  appendView();
+
+  equal(view.$('div').attr('onclick'), 'void(0)', "the onclick attribute exists");
+});
