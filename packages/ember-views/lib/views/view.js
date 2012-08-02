@@ -623,7 +623,7 @@ Ember.View = Ember.Object.extend(Ember.Evented,
       return value;
     }
 
-    if (VIEW_PRESERVES_CONTEXT) {
+    if (VIEW_PRESERVES_CONTEXT || this.VIEW_PRESERVES_CONTEXT || this.nearestWithProperty('VIEW_PRESERVES_CONTEXT')) {
       if (controller = get(this, 'controller')) {
         return controller;
       }
