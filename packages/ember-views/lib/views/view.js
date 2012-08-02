@@ -854,7 +854,7 @@ Ember.View = Ember.Object.extend(Ember.Evented,
         buffer: buffer,
         isRenderData: true,
         keywords: keywords,
-        insideGroup: getPath(this, 'templateData.insideGroup')
+        insideGroup: get(this, 'templateData.insideGroup')
       };
 
       // Invoke the template with the provided template context, which
