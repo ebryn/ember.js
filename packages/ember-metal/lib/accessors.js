@@ -258,7 +258,7 @@ Ember.getWithDefault = function(root, key, defaultValue) {
   @returns {Object} the property value or null.
 */
 Ember.get = get;
-Ember.getPath = Ember.deprecateFunc('getPath is deprecated since get now supports paths', Ember.get);
+Ember.getPath = get;
 
 /**
   @function
@@ -290,7 +290,7 @@ Ember.getPath = Ember.deprecateFunc('getPath is deprecated since get now support
   @returns {Object} the passed value.
 */
 Ember.set = set;
-Ember.setPath = Ember.deprecateFunc('setPath is deprecated since set now supports paths', Ember.set);
+Ember.setPath = set;
 
 /**
   Error-tolerant form of Ember.set. Will not blow up if any part of the
