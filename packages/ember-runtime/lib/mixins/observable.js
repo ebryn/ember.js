@@ -398,7 +398,6 @@ Ember.Observable = Ember.Mixin.create(/** @scope Ember.Observable.prototype */ {
     @returns {Object} The property value or undefined.
   */
   getPath: function(path) {
-    Ember.deprecate("getPath is deprecated since get now supports paths");
     return this.get(path);
   },
 
@@ -409,7 +408,6 @@ Ember.Observable = Ember.Mixin.create(/** @scope Ember.Observable.prototype */ {
     @returns {Ember.Observable}
   */
   setPath: function(path, value) {
-    Ember.deprecate("setPath is deprecated since set now supports paths");
     return this.set(path, value);
   },
 
