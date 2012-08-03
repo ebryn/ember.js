@@ -17,7 +17,7 @@ Ember.View.states = {
     },
 
     $: function() {
-      return undefined;
+      return Ember.$();
     },
 
     getElement: function() {

@@ -1032,8 +1032,6 @@ Ember.View = Ember.Object.extend(Ember.Evented,
       // JavaScript property changes.
       var observer = function() {
         elem = this.$();
-        if (!elem) { return; }
-
         attributeValue = get(this, property);
 
         Ember.View.applyAttributeBindings(elem, attributeName, attributeValue);
@@ -1849,12 +1847,9 @@ Ember.View = Ember.Object.extend(Ember.Evented,
     element of the actual DOM element.
   */
   _isVisibleDidChange: Ember.observer(function() {
-    var $el = this.$();
-    if (!$el) { return; }
-
     var isVisible = get(this, 'isVisible');
 
-    $el.toggle(isVisible);
+    this.$().toggle(isVisible);
 
     if (this._isAncestorHidden()) { return; }
 
