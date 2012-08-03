@@ -243,6 +243,8 @@ EmberHandlebars.registerHelper('action', function(actionName) {
       return getPath(this, context, options);
     }, this);
     action.context = contexts[0];
+  } else {
+    action.context = options.contexts[0]; // pass `this` as default
   }
 
   var output = [], url;
