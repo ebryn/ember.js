@@ -60,8 +60,6 @@ Ember.Application = Ember.Namespace.extend(
 
   /** @private */
   init: function() {
-    if (!this.$) { this.$ = Ember.$; }
-
     var eventDispatcher,
         rootElement = get(this, 'rootElement');
     this._super();
@@ -72,32 +70,14 @@ Ember.Application = Ember.Namespace.extend(
 
     set(this, 'eventDispatcher', eventDispatcher);
 
-    // Start off the number of deferrals at 1. This will be
-    // decremented by the Application's own `initialize` method.
-    this._readinessDeferrals = 1;
-
-    this.waitForDOMContentLoaded();
-  },
-
-  waitForDOMContentLoaded: function() {
-    this.deferReadiness();
-
-    var self = this;
-    this.$().ready(function() {
-      self.advanceReadiness();
-    });
-  },
-
-  deferReadiness: function() {
-    Ember.assert("You cannot defer readiness since the `ready()` hook has already been called.", this._readinessDeferrals > 0);
-    this._readinessDeferrals++;
-  },
-
-  advanceReadiness: function() {
-    this._readinessDeferrals--;
-
-    if (this._readinessDeferrals === 0) {
+    // jQuery 1.7 doesn't call the ready callback if already ready
+    if (Ember.$.isReady) {
       Ember.run.once(this, this.didBecomeReady);
+    } else {
+      var self = this;
+      Ember.$(document).ready(function() {
+        Ember.run.once(self, self.didBecomeReady);
+      });
     }
   },
 
@@ -151,28 +131,19 @@ Ember.Application = Ember.Namespace.extend(
       });
     });
 
-    // At this point, any injections or load hooks that would have wanted
-    // to defer readiness have fired.
-    this.advanceReadiness();
-
-    return this;
+    if (router && router instanceof Ember.Router) {
+      this.startRouting(router);
+    }
   },
 
   /** @private */
   didBecomeReady: function() {
     var eventDispatcher = get(this, 'eventDispatcher'),
-        customEvents    = get(this, 'customEvents'),
-        router;
+        customEvents    = get(this, 'customEvents');
 
     eventDispatcher.setup(customEvents);
 
     this.ready();
-
-    router = get(this, 'router');
-
-    if (router && router instanceof Ember.Router) {
-      this.startRouting(router);
-    }
   },
 
   /**
