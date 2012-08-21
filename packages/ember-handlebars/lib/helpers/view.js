@@ -137,7 +137,7 @@ EmberHandlebars.ViewHelper = Ember.Object.create({
     var currentView = data.view;
 
     // Since we don't have a view backing #each, we need to manually pass the context.
-    if (Ember.VIEW_PRESERVES_CONTEXT && data.insideEach) {
+    if ((VIEW_PRESERVES_CONTEXT || options.data.view.nearestWithProperty('VIEW_PRESERVES_CONTEXT')) && data.insideEach) {
       viewOptions._context = thisContext;
     }
 
@@ -150,7 +150,7 @@ EmberHandlebars.ViewHelper = Ember.Object.create({
 
     // We only want to override the `_context` computed property if there is
     // no specified controller. See View#_context for more information.
-    if (VIEW_PRESERVES_CONTEXT && !newView.proto().controller && !newView.proto().controllerBinding && !viewOptions.controller && !viewOptions.controllerBinding) {
+    if ((VIEW_PRESERVES_CONTEXT || options.data.view.nearestWithProperty('VIEW_PRESERVES_CONTEXT')) && !newView.proto().controller && !newView.proto().controllerBinding && !viewOptions.controller && !viewOptions.controllerBinding) {
       viewOptions._context = thisContext;
     }
 
