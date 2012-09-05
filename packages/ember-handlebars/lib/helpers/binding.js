@@ -38,7 +38,7 @@ function bind(property, options, preserveContext, shouldDisplay, valueNormalizer
     var observer;
     if (data.insideGroup) {
       observer = function() {
-        Ember.run.once(view, 'rerender');
+        Ember.run.scheduleOnce('render', view, 'rerender');
       };
 
       data.buffer.push(getPath(pathRoot, path, options));
@@ -62,8 +62,8 @@ function bind(property, options, preserveContext, shouldDisplay, valueNormalizer
       view.appendChild(bindView);
 
       /** @private */
-      observer = function() {
-        Ember.run.once(bindView, 'rerenderIfNeeded');
+      var observer = function() {
+        Ember.run.scheduleOnce('render', bindView, 'rerenderIfNeeded');
       };
     }
 
@@ -315,7 +315,7 @@ EmberHandlebars.registerHelper('bindAttr', function(options) {
 
     /** @private */
     invoker = function() {
-      Ember.run.once(observer);
+      Ember.run.scheduleOnce('render', observer);
     };
 
     // Add an observer to the view for when the property changes.
@@ -441,7 +441,7 @@ EmberHandlebars.bindClasses = function(context, classBindings, view, bindAttrId,
 
     /** @private */
     invoker = function() {
-      Ember.run.once(observer);
+      Ember.run.scheduleOnce('render', observer);
     };
 
     if (path !== '' && path !== 'this') {
