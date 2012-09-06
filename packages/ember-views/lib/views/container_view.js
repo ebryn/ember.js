@@ -416,7 +416,9 @@ Ember.ContainerView.states = {
             view.domManager.prepend(view, buffer.string());
           }
           childView.transitionTo('inDOM');
-          childView.invalidateRecursively('element');
+          childView.invokeRecursively(function(view) {
+            view.propertyDidChange('element');
+          });
           childView._notifyDidInsertElement();
         }
         previous = childView;
