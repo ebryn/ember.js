@@ -41,7 +41,26 @@ function bind(property, options, preserveContext, shouldDisplay, valueNormalizer
         Ember.run.scheduleOnce('render', view, 'rerender');
       };
 
-      data.buffer.push(getPath(pathRoot, path, options));
+      var result = getPath(pathRoot, path, options);
+
+      // Handle block helpers like #if
+      if (fn) {
+        var template, context;
+
+        result = valueNormalizer(result);
+
+        if (shouldDisplay(result)) {
+          template = fn;
+          context = preserveContext ? this : result;
+        } else if (inverse) {
+          template = inverse;
+          context = preserveContext ? this : result;
+        }
+
+        template(context, { data: options.data });
+      } else {
+        data.buffer.push(result);
+      }
     } else {
       // Create the view that will wrap the output of this template/property
       // and add it to the nearest view's childViews array.
@@ -62,7 +81,7 @@ function bind(property, options, preserveContext, shouldDisplay, valueNormalizer
       view.appendChild(bindView);
 
       /** @private */
-      var observer = function() {
+      observer = function() {
         Ember.run.scheduleOnce('render', bindView, 'rerenderIfNeeded');
       };
     }

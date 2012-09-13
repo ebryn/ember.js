@@ -4,8 +4,9 @@ module("Ember.Handlebars - group helper", {
   setup: function() {},
 
   teardown: function() {
-    view.destroy();
-    Ember.run.end();
+    Ember.run(function() {
+      view.destroy();
+    });
     Ember.run.cancelTimers();
   }
 });
@@ -13,7 +14,9 @@ module("Ember.Handlebars - group helper", {
 function createView(template, options) {
   options = options || {};
   options.template = Ember.Handlebars.compile(template);
-  view = Ember.View.create(options);
+  Ember.run(function() {
+    view = Ember.View.create(options);
+  });
 }
 
 function appendView() {
@@ -143,22 +146,20 @@ test("works with #if", function() {
   createView(
     '{{#group}}' +
     '  {{#if something}}' +
-    '    true' +
+    '    hooray' +
     ' {{else}}' +
-    '    false' +
+    '    boo' +
     '  {{/if}}' +
     '{{/group}}',
     {something: true}
   );
   appendView();
 
-  debugger;
-
   equal(view.$('script').length, 2, "Only one set of Metamorph markers");
-  equal(view.$().text().trim(), 'true', 'Truthy text was rendered');
+  equal(view.$().text().trim(), 'hooray', 'Truthy text was rendered');
 
   Ember.run(function() {
     view.set('something', false);
   });
-  equal(view.$().text().trim(), 'false', "The falsy value was rendered");
+  equal(view.$().text().trim(), 'boo', "The falsy value was rendered");
 });

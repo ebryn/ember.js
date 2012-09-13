@@ -107,12 +107,13 @@ GroupedEach.prototype = {
 
     data.insideEach = true;
     for (var i = 0, l = content.length; i < l; i++) {
-      template(content[i], { data: data });
+      // FIXME: better ArrayProxy support?
+      template(typeof content.objectAt === 'function' ? content.objectAt(i) : content[i], { data: data });
     }
   },
 
   rerenderContainingView: function() {
-    Ember.run.once(this.containingView, 'rerender');
+    Ember.run.scheduleOnce('render', this.containingView, 'rerender');
   },
 
   destroy: function() {
