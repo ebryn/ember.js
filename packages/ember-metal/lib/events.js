@@ -103,7 +103,7 @@ function invokeAction(action, params, sender) {
 
   @memberOf Ember
 */
-function addListener(obj, eventName, target, method) {
+function addListener(obj, eventName, target, method, guid) {
   Ember.assert("You must pass at least an object and event name to Ember.addListener", !!obj && !!eventName);
 
   if (!method && 'function' === typeof target) {
@@ -112,7 +112,9 @@ function addListener(obj, eventName, target, method) {
   }
 
   var actionSet = actionSetFor(obj, eventName, target, true),
-      methodGuid = guidFor(method);
+      // guid is used in case we wrapp given method to register
+      // listener with method guid instead of the wrapper guid
+      methodGuid = guid || guidFor(method);
 
   if (!actionSet[methodGuid]) {
     actionSet[methodGuid] = { target: target, method: method };
