@@ -54,8 +54,8 @@ function iterDeps(method, obj, depKey, seen, meta) {
   if (deps) {
     for(var key in deps) {
       if (DEP_SKIP[key]) continue;
-      var desc = meta.descs[key];
-      if (desc && desc._suspended === obj) continue;
+      var desc = obj[key];
+      if (desc instanceof Ember.Descriptor && desc._suspended === obj) continue;
       method(obj, key);
     }
   }
@@ -424,27 +424,27 @@ Ember.watch = function(obj, keyName) {
   if (!watching[keyName]) {
     watching[keyName] = 1;
     if (isKeyName(keyName)) {
-      desc = m.descs[keyName];
-      if (desc && desc.willWatch) { desc.willWatch(obj, keyName); }
+      desc = obj[keyName];
+      if (desc instanceof Ember.Descriptor && desc.willWatch) { desc.willWatch(obj, keyName); }
 
       if ('function' === typeof obj.willWatchProperty) {
         obj.willWatchProperty(keyName);
       }
 
-      if (MANDATORY_SETTER && keyName in obj) {
-        m.values[keyName] = obj[keyName];
-        o_defineProperty(obj, keyName, {
-          configurable: true,
-          enumerable: true,
-          set: function() {
-            Ember.assert('Must use Ember.set() to access this property', false);
-          },
-          get: function() {
-            var meta = this[META_KEY];
-            return meta && meta.values[keyName];
-          }
-        });
-      }
+      //if (MANDATORY_SETTER && keyName in obj) {
+      //  m.values[keyName] = obj[keyName];
+      //  o_defineProperty(obj, keyName, {
+      //    configurable: true,
+      //    enumerable: true,
+      //    set: function() {
+      //      Ember.assert('Must use Ember.set() to access this property', false);
+      //    },
+      //    get: function() {
+      //      var meta = this[META_KEY];
+      //      return meta && meta.values[keyName];
+      //    }
+      //  });
+      //}
     } else {
       chainsFor(obj).add(keyName);
     }
@@ -472,22 +472,22 @@ Ember.unwatch = function(obj, keyName) {
     watching[keyName] = 0;
 
     if (isKeyName(keyName)) {
-      desc = m.descs[keyName];
-      if (desc && desc.didUnwatch) { desc.didUnwatch(obj, keyName); }
+      desc = obj[keyName];
+      if (desc instanceof Ember.Descriptor && desc.didUnwatch) { desc.didUnwatch(obj, keyName); }
 
       if ('function' === typeof obj.didUnwatchProperty) {
         obj.didUnwatchProperty(keyName);
       }
 
-      if (MANDATORY_SETTER && keyName in obj) {
-        o_defineProperty(obj, keyName, {
-          configurable: true,
-          enumerable: true,
-          writable: true,
-          value: m.values[keyName]
-        });
-        delete m.values[keyName];
-      }
+      //if (MANDATORY_SETTER && keyName in obj) {
+      //  o_defineProperty(obj, keyName, {
+      //    configurable: true,
+      //    enumerable: true,
+      //    writable: true,
+      //    value: m.values[keyName]
+      //  });
+      //  delete m.values[keyName];
+      //}
     } else {
       chainsFor(obj).remove(keyName);
     }
@@ -559,11 +559,11 @@ function propertyWillChange(obj, keyName, value) {
   var m = metaFor(obj, false),
       watching = m.watching[keyName] > 0 || keyName === 'length',
       proto = m.proto,
-      desc = m.descs[keyName];
+      desc = obj[keyName];
 
   if (!watching) { return; }
   if (proto === obj) { return; }
-  if (desc && desc.willChange) { desc.willChange(obj, keyName); }
+  if (desc instanceof Ember.Descriptor && desc.willChange) { desc.willChange(obj, keyName); }
   dependentKeysWillChange(obj, keyName, m);
   chainsWillChange(obj, keyName, m);
   Ember.notifyBeforeObservers(obj, keyName);
@@ -590,12 +590,12 @@ function propertyDidChange(obj, keyName) {
   var m = metaFor(obj, false),
       watching = m.watching[keyName] > 0 || keyName === 'length',
       proto = m.proto,
-      desc = m.descs[keyName];
+      desc = obj[keyName];
 
   if (proto === obj) { return; }
 
   // shouldn't this mean that we're watching this key?
-  if (desc && desc.didChange) { desc.didChange(obj, keyName); }
+  if (desc instanceof Ember.Descriptor && desc.didChange) { desc.didChange(obj, keyName); }
   if (!watching && keyName !== 'length') { return; }
 
   dependentKeysDidChange(obj, keyName, m);

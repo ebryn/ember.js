@@ -63,15 +63,15 @@ get = function get(obj, keyName) {
 
   Ember.assert("You need to provide an object and key to `get`.", !!obj && keyName);
 
-  var meta = obj[META_KEY], desc = meta && meta.descs[keyName], ret;
-  if (desc) {
-    return desc.get(obj, keyName);
+  var meta = obj[META_KEY], val = obj[keyName], ret;
+  if (val instanceof Ember.ComputedProperty) {
+    return val.get(obj, keyName);
   } else {
-    if (MANDATORY_SETTER && meta && meta.watching[keyName] > 0) {
-      ret = meta.values[keyName];
-    } else {
+    //if (MANDATORY_SETTER && meta && meta.watching[keyName] > 0) {
+    //  ret = meta.values[keyName];
+    //} else {
       ret = obj[keyName];
-    }
+    //}
 
     if (ret === undefined &&
         'object' === typeof obj && !(keyName in obj) && 'function' === typeof obj.unknownProperty) {
@@ -120,12 +120,11 @@ set = function set(obj, keyName, value, tolerant) {
   Ember.assert("You need to provide an object and key to `set`.", !!obj && keyName !== undefined);
   Ember.assert('calling set on destroyed object', !obj.isDestroyed);
 
-  var meta = obj[META_KEY], desc = meta && meta.descs[keyName],
+  var meta = obj[META_KEY], val = obj[keyName],
       isUnknown, currentValue;
-  if (desc) {
-    desc.set(obj, keyName, value);
-  }
-  else {
+  if (val instanceof Ember.ComputedProperty) {
+    val.set(obj, keyName, value);
+  } else {
     isUnknown = 'object' === typeof obj && !(keyName in obj);
 
     // setUnknownProperty is called if `obj` is an object,
@@ -134,23 +133,23 @@ set = function set(obj, keyName, value, tolerant) {
     if (isUnknown && 'function' === typeof obj.setUnknownProperty) {
       obj.setUnknownProperty(keyName, value);
     } else if (meta && meta.watching[keyName] > 0) {
-      if (MANDATORY_SETTER) {
-        currentValue = meta.values[keyName];
-      } else {
+      //if (MANDATORY_SETTER) {
+      //  currentValue = meta.values[keyName];
+      //} else {
         currentValue = obj[keyName];
-      }
+      //}
       // only trigger a change if the value has changed
       if (value !== currentValue) {
         Ember.propertyWillChange(obj, keyName);
-        if (MANDATORY_SETTER) {
-          if (currentValue === undefined && !(keyName in obj)) {
-            Ember.defineProperty(obj, keyName, null, value); // setup mandatory setter
-          } else {
-            meta.values[keyName] = value;
-          }
-        } else {
+        //if (MANDATORY_SETTER) {
+        //  if (currentValue === undefined && !(keyName in obj)) {
+        //    Ember.defineProperty(obj, keyName, null, value); // setup mandatory setter
+        //  } else {
+        //    meta.values[keyName] = value;
+        //  }
+        //} else {
           obj[keyName] = value;
-        }
+        //}
         Ember.propertyDidChange(obj, keyName);
       }
     } else {

@@ -20,6 +20,7 @@ test("for data properties, didDefineProperty hook should be called if implemente
   Ember.defineProperty(obj, 'foo', undefined, "bar");
 });
 
+/*
 test("for descriptor properties, didDefineProperty hook should be called if implemented", function() {
   expect(2);
 
@@ -34,4 +35,4 @@ test("for descriptor properties, didDefineProperty hook should be called if impl
 
   Ember.defineProperty(obj, 'foo', computedProperty);
 });
-
+*/

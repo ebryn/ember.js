@@ -253,7 +253,7 @@ var ClassMixin = Mixin.create({
     @param key {String} property name
   */
   metaForProperty: function(key) {
-    var desc = meta(this.proto(), false).descs[key];
+    var desc = this.proto()[key];
 
     Ember.assert("metaForProperty() could not find a computed property with key '"+key+"'.", !!desc && desc instanceof Ember.ComputedProperty);
     return desc._meta || {};
@@ -269,12 +269,11 @@ var ClassMixin = Mixin.create({
   */
   eachComputedProperty: function(callback, binding) {
     var proto = this.proto(),
-        descs = meta(proto).descs,
         empty = {},
         property;
 
-    for (var name in descs) {
-      property = descs[name];
+    for (var name in proto) {
+      property = proto[name];
 
       if (property instanceof Ember.ComputedProperty) {
         callback.call(binding || this, name, property._meta || empty);
