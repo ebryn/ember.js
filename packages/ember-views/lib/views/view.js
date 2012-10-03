@@ -1008,6 +1008,10 @@ Ember.View = Ember.Object.extend(Ember.Evented,
       // Extract just the property name from bindings like 'foo:bar'
       var parsedPath = Ember.View._parsePropertyPath(binding);
       addObserver(this, parsedPath.path, observer);
+
+      this.one('willRerender', function() {
+        removeObserver(this, parsedPath.path, observer);
+      });
     }, this);
   },
 
@@ -1038,6 +1042,10 @@ Ember.View = Ember.Object.extend(Ember.Evented,
       };
 
       addObserver(this, property, observer);
+
+      this.one('willRerender', function() {
+        removeObserver(this, property, observer);
+      });
 
       // Determine the current value and add it to the render buffer
       // if necessary.
