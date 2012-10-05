@@ -431,20 +431,20 @@ Ember.watch = function(obj, keyName) {
         obj.willWatchProperty(keyName);
       }
 
-      //if (MANDATORY_SETTER && keyName in obj) {
-      //  m.values[keyName] = obj[keyName];
-      //  o_defineProperty(obj, keyName, {
-      //    configurable: true,
-      //    enumerable: true,
-      //    set: function() {
-      //      Ember.assert('Must use Ember.set() to access this property', false);
-      //    },
-      //    get: function() {
-      //      var meta = this[META_KEY];
-      //      return meta && meta.values[keyName];
-      //    }
-      //  });
-      //}
+      if (MANDATORY_SETTER && keyName in obj) {
+        m.values[keyName] = obj[keyName];
+        o_defineProperty(obj, keyName, {
+          configurable: true,
+          enumerable: true,
+          set: function() {
+            Ember.assert('Must use Ember.set() to access this property', false);
+          },
+          get: function() {
+            var meta = this[META_KEY];
+            return meta && meta.values[keyName];
+          }
+        });
+      }
     } else {
       chainsFor(obj).add(keyName);
     }
@@ -479,15 +479,15 @@ Ember.unwatch = function(obj, keyName) {
         obj.didUnwatchProperty(keyName);
       }
 
-      //if (MANDATORY_SETTER && keyName in obj) {
-      //  o_defineProperty(obj, keyName, {
-      //    configurable: true,
-      //    enumerable: true,
-      //    writable: true,
-      //    value: m.values[keyName]
-      //  });
-      //  delete m.values[keyName];
-      //}
+      if (MANDATORY_SETTER && keyName in obj) {
+        o_defineProperty(obj, keyName, {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: m.values[keyName]
+        });
+        delete m.values[keyName];
+      }
     } else {
       chainsFor(obj).remove(keyName);
     }

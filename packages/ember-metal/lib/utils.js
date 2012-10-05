@@ -201,7 +201,7 @@ Ember.meta = function meta(obj, writable) {
 
     ret = new Meta(obj);
 
-    //if (MANDATORY_SETTER) { ret.values = {}; }
+    if (MANDATORY_SETTER) { ret.values = {}; }
 
     obj[META_KEY] = ret;
 
@@ -217,7 +217,7 @@ Ember.meta = function meta(obj, writable) {
     ret.cache    = {};
     ret.source   = obj;
 
-    //if (MANDATORY_SETTER) { ret.values = o_create(ret.values); }
+    if (MANDATORY_SETTER) { ret.values = o_create(ret.values); }
 
     obj[META_KEY] = ret;
   }

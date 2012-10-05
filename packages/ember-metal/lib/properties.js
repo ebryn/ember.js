@@ -100,38 +100,38 @@ Ember.defineProperty = function(obj, keyName, desc, data, meta) {
     value = desc;
 
     descs[keyName] = desc;
-    //if (MANDATORY_SETTER && watching) {
-    //  objectDefineProperty(obj, keyName, {
-    //    configurable: true,
-    //    enumerable: true,
-    //    writable: true,
-    //    value: undefined // make enumerable
-    //  });
-    //} else {
-    //  obj[keyName] = undefined; // make enumerable
-    //}
+    if (MANDATORY_SETTER && watching) {
+      objectDefineProperty(obj, keyName, {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: undefined // make enumerable
+      });
+    } else {
+      obj[keyName] = undefined; // make enumerable
+    }
     desc.setup(obj, keyName);
   } else {
     //descs[keyName] = undefined; // shadow descriptor in proto
     if (desc == null) {
       value = data;
 
-      //if (MANDATORY_SETTER && watching) {
-      //  meta.values[keyName] = data;
-      //  objectDefineProperty(obj, keyName, {
-      //    configurable: true,
-      //    enumerable: true,
-      //    set: function() {
-      //      Ember.assert('Must use Ember.set() to access this property', false);
-      //    },
-      //    get: function() {
-      //      var meta = this[META_KEY];
-      //      return meta && meta.values[keyName];
-      //    }
-      //  });
-      //} else {
+      if (MANDATORY_SETTER && watching) {
+        meta.values[keyName] = data;
+        objectDefineProperty(obj, keyName, {
+          configurable: true,
+          enumerable: true,
+          set: function() {
+            Ember.assert('Must use Ember.set() to access this property', false);
+          },
+          get: function() {
+            var meta = this[META_KEY];
+            return meta && meta.values[keyName];
+          }
+        });
+      } else {
         obj[keyName] = data;
-      //}
+      }
     } else {
       value = desc;
 
