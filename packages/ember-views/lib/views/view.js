@@ -6,7 +6,7 @@
 // ==========================================================================
 
 require("ember-views/system/render_buffer");
-var get = Ember.get, set = Ember.set, addObserver = Ember.addObserver;
+var get = Ember.get, set = Ember.set, addObserver = Ember.addObserver, removeObserver = Ember.removeObserver;
 var meta = Ember.meta, fmt = Ember.String.fmt;
 var a_slice = [].slice;
 var a_forEach = Ember.EnumerableUtils.forEach;
