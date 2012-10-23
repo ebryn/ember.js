@@ -12,91 +12,89 @@ require('ember-metal/array');
 
 var AFTER_OBSERVERS = ':change';
 var BEFORE_OBSERVERS = ':before';
+
 var guidFor = Ember.guidFor;
 
 var deferred = 0;
-var array_Slice = [].slice;
 
-/** @private */
-var ObserverSet = function () {
-  this.targetSet = {};
-};
-ObserverSet.prototype.add = function (target, path) {
-  var targetSet = this.targetSet,
-    targetGuid = Ember.guidFor(target),
-    pathSet = targetSet[targetGuid];
-  if (!pathSet) {
-    targetSet[targetGuid] = pathSet = {};
+/*
+  this.observerSet = {
+    [senderGuid]: { // variable name: `keySet`
+      [keyName]: listIndex
+    }
+  },
+  this.observers = [
+    {
+      sender: obj,
+      keyName: keyName,
+      eventName: eventName,
+      listeners: {
+        [targetGuid]: {        // variable name: `actionSet`
+          [methodGuid]: {      // variable name: `action`
+            target: [Object object],
+            method: [Function function]
+          }
+        }
+      }
+    },
+    ...
+  ]
+*/
+function ObserverSet() {
+  this.clear();
+}
+
+ObserverSet.prototype.add = function(sender, keyName, eventName) {
+  var observerSet = this.observerSet,
+      observers = this.observers,
+      senderGuid = Ember.guidFor(sender),
+      keySet = observerSet[senderGuid],
+      index;
+
+  if (!keySet) {
+    observerSet[senderGuid] = keySet = {};
   }
-  if (pathSet[path]) {
-    return false;
-  } else {
-    return pathSet[path] = true;
-  }
-};
-ObserverSet.prototype.clear = function () {
-  this.targetSet = {};
-};
-
-/** @private */
-var DeferredEventQueue = function() {
-  this.targetSet = {};
-  this.queue = [];
-};
-
-DeferredEventQueue.prototype.push = function(target, eventName, keyName) {
-  var targetSet = this.targetSet,
-    queue = this.queue,
-    targetGuid = Ember.guidFor(target),
-    eventNameSet = targetSet[targetGuid],
-    index;
-
-  if (!eventNameSet) {
-    targetSet[targetGuid] = eventNameSet = {};
-  }
-  index = eventNameSet[eventName];
+  index = keySet[keyName];
   if (index === undefined) {
-    eventNameSet[eventName] = queue.push(Ember.deferEvent(target, eventName, [target, keyName])) - 1;
-  } else {
-    queue[index] = Ember.deferEvent(target, eventName, [target, keyName]);
+    index = observers.push({
+      sender: sender,
+      keyName: keyName,
+      eventName: eventName,
+      listeners: {}
+    }) - 1;
+    keySet[keyName] = index;
+  }
+  return observers[index].listeners;
+};
+
+ObserverSet.prototype.flush = function() {
+  var observers = this.observers, i, len, observer, sender;
+  this.clear();
+  for (i=0, len=observers.length; i < len; ++i) {
+    observer = observers[i];
+    sender = observer.sender;
+    if (sender.isDestroyed) { continue; }
+    Ember.sendEvent(sender, observer.eventName, [sender, observer.keyName], observer.listeners);
   }
 };
 
-DeferredEventQueue.prototype.flush = function() {
-  var queue = this.queue;
-  this.queue = [];
-  this.targetSet = {};
-  for (var i=0, len=queue.length; i < len; ++i) {
-    queue[i]();
-  }
+ObserverSet.prototype.clear = function() {
+  this.observerSet = {};
+  this.observers = [];
 };
 
-var queue = new DeferredEventQueue(), beforeObserverSet = new ObserverSet();
-
-/** @private */
-function notifyObservers(obj, eventName, keyName, forceNotification) {
-  if (deferred && !forceNotification) {
-    queue.push(obj, eventName, keyName);
-  } else {
-    Ember.sendEvent(obj, eventName, [obj, keyName]);
-  }
-}
-
-/** @private */
-function flushObserverQueue() {
-  beforeObserverSet.clear();
-
-  queue.flush();
-}
+var beforeObserverSet = new ObserverSet(), observerSet = new ObserverSet();
 
 Ember.beginPropertyChanges = function() {
   deferred++;
-  return this;
 };
 
 Ember.endPropertyChanges = function() {
   deferred--;
-  if (deferred<=0) flushObserverQueue();
+  if (deferred<=0) {
+    beforeObserverSet.clear();
+    observerSet.flush();
+  }
 };
 
 /**
@@ -201,27 +199,27 @@ Ember.removeBeforeObserver = function(obj, path, target, method) {
   return this;
 };
 
-/** @private */
-Ember.notifyObservers = function(obj, keyName) {
-  if (obj.isDestroying) { return; }
-
-  notifyObservers(obj, changeEvent(keyName), keyName);
-};
-
-/** @private */
 Ember.notifyBeforeObservers = function(obj, keyName) {
   if (obj.isDestroying) { return; }
 
-  var guid, set, forceNotification = false;
-
+  var eventName = beforeEvent(keyName), listeners, listenersDiff;
   if (deferred) {
-    if (beforeObserverSet.add(obj, keyName)) {
-      forceNotification = true;
-    } else {
-      return;
-    }
+    listeners = beforeObserverSet.add(obj, keyName, eventName);
+    listenersDiff = Ember.listenersDiff(obj, eventName, listeners);
+    Ember.sendEvent(obj, eventName, [obj, keyName], listenersDiff);
+  } else {
+    Ember.sendEvent(obj, eventName, [obj, keyName]);
   }
-
-  notifyObservers(obj, beforeEvent(keyName), keyName, forceNotification);
 };
 
+Ember.notifyObservers = function(obj, keyName) {
+  if (obj.isDestroying) { return; }
+
+  var eventName = changeEvent(keyName), listeners;
+  if (deferred) {
+    listeners = observerSet.add(obj, keyName, eventName);
+    Ember.listenersUnion(obj, eventName, listeners);
+  } else {
+    Ember.sendEvent(obj, eventName, [obj, keyName]);
+  }
+};
