@@ -1215,6 +1215,10 @@ Ember.View = Ember.CoreView.extend(
     return this.invokeForState('rerender');
   },
 
+  rerenderContents: function() {
+    return this.invokeForState('rerenderContents');
+  },
+
   clearRenderedChildren: function() {
     var lengthBefore = this.lengthBeforeRender,
         lengthAfter  = this.lengthAfterRender;

@@ -43,6 +43,20 @@ Ember.View.states.hasElement = {
     return view;
   },
 
+  rerenderContents: function(view) {
+    view._notifyWillClearRender();
+    view.forEachChildView(function(childView) {
+      childView.removedFromDOM = true;
+    });
+    view.clearRenderedChildren();
+    element = view.get('element');
+    view.renderToBuffer();
+    buffer = view.buffer;
+    buffer.elementTag = null;
+    element.innerHTML = buffer.string();
+    view.transitionTo('inDOM');
+  },
+
   // once the view is already in the DOM, destroying it removes it
   // from the DOM, nukes its element, and puts it back into the
   // preRender state if inDOM.
