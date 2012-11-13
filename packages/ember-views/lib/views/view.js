@@ -643,9 +643,9 @@ Ember.View = Ember.Object.extend(Ember.Evented,
 
     @private
   */
-  _displayPropertyDidChange: Ember.observer(function() {
+  _contextDidChange: Ember.observer(function() {
     this.rerender();
-  }, 'context', 'controller'),
+  }, 'context'),
 
   /**
     If the view is currently inserted into the DOM of a parent view, this
@@ -812,6 +812,8 @@ Ember.View = Ember.Object.extend(Ember.Evented,
 
   _controllerDidChange: Ember.observer(function() {
     if (this.isDestroying) { return; }
+
+    this.rerender();
 
     this.forEachChildView(function(view) {
       view.propertyDidChange('controller');
