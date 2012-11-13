@@ -7,7 +7,7 @@ require('ember-metal/utils');
 */
 
 var o_create = Ember.create,
-    meta = Ember.meta,
+    metaFor = Ember.meta,
     metaPath = Ember.metaPath,
     guidFor = Ember.guidFor,
     a_slice = [].slice;
@@ -42,8 +42,17 @@ function actionSetFor(obj, eventName, target, writable) {
 }
 
 function actionsFor(obj, eventName, target, writable) {
-  var meta = Ember.meta(obj, writable);
-  meta.listeners = meta.listeners || {};
+  // FIXME: target arg is unused
+  var meta = metaFor(obj, writable);
+
+  // create or clone listeners obj
+  meta.listeners = meta.listeners || {__ember_source__: obj};
+  if (meta.listeners.__ember_source__ !== obj) {
+    meta.listeners = o_create(meta.listeners);
+    meta.listeners.__ember_source__ = obj;
+  }
+
+  // create or clone actions
   var actions = meta.listeners[eventName] = meta.listeners[eventName] || {__ember_source__: obj};
   if (actions && actions.__ember_source__ !== obj) {
     meta.listeners = o_create(meta.listeners);
@@ -68,7 +77,7 @@ function actionsFor(obj, eventName, target, writable) {
 // Gets the set of all targets, keyed on the guid of each action's
 // target property.
 function targetSetFor(obj, eventName) {
-  var listenerSet = meta(obj, false).listeners;
+  var listenerSet = metaFor(obj, false).listeners;
   if (!listenerSet) { return false; }
 
   return listenerSet[eventName] || false;
@@ -222,7 +231,10 @@ function removeListener(obj, eventName, target, method) {
 
     var targetMethodIndex = targetMethods.indexOf(method);
     if (targetMethodIndex !== -1) { targetMethods.splice(targetMethodIndex, 1); }
-    if (!targetMethods.length) { actions.targets.splice(targetIndex, 1); }
+    if (!targetMethods.length) {
+      actions.targets.splice(targetIndex, 1);
+      actions.methods.splice(targetIndex, 1);
+    }
 
     if ('function' === typeof obj.didRemoveListener) {
       obj.didRemoveListener(eventName, target, method);
@@ -264,11 +276,11 @@ function suspendListener(obj, eventName, target, method, callback) {
 
   var actions = actionsFor(obj, eventName, target, true),
       targetIndex = actions.targets.indexOf(target),
-      targetMethods = actions.methods[targetIndex],
-      targetMethodIndex = targetMethods.indexOf(method),
+      targetMethods = targetIndex !== -1 && actions.methods[targetIndex],
+      targetMethodIndex = targetMethods && targetMethods.indexOf(method),
       action;
 
-  if (targetMethodIndex !== -1) {
+  if (targetMethods && targetMethodIndex !== -1) {
     action = targetMethods.splice(targetMethodIndex, 1)[0];
   }
 
@@ -339,7 +351,7 @@ function suspendListeners(obj, eventNames, target, method, callback) {
   @param obj
 */
 function watchedEvents(obj) {
-  var listeners = meta(obj, false).listeners, ret = [];
+  var listeners = metaFor(obj, false).listeners, ret = [];
 
   if (listeners) {
     for(var eventName in listeners) {
