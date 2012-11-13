@@ -7,10 +7,8 @@ require('ember-metal/utils');
 */
 
 var o_create = Ember.create,
-    meta = Ember.meta,
-    metaPath = Ember.metaPath,
-    guidFor = Ember.guidFor,
-    a_slice = [].slice;
+    metaFor = Ember.meta,
+    metaPath = Ember.metaPath;
 
 /*
   The event system uses a series of nested hashes to store listeners on an
@@ -21,100 +19,86 @@ var o_create = Ember.create,
 
       // Object's meta hash
       {
-        listeners: {               // variable name: `listenerSet`
-          "foo:changed": {         // variable name: `targetSet`
-            [targetGuid]: {        // variable name: `actionSet`
-              [methodGuid]: {      // variable name: `action`
-                target: [Object object],
-                method: [Function function]
-              }
-            }
-          }
+        listeners: {       // variable name: `listenerSet`
+          "foo:changed": [ // variable name: `actions`
+            [method, target, onceFlag]
+          ]
         }
       }
 
 */
 
-// Gets the set of all actions, keyed on the guid of each action's
-// method property.
-function actionSetFor(obj, eventName, target, writable) {
-  return metaPath(obj, ['listeners', eventName, guidFor(target)], writable);
+function indexOf(array, target, method, once) {
+  var index = -1;
+  for (var i = 0, l = array.length; i < l; i++) {
+    if (method === array[i][0] && target === array[i][1] /* FIXME && once === array[i][2]*/) { index = i; break; }
+  }
+  return index;
 }
 
-// Gets the set of all targets, keyed on the guid of each action's
-// target property.
-function targetSetFor(obj, eventName) {
-  var listenerSet = meta(obj, false).listeners;
-  if (!listenerSet) { return false; }
+// FIXME: writable isn't used anymore
+function actionsFor(obj, eventName, writable) {
+  var meta = metaFor(obj, writable),
+      actions;
 
-  return listenerSet[eventName] || false;
+  if (!meta.listeners) { meta.listeners = {}; }
+
+  if (!meta.hasOwnProperty('listeners')) {
+    // setup inherited copy of the listeners object
+    meta.listeners = o_create(meta.listeners);
+  }
+
+  // copy the actions from the parent if they exist, or initialize to an empty array
+  actions = meta.listeners[eventName];
+
+  // if there are actions, but the eventName doesn't exist in our listeners, then copy them from the prototype
+  if (actions && !meta.listeners.hasOwnProperty(eventName)) {
+    actions = meta.listeners[eventName] = meta.listeners[eventName].slice();
+  } else if (!actions) {
+    actions = meta.listeners[eventName] = [];
+  }
+
+  return actions;
 }
 
-// TODO: This knowledge should really be a part of the
-// meta system.
-var SKIP_PROPERTIES = { __ember_source__: true };
+function iterateSet(actions, callback) {
+  if (!actions) { return false; }
 
-function iterateSet(targetSet, callback) {
-  if (!targetSet) { return false; }
-  // Iterate through all elements of the target set
-  for(var targetGuid in targetSet) {
-    if (SKIP_PROPERTIES[targetGuid]) { continue; }
-
-    var actionSet = targetSet[targetGuid];
-    if (actionSet) {
-      // Iterate through the elements of the action set
-      for(var methodGuid in actionSet) {
-        if (SKIP_PROPERTIES[methodGuid]) { continue; }
-
-        var action = actionSet[methodGuid];
-        if (action) {
-          if (callback(action) === true) {
-            return true;
-          }
-        }
-      }
+  // loop backwards because of removeListener
+  for (var i = actions.length - 1; i >= 0; i--) {
+    if (!actions[i]) { continue; } // needed for removing an observer inside an observer?
+    if (callback(actions[i][1], actions[i][0], actions[i][2]) === true) {
+      return true;
     }
   }
+
   return false;
 }
 
-function invokeAction(action, params, sender) {
-  var method = action.method, target = action.target;
-  // If there is no target, the target is the object
-  // on which the event was fired.
-  if (!target) { target = sender; }
-  if ('string' === typeof method) { method = target[method]; }
-  if (params) {
-    method.apply(target, params);
-  } else {
-    method.apply(target);
-  }
-}
+function targetSetUnion(obj, eventName, otherActions) {
+  var meta = metaFor(obj, false),
+      actions = meta.listeners && meta.listeners[eventName];
 
-function targetSetUnion(obj, eventName, targetSet) {
-  iterateSet(targetSetFor(obj, eventName), function (action) {
-    var targetGuid = guidFor(action.target),
-        methodGuid = guidFor(action.method),
-        actionSet = targetSet[targetGuid];
-    if (!actionSet) actionSet = targetSet[targetGuid] = {};
-    actionSet[methodGuid] = action;
+  iterateSet(actions, function (target, method, once) {
+    var actionIndex = indexOf(otherActions, target, method, once);
+
+    if (actionIndex === -1) {
+      otherActions.push([method, target, once]);
+    }
   });
 }
 
-function targetSetDiff(obj, eventName, targetSet) {
-  var diffTargetSet = {};
-  iterateSet(targetSetFor(obj, eventName), function (action) {
-    var targetGuid = guidFor(action.target),
-        methodGuid = guidFor(action.method),
-        actionSet = targetSet[targetGuid],
-        diffActionSet = diffTargetSet[targetGuid];
-    if (!actionSet) actionSet = targetSet[targetGuid] = {};
-    if (actionSet[methodGuid]) return;
-    actionSet[methodGuid] = action;
-    if (!diffActionSet) diffActionSet = diffTargetSet[targetGuid] = {};
-    diffActionSet[methodGuid] = action;
+function targetSetDiff(obj, eventName, otherActions) {
+  var meta = metaFor(obj, false),
+      actions = meta.listeners && meta.listeners[eventName],
+      diffActions = [];
+  iterateSet(actions, function (target, method, once) {
+    var actionIndex = indexOf(otherActions, target, method, once);
+    if (actionIndex !== -1) { return; }
+    otherActions.push([method, target, once]);
+    diffActions.push([method, target, once]);
   });
-  return diffTargetSet;
+  return diffActions;
 }
 
 /**
@@ -127,7 +111,7 @@ function targetSetDiff(obj, eventName, targetSet) {
   @param {Object|Function} targetOrMethod A target object or a function
   @param {Function|String} method A function or the name of a function to be called on `target`
 */
-function addListener(obj, eventName, target, method, guid) {
+function addListener(obj, eventName, target, method, once) {
   Ember.assert("You must pass at least an object and event name to Ember.addListener", !!obj && !!eventName);
 
   if (!method && 'function' === typeof target) {
@@ -135,14 +119,12 @@ function addListener(obj, eventName, target, method, guid) {
     target = null;
   }
 
-  var actionSet = actionSetFor(obj, eventName, target, true),
-      // guid is used in case we wrapp given method to register
-      // listener with method guid instead of the wrapper guid
-      methodGuid = guid || guidFor(method);
+  var actions = actionsFor(obj, eventName, true),
+      actionIndex = indexOf(actions, target, method, once);
 
-  if (!actionSet[methodGuid]) {
-    actionSet[methodGuid] = { target: target, method: method };
-  }
+  if (actionIndex !== -1) { return; }
+
+  actions.push([method, target, once]);
 
   if ('function' === typeof obj.didAddListener) {
     obj.didAddListener(eventName, target, method);
@@ -169,13 +151,14 @@ function removeListener(obj, eventName, target, method) {
     target = null;
   }
 
-  function _removeListener(target, method) {
-    var actionSet = actionSetFor(obj, eventName, target, true),
-        methodGuid = guidFor(method);
+  function _removeListener(target, method, once) {
+    var actions = actionsFor(obj, eventName, true),
+        actionIndex = indexOf(actions, target, method, once);
 
-    // we can't simply delete this parameter, because if we do, we might
-    // re-expose the property from the prototype chain.
-    if (actionSet && actionSet[methodGuid]) { actionSet[methodGuid] = null; }
+    // action doesn't exist, give up silently
+    if (actionIndex === -1) { return; }
+
+    actions.splice(actionIndex, 1);
 
     if ('function' === typeof obj.didRemoveListener) {
       obj.didRemoveListener(eventName, target, method);
@@ -185,8 +168,11 @@ function removeListener(obj, eventName, target, method) {
   if (method) {
     _removeListener(target, method);
   } else {
-    iterateSet(targetSetFor(obj, eventName), function(action) {
-      _removeListener(action.target, action.method);
+    var meta = metaFor(obj, false),
+        actions = meta.listeners && meta.listeners[eventName];
+
+    iterateSet(actions, function(target, method, once) {
+      _removeListener(target, method, once);
     });
   }
 }
@@ -215,15 +201,18 @@ function suspendListener(obj, eventName, target, method, callback) {
     target = null;
   }
 
-  var actionSet = actionSetFor(obj, eventName, target, true),
-      methodGuid = guidFor(method),
-      action = actionSet && actionSet[methodGuid];
+  var actions = actionsFor(obj, eventName, true),
+      actionIndex = indexOf(actions, target, method), // not passing once...?
+      action;
 
-  actionSet[methodGuid] = null;
+  if (actionIndex !== -1) {
+    action = actions.splice(actionIndex, 1)[0];
+  }
+
   try {
     return callback.call(target);
   } finally {
-    actionSet[methodGuid] = action;
+    if (action) { actions.push(action); }
   }
 }
 
@@ -251,30 +240,31 @@ function suspendListeners(obj, eventNames, target, method, callback) {
     target = null;
   }
 
-  var oldActions = [],
-      actionSets = [],
-      eventName, actionSet, methodGuid, action, i, l;
+  var removedActions = [],
+      eventName, actions, action, i, l;
 
   for (i=0, l=eventNames.length; i<l; i++) {
     eventName = eventNames[i];
-    actionSet = actionSetFor(obj, eventName, target, true),
-    methodGuid = guidFor(method);
+    actions = actionsFor(obj, eventName, true);
+    var actionIndex = indexOf(actions, target, method); // FIXME: not passing once?
 
-    oldActions.push(actionSet && actionSet[methodGuid]);
-    actionSets.push(actionSet);
-
-    actionSet[methodGuid] = null;
+    if (actionIndex !== -1) {
+      removedActions.push(actions.splice(actionIndex, 1)[0]);
+    }
   }
 
   try {
     return callback.call(target);
   } finally {
-    for (i=0, l=oldActions.length; i<l; i++) {
-      eventName = eventNames[i];
-      actionSets[i][methodGuid] = oldActions[i];
+    for (i=0, l=removedActions.length; i<l; i++) {
+      actions.push(removedActions[i]);
     }
   }
 }
+
+// TODO: This knowledge should really be a part of the
+// meta system.
+var SKIP_PROPERTIES = { __ember_source__: true };
 
 /**
   @private
@@ -286,7 +276,7 @@ function suspendListeners(obj, eventNames, target, method, callback) {
   @param obj
 */
 function watchedEvents(obj) {
-  var listeners = meta(obj, false).listeners, ret = [];
+  var listeners = metaFor(obj, false).listeners, ret = [];
 
   if (listeners) {
     for(var eventName in listeners) {
@@ -312,10 +302,20 @@ function sendEvent(obj, eventName, params, targetSet) {
     obj.sendEvent(eventName, params);
   }
 
-  if (!targetSet) targetSet = targetSetFor(obj, eventName);
+  if (!targetSet) {
+    var meta = metaFor(obj, false);
+    targetSet = meta.listeners && meta.listeners[eventName];
+  }
 
-  iterateSet(targetSet, function (action) {
-    invokeAction(action, params, obj);
+  iterateSet(targetSet, function (target, method, once) {
+    if (once) { removeListener(obj, eventName, target, method); }
+    if (!target) { target = obj; }
+    if ('string' === typeof method) { method = target[method]; }
+    if (params) {
+      method.apply(target, params);
+    } else {
+      method.apply(target);
+    }
   });
   return true;
 }
@@ -328,11 +328,14 @@ function sendEvent(obj, eventName, params, targetSet) {
   @param {String} eventName
 */
 function hasListeners(obj, eventName) {
-  if (iterateSet(targetSetFor(obj, eventName), function() { return true; })) {
+  var meta = metaFor(obj, false),
+      eventActions = meta.listeners && meta.listeners[eventName];
+  if (iterateSet(eventActions, function() { return true; })) {
     return true;
   }
 
   // no listeners!  might as well clean this up so it is faster later.
+  // FIXME: verify this
   var set = metaPath(obj, ['listeners'], true);
   set[eventName] = null;
 
@@ -348,8 +351,11 @@ function hasListeners(obj, eventName) {
 */
 function listenersFor(obj, eventName) {
   var ret = [];
-  iterateSet(targetSetFor(obj, eventName), function (action) {
-    ret.push([action.target, action.method]);
+  var meta = metaFor(obj, false),
+      actions = meta.listeners && meta.listeners[eventName];
+
+  iterateSet(actions, function (target, method) {
+    ret.unshift([target, method]); // unshift since iterateSet is in reverse order
   });
   return ret;
 }

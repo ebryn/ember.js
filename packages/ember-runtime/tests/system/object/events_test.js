@@ -16,7 +16,7 @@ test("a listener can be added to an object", function() {
   equal(count, 2, "the event was triggered");
 });
 
-test("a listener can be added and removed automatically the first time it is triggerd", function() {
+test("a listener can be added and removed automatically the first time it is triggered", function() {
   var count = 0;
   var F = function() { count++; };
 
@@ -106,6 +106,7 @@ test("a listener registered with one can take method as string and can be added 
   equal(count, 1, "the event was not triggered again");
 });
 
+// FIXME: this fails. think we need to add a lower-level once listener
 test("a listener registered with one can be removed with off", function() {
   var obj = Ember.Object.create(Ember.Evented, {
     F: function() {}
