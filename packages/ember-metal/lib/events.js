@@ -21,25 +21,15 @@ var o_create = Ember.create,
 
       // Object's meta hash
       {
-        listeners: {               // variable name: `listenerSet`
-          "foo:changed": {         // variable name: `targetSet`
-            [targetGuid]: {        // variable name: `actionSet`
-              [methodGuid]: {      // variable name: `action`
-                target: [Object object],
-                method: [Function function]
-              }
-            }
+        listeners: {       // variable name: `listenerSet`
+          "foo:changed": { // variable name: `actions`
+            targets: [],   // an array of target objects, null means `this`
+            methods: []    // an array of arrays. indexes correspond with targets
           }
         }
       }
 
 */
-
-// Gets the set of all actions, keyed on the guid of each action's
-// method property.
-function actionSetFor(obj, eventName, target, writable) {
-  return metaPath(obj, ['listeners', eventName, guidFor(target)], writable);
-}
 
 function actionsFor(obj, eventName, target, writable) {
   // FIXME: target arg is unused
