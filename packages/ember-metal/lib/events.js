@@ -64,21 +64,12 @@ function actionsFor(obj, eventName, target, writable) {
   return actions;
 }
 
-// Gets the set of all targets, keyed on the guid of each action's
-// target property.
-function targetSetFor(obj, eventName) {
-  var listenerSet = metaFor(obj, false).listeners;
-  if (!listenerSet) { return false; }
-
-  return listenerSet[eventName] || false;
-}
-
 // TODO: This knowledge should really be a part of the
 // meta system.
 var SKIP_PROPERTIES = { __ember_source__: true };
 
 function iterateSet(actions, callback) {
-  if (!actions.targets) { return false; }
+  if (!actions || !actions.targets) { return false; }
 
   for (var i = 0, l = actions.targets.length; i < l; i++) {
     var target = actions.targets[i],
@@ -87,8 +78,8 @@ function iterateSet(actions, callback) {
     // loop backwards because of removeListener
     for (var j = methods.length - 1; j >= 0; j--) {
       var method = methods[j];
-      if (!method) { continue; }
-      if (callback({target: target, method: method}) === true) {
+      if (!method) { continue; } // TODO: can this guard be removed?
+      if (callback(target, method) === true) {
         return true;
       }
     }
@@ -97,62 +88,54 @@ function iterateSet(actions, callback) {
   return false;
 }
 
-function invokeAction(action, params, sender) {
-  var method = action.method, target = action.target;
-  // If there is no target, the target is the object
-  // on which the event was fired.
-  if (!target) { target = sender; }
-  if ('string' === typeof method) { method = target[method]; }
-  if (params) {
-    method.apply(target, params);
-  } else {
-    method.apply(target);
-  }
-}
-
 function targetSetUnion(obj, eventName, actions) {
+  var meta = metaFor(obj, false),
+      eventActions = meta.listeners && meta.listeners[eventName];
   actions.targets = actions.targets || [];
   actions.methods = actions.methods || [];
 
-   iterateSet(targetSetFor(obj, eventName), function (action) {
-     var targetIndex = actions.targets.indexOf(action.target), methodIndex, targetMethods;
- 
-     if (targetIndex !== -1) {
-       targetMethods = actions.methods[targetIndex];
-       methodIndex = targetMethods.indexOf(action.method);
-       if (methodIndex === -1) {
-         targetMethods.push(action.method);
-       }
-     } else {
-       actions.targets.push(action.target);
-       actions.methods.push([action.method]);
-     }
+  iterateSet(eventActions, function (target, method) {
+    var targetIndex = actions.targets.indexOf(target), methodIndex, targetMethods;
+
+    if (targetIndex !== -1) {
+      targetMethods = actions.methods[targetIndex];
+      methodIndex = targetMethods.indexOf(method);
+      if (methodIndex === -1) {
+        targetMethods.push(method);
+      }
+    } else {
+      actions.targets.push(target);
+      actions.methods.push([method]);
+    }
   });
 }
 
-function addAction(actions, action) {
-    var targetIndex = actions.targets.indexOf(action.target),
+function addAction(actions, target, method) {
+    var targetIndex = actions.targets.indexOf(target),
         targetMethods = actions.methods[targetIndex],
-        targetMethodIndex = targetMethods && targetMethods.indexOf(action.method);
+        targetMethodIndex = targetMethods && targetMethods.indexOf(method);
     if (targetMethods && targetMethodIndex === -1) {
-      targetMethods.push(action.method);
+      targetMethods.push(method);
     } else {
-      actions.targets.push(action.target);
-      actions.methods.push([action.method]);
+      actions.targets.push(target);
+      actions.methods.push([method]);
     }
 }
 
 function targetSetDiff(obj, eventName, actions) {
+  var meta = metaFor(obj, false),
+      eventActions = meta.listeners && meta.listeners[eventName];
+
   actions.targets = actions.targets || [];
   actions.methods = actions.methods || [];
   var diffActions = {targets: [], methods: []};
-  iterateSet(targetSetFor(obj, eventName), function (action) {
-    var targetIndex = actions.targets.indexOf(action.target),
+  iterateSet(eventActions, function (target, method) {
+    var targetIndex = actions.targets.indexOf(target),
         targetMethods = actions.methods[targetIndex],
-        targetMethodIndex = targetMethods && targetMethods.indexOf(action.method);
+        targetMethodIndex = targetMethods && targetMethods.indexOf(method);
     if (targetMethods && targetMethodIndex !== -1) return;
-    addAction(actions, action);
-    addAction(diffActions, action);
+    addAction(actions, target, method);
+    addAction(diffActions, target, method);
   });
   return diffActions;
 }
@@ -234,8 +217,10 @@ function removeListener(obj, eventName, target, method) {
   if (method) {
     _removeListener(target, method);
   } else {
-    iterateSet(targetSetFor(obj, eventName), function(action) {
-      _removeListener(action.target, action.method);
+    var meta = metaFor(obj, false),
+        eventActions = meta.listeners && meta.listeners[eventName];
+    iterateSet(eventActions, function(target, method) {
+      _removeListener(target, method);
     });
   }
 }
@@ -367,10 +352,19 @@ function sendEvent(obj, eventName, params, targetSet) {
     obj.sendEvent(eventName, params);
   }
 
-  if (!targetSet) targetSet = targetSetFor(obj, eventName);
+  if (!targetSet) {
+    var meta = metaFor(obj, false);
+    targetSet = meta.listeners && meta.listeners[eventName];
+  }
 
-  iterateSet(targetSet, function (action) {
-    invokeAction(action, params, obj);
+  iterateSet(targetSet, function (target, method) {
+    if (!target) { target = obj; }
+    if ('string' === typeof method) { method = target[method]; }
+    if (params) {
+      method.apply(target, params);
+    } else {
+      method.apply(target);
+    }
   });
   return true;
 }
@@ -383,7 +377,9 @@ function sendEvent(obj, eventName, params, targetSet) {
   @param {String} eventName
 */
 function hasListeners(obj, eventName) {
-  if (iterateSet(targetSetFor(obj, eventName), function() { return true; })) {
+  var meta = metaFor(obj, false),
+      eventActions = meta.listeners && meta.listeners[eventName];
+  if (iterateSet(eventActions, function() { return true; })) {
     return true;
   }
 
@@ -403,8 +399,10 @@ function hasListeners(obj, eventName) {
 */
 function listenersFor(obj, eventName) {
   var ret = [];
-  iterateSet(targetSetFor(obj, eventName), function (action) {
-    ret.push([action.target, action.method]);
+  var meta = metaFor(obj, false),
+      eventActions = meta.listeners && meta.listeners[eventName];
+  iterateSet(eventActions, function (target, method) {
+    ret.push([target, method]);
   });
   return ret;
 }
