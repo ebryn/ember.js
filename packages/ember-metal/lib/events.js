@@ -25,11 +25,22 @@ var o_create = Ember.create,
           "foo:changed": { // variable name: `actions`
             targets: [],   // an array of target objects, null means `this`
             methods: []    // an array of arrays. indexes correspond with targets
+            onceFlags: {
+              "<targetIndex>-<methodIndex>": flag
+            }
           }
         }
       }
 
 */
+
+function arrayIndexOf(array, obj) {
+  var index = -1;
+  for (var i = 0, l = array.length; i < l; i++) {
+    if (obj === array[i]) { index = i; break; }
+  }
+  return index;
+}
 
 function actionsFor(obj, eventName, target, writable) {
   // FIXME: target arg is unused
@@ -55,11 +66,13 @@ function actionsFor(obj, eventName, target, writable) {
 
     actions = meta.listeners[eventName] = {
       targets: actions.targets.slice(),
-      methods: methodsCopy
+      methods: methodsCopy,
+      onceFlags: {}
     };
   } else {
     actions.targets = actions.targets || [];
     actions.methods = actions.methods || [];
+    actions.onceFlags = actions.onceFlags || {};
   }
   return actions;
 }
@@ -73,13 +86,15 @@ function iterateSet(actions, callback) {
 
   for (var i = 0, l = actions.targets.length; i < l; i++) {
     var target = actions.targets[i],
-        methods = actions.methods[i];
+        methods = actions.methods[i],
+        onceFlags = actions.onceFlags;
 
     // loop backwards because of removeListener
     for (var j = methods.length - 1; j >= 0; j--) {
-      var method = methods[j];
+      var method = methods[j],
+          once = onceFlags['' + i + '-' + j];
       if (!method) { continue; } // TODO: can this guard be removed?
-      if (callback(target, method) === true) {
+      if (callback(target, method, once) === true) {
         return true;
       }
     }
@@ -90,16 +105,17 @@ function iterateSet(actions, callback) {
 
 function targetSetUnion(obj, eventName, actions) {
   var meta = metaFor(obj, false),
-      eventActions = meta.listeners && meta.listeners[eventName];
-  actions.targets = actions.targets || [];
-  actions.methods = actions.methods || [];
+      eventActions = meta.listeners && meta.listeners[eventName],
+      targets = actions.targets = actions.targets || [],
+      methods = actions.methods = actions.methods || [],
+      onceFlags = actions.onceFlags = actions.onceFlags || {};
 
   iterateSet(eventActions, function (target, method) {
-    var targetIndex = actions.targets.indexOf(target), methodIndex, targetMethods;
+    var targetIndex = arrayIndexOf(targets, target), methodIndex, targetMethods;
 
     if (targetIndex !== -1) {
       targetMethods = actions.methods[targetIndex];
-      methodIndex = targetMethods.indexOf(method);
+      methodIndex = arrayIndexOf(targetMethods, method);
       if (methodIndex === -1) {
         targetMethods.push(method);
       }
@@ -110,32 +126,41 @@ function targetSetUnion(obj, eventName, actions) {
   });
 }
 
-function addAction(actions, target, method) {
-    var targetIndex = actions.targets.indexOf(target),
-        targetMethods = actions.methods[targetIndex],
-        targetMethodIndex = targetMethods && targetMethods.indexOf(method);
-    if (targetMethods && targetMethodIndex === -1) {
-      targetMethods.push(method);
-    } else {
-      actions.targets.push(target);
-      actions.methods.push([method]);
+function addAction(actions, target, method, once) {
+  var targets = actions.targets,
+      methods = actions.methods,
+      onceFlags = actions.onceFlags,
+      targetIndex = arrayIndexOf(targets, target),
+      targetMethods = methods[targetIndex],
+      targetMethodIndex = targetMethods && arrayIndexOf(targetMethods, method);
+  if (targetMethods && targetMethodIndex === -1) {
+    targetMethods.push(method);
+    if (once) {
+      onceFlags['' + targetIndex + '-' + (targetMethods.length - 1)] = true;
     }
+  } else {
+    targets.push(target);
+    methods.push([method]);
+    if (once) {
+      onceFlags['' + (targets.length - 1) + '-' + (methods.length - 1)] = true;
+    }
+  }
 }
 
 function targetSetDiff(obj, eventName, actions) {
   var meta = metaFor(obj, false),
-      eventActions = meta.listeners && meta.listeners[eventName];
-
-  actions.targets = actions.targets || [];
-  actions.methods = actions.methods || [];
-  var diffActions = {targets: [], methods: []};
-  iterateSet(eventActions, function (target, method) {
-    var targetIndex = actions.targets.indexOf(target),
+      eventActions = meta.listeners && meta.listeners[eventName],
+      targets = actions.targets = actions.targets || [],
+      methods = actions.methods = actions.methods || [],
+      onceFlags = actions.onceFlags = actions.onceFlags || {},
+      diffActions = {targets: [], methods: [], onceFlags: {}};
+  iterateSet(eventActions, function (target, method, once) {
+    var targetIndex = arrayIndexOf(targets, target),
         targetMethods = actions.methods[targetIndex],
-        targetMethodIndex = targetMethods && targetMethods.indexOf(method);
+        targetMethodIndex = targetMethods && arrayIndexOf(targetMethods, method);
     if (targetMethods && targetMethodIndex !== -1) return;
-    addAction(actions, target, method);
-    addAction(diffActions, target, method);
+    addAction(actions, target, method, once);
+    addAction(diffActions, target, method, once);
   });
   return diffActions;
 }
@@ -150,7 +175,7 @@ function targetSetDiff(obj, eventName, actions) {
   @param {Object|Function} targetOrMethod A target object or a function
   @param {Function|String} method A function or the name of a function to be called on `target`
 */
-function addListener(obj, eventName, target, method) {
+function addListener(obj, eventName, target, method, once) {
   Ember.assert("You must pass at least an object and event name to Ember.addListener", !!obj && !!eventName);
 
   if (!method && 'function' === typeof target) {
@@ -159,17 +184,26 @@ function addListener(obj, eventName, target, method) {
   }
 
   var actions = actionsFor(obj, eventName, target, true),
-      targetIndex = actions.targets.indexOf(target);
+      targets = actions.targets,
+      methods = actions.methods,
+      onceFlags = actions.onceFlags,
+      targetIndex = arrayIndexOf(actions.targets, target);
   if (targetIndex !== -1) {
     var targetMethods = actions.methods[targetIndex] = actions.methods[targetIndex] || [],
-        targetMethodIndex = targetMethods.indexOf(method);
+        targetMethodIndex = arrayIndexOf(targetMethods, method);
 
     if (targetMethodIndex === -1) {
       targetMethods.push(method);
+      if (once) {
+        onceFlags['' + targetIndex + '-' + (targetMethods.length - 1)] = true;
+      }
     }
   } else {
-    actions.targets.push(target);
-    actions.methods.push([method]);
+    targets.push(target);
+    methods.push([method]);
+    if (once) {
+      onceFlags['' + (targets.length - 1) + '-' + (methods.length - 1)] = true;
+    }
   }
 
   if ('function' === typeof obj.didAddListener) {
@@ -199,14 +233,20 @@ function removeListener(obj, eventName, target, method) {
 
   function _removeListener(target, method) {
     var actions = actionsFor(obj, eventName, target, true),
-        targetIndex = actions.targets.indexOf(target),
-        targetMethods = actions.methods[targetIndex] || [];
+        targets = actions.targets,
+        methods = actions.methods,
+        onceFlags = actions.onceFlags,
+        targetIndex = arrayIndexOf(targets, target),
+        targetMethods = methods[targetIndex] || [];
 
-    var targetMethodIndex = targetMethods.indexOf(method);
-    if (targetMethodIndex !== -1) { targetMethods.splice(targetMethodIndex, 1); }
+    var targetMethodIndex = arrayIndexOf(targetMethods, method);
+    if (targetMethodIndex !== -1) {
+      targetMethods.splice(targetMethodIndex, 1);
+      delete onceFlags['' + targetIndex + '-' + targetMethodIndex];
+    }
     if (!targetMethods.length) {
-      actions.targets.splice(targetIndex, 1);
-      actions.methods.splice(targetIndex, 1);
+      targets.splice(targetIndex, 1);
+      methods.splice(targetIndex, 1);
     }
 
     if ('function' === typeof obj.didRemoveListener) {
@@ -250,9 +290,9 @@ function suspendListener(obj, eventName, target, method, callback) {
   }
 
   var actions = actionsFor(obj, eventName, target, true),
-      targetIndex = actions.targets.indexOf(target),
+      targetIndex = arrayIndexOf(actions.targets, target),
       targetMethods = targetIndex !== -1 && actions.methods[targetIndex],
-      targetMethodIndex = targetMethods && targetMethods.indexOf(method),
+      targetMethodIndex = targetMethods && arrayIndexOf(targetMethods, method),
       action;
 
   if (targetMethods && targetMethodIndex !== -1) {
@@ -297,9 +337,9 @@ function suspendListeners(obj, eventNames, target, method, callback) {
   for (i=0, l=eventNames.length; i<l; i++) {
     eventName = eventNames[i];
     actions = actionsFor(obj, eventName, target, true);
-    var targetIndex = actions.targets.indexOf(target),
+    var targetIndex = arrayIndexOf(actions.targets, target),
         targetMethods = actions.methods[targetIndex],
-        targetMethodIndex = actions.methods[targetIndex].indexOf(method);
+        targetMethodIndex = arrayIndexOf(actions.methods[targetIndex], method);
 
     if (targetMethodIndex !== -1) {
       removedMethods.push(targetMethods.splice(targetMethodIndex, 1)[0]);
@@ -357,8 +397,9 @@ function sendEvent(obj, eventName, params, targetSet) {
     targetSet = meta.listeners && meta.listeners[eventName];
   }
 
-  iterateSet(targetSet, function (target, method) {
+  iterateSet(targetSet, function (target, method, once) {
     if (!target) { target = obj; }
+    if (once) { removeListener(obj, eventName, target, method); }
     if ('string' === typeof method) { method = target[method]; }
     if (params) {
       method.apply(target, params);
