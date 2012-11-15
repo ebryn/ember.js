@@ -103,25 +103,31 @@ function iterateSet(actions, callback) {
   return false;
 }
 
-function targetSetUnion(obj, eventName, actions) {
+function targetSetUnion(obj, eventName, otherActions) {
   var meta = metaFor(obj, false),
-      eventActions = meta.listeners && meta.listeners[eventName],
-      targets = actions.targets = actions.targets || [],
-      methods = actions.methods = actions.methods || [],
-      onceFlags = actions.onceFlags = actions.onceFlags || {};
+      objActions = meta.listeners && meta.listeners[eventName],
+      targets = otherActions.targets = otherActions.targets || [],
+      methods = otherActions.methods = otherActions.methods || [],
+      onceFlags = otherActions.onceFlags = otherActions.onceFlags || {};
 
-  iterateSet(eventActions, function (target, method) {
-    var targetIndex = arrayIndexOf(targets, target), methodIndex, targetMethods;
+  iterateSet(objActions, function (target, method, once) {
+    var targetIndex = -1, methodIndex = -1, targetMethods, i, l;
+
+    for (i = 0, l = targets.length; i < l; i++) {
+      if (target === targets[i]) { targetIndex = i; break; }
+    }
 
     if (targetIndex !== -1) {
-      targetMethods = actions.methods[targetIndex];
-      methodIndex = arrayIndexOf(targetMethods, method);
+      targetMethods = methods[targetIndex];
+      for (i = 0, l = targetMethods.length; i < l; i++) {
+        if (method === targetMethods[i]) { methodIndex = i; break; }
+      }
       if (methodIndex === -1) {
         targetMethods.push(method);
       }
     } else {
-      actions.targets.push(target);
-      actions.methods.push([method]);
+      targets.push(target);
+      methods.push([method]);
     }
   });
 }
@@ -130,9 +136,19 @@ function addAction(actions, target, method, once) {
   var targets = actions.targets,
       methods = actions.methods,
       onceFlags = actions.onceFlags,
-      targetIndex = arrayIndexOf(targets, target),
-      targetMethods = methods[targetIndex],
-      targetMethodIndex = targetMethods && arrayIndexOf(targetMethods, method);
+      targetIndex = -1, targetMethods, targetMethodIndex = -1,
+      i, l;
+
+  for (i = 0, l = targets.length; i < l; i++) {
+    if (target === targets[i]) { targetIndex = i; break; }
+  }
+
+  targetMethods = methods[targetIndex];
+
+  for (i = 0, l = targetMethods && targetMethods.length || 0; i < l; i++) {
+    if (method === targetMethods[i]) { targetMethodIndex = i; break; }
+  }
+
   if (targetMethods && targetMethodIndex === -1) {
     targetMethods.push(method);
     if (once) {
@@ -155,9 +171,15 @@ function targetSetDiff(obj, eventName, actions) {
       onceFlags = actions.onceFlags = actions.onceFlags || {},
       diffActions = {targets: [], methods: [], onceFlags: {}};
   iterateSet(eventActions, function (target, method, once) {
-    var targetIndex = arrayIndexOf(targets, target),
-        targetMethods = actions.methods[targetIndex],
-        targetMethodIndex = targetMethods && arrayIndexOf(targetMethods, method);
+    var targetIndex = -1, targetMethods, targetMethodIndex = -1, i, l;
+    for (i = 0, l = targets.length; i < l; i++) {
+      if (target === targets[i]) { targetIndex = i; break; }
+    }
+    targetMethods = methods[targetIndex] || [];
+    for (i = 0, l = targetMethods.length; i < l; i++) {
+      if (method === targetMethods[i]) { targetMethodIndex = i; break; }
+    }
+    // return if the method is present
     if (targetMethods && targetMethodIndex !== -1) return;
     addAction(actions, target, method, once);
     addAction(diffActions, target, method, once);
@@ -197,7 +219,7 @@ function addListener(obj, eventName, target, method, once) {
   // if the target already is inserted, there should be a targetMethods array
   if (targetIndex !== -1) {
     var targetMethods = methods[targetIndex],
-        targetMethodIndex = -1; //arrayIndexOf(targetMethods, method);
+        targetMethodIndex = -1;
 
     for (i = 0, l = targetMethods.length; i < l; i++) {
       if (method === targetMethods[i]) { targetMethodIndex = i; break; }
@@ -248,7 +270,7 @@ function removeListener(obj, eventName, target, method) {
         targets = actions.targets,
         methods = actions.methods,
         onceFlags = actions.onceFlags,
-        targetIndex = -1, //arrayIndexOf(targets, target),
+        targetIndex = -1,
         i, l;
 
     for (i = 0, l = targets.length; i < l; i++) {
@@ -256,7 +278,7 @@ function removeListener(obj, eventName, target, method) {
     }
 
     var targetMethods = methods[targetIndex] || [],
-        targetMethodIndex = -1; //arrayIndexOf(targetMethods, method);
+        targetMethodIndex = -1;
 
     for (i = 0, l = targetMethods.length; i < l; i++) {
       if (method === targetMethods[i]) { targetMethodIndex = i; break; }
