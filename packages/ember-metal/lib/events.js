@@ -187,29 +187,17 @@ function addListener(obj, eventName, target, method, once) {
       targets = actions.targets,
       methods = actions.methods,
       onceFlags = actions.onceFlags,
-      targetIndex = -1,
-      i, l;
-
-  for (i = 0, l = targets.length; i < l; i++) {
-    if (target === targets[i]) { targetIndex = i; break; }
-  }
-
-  // if the target already is inserted, there should be a targetMethods array
+      targetIndex = arrayIndexOf(actions.targets, target);
   if (targetIndex !== -1) {
-    var targetMethods = methods[targetIndex],
-        targetMethodIndex = -1; //arrayIndexOf(targetMethods, method);
-
-    for (i = 0, l = targetMethods.length; i < l; i++) {
-      if (method === targetMethods[i]) { targetMethodIndex = i; break; }
-    }
+    var targetMethods = actions.methods[targetIndex] = actions.methods[targetIndex] || [],
+        targetMethodIndex = arrayIndexOf(targetMethods, method);
 
     if (targetMethodIndex === -1) {
       targetMethods.push(method);
+      if (once) {
+        onceFlags['' + targetIndex + '-' + (targetMethods.length - 1)] = true;
+      }
     }
-    if (once) {
-      onceFlags['' + targetIndex + '-' + (targetMethods.length - 1)] = true;
-    }
-  // if the target isn't inserted, then we know we need to add it and the methods array
   } else {
     targets.push(target);
     methods.push([method]);
@@ -248,20 +236,10 @@ function removeListener(obj, eventName, target, method) {
         targets = actions.targets,
         methods = actions.methods,
         onceFlags = actions.onceFlags,
-        targetIndex = -1, //arrayIndexOf(targets, target),
-        i, l;
+        targetIndex = arrayIndexOf(targets, target),
+        targetMethods = methods[targetIndex] || [];
 
-    for (i = 0, l = targets.length; i < l; i++) {
-      if (target === targets[i]) { targetIndex = i; break; }
-    }
-
-    var targetMethods = methods[targetIndex] || [],
-        targetMethodIndex = -1; //arrayIndexOf(targetMethods, method);
-
-    for (i = 0, l = targetMethods.length; i < l; i++) {
-      if (method === targetMethods[i]) { targetMethodIndex = i; break; }
-    }
-
+    var targetMethodIndex = arrayIndexOf(targetMethods, method);
     if (targetMethodIndex !== -1) {
       targetMethods.splice(targetMethodIndex, 1);
       delete onceFlags['' + targetIndex + '-' + targetMethodIndex];
