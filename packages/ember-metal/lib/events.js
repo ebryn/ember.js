@@ -42,6 +42,112 @@ function arrayIndexOf(array, obj) {
   return index;
 }
 
+function EventActions(obj, targets, methods, onceFlags) {
+  this.__ember_source__ = obj;
+  this.targets   = targets   || [null];
+  this.methods   = methods   || [[]];
+  this.onceFlags = onceFlags || {};
+}
+
+EventActions.prototype = {
+  add: function(target, method, once) {
+    var targets = this.targets,
+        methods = this.methods,
+        onceFlags = this.onceFlags,
+        targetIndex = target === null ? 0 : arrayIndexOf(this.targets, target);
+
+    // if the target already is inserted, there should be a targetMethods array
+    if (targetIndex !== -1) {
+      var targetMethods = this.methods[targetIndex] = this.methods[targetIndex] || [],
+          targetMethodIndex = arrayIndexOf(targetMethods, method);
+
+      if (targetMethodIndex === -1) {
+        targetMethods.push(method);
+        if (once) {
+          onceFlags['' + targetIndex + '-' + (targetMethods.length - 1)] = true;
+        }
+      }
+    } else {
+      targets.push(target);
+      methods.push([method]);
+      if (once) {
+        onceFlags['' + (targets.length - 1) + '-0'] = true;
+      }
+    }
+  },
+
+  remove: function(target, method) {
+    var targets = this.targets,
+        methods = this.methods,
+        onceFlags = this.onceFlags,
+        targetIndex = target === null ? 0 : arrayIndexOf(targets, target),
+        targetMethods = methods[targetIndex] || [];
+
+    var targetMethodIndex = arrayIndexOf(targetMethods, method);
+    if (targetMethodIndex !== -1) {
+      targetMethods.splice(targetMethodIndex, 1);
+      delete onceFlags['' + targetIndex + '-' + targetMethodIndex];
+    }
+    if (target !== null && !targetMethods.length) {
+      targets.splice(targetIndex, 1);
+      methods.splice(targetIndex, 1);
+    }
+
+  },
+
+  copyTo: function(obj) {
+    var methodsCopy = [];
+    for (var i = 0, l = this.methods.length; i < l; i++) {
+      methodsCopy.push(this.methods[i].slice());
+    }
+
+    var onceFlagsCopy = {};
+    for (var key in this.onceFlags) {
+      onceFlagsCopy[key] = this.onceFlags[key];
+    }
+
+    // FIXME: shouldn't we be copying the flags too?
+    return new EventActions(obj, this.targets.slice(), methodsCopy, onceFlagsCopy);
+  },
+
+  union: function(otherActions) {
+    var targets = otherActions.targets = otherActions.targets || [null],
+        methods = otherActions.methods = otherActions.methods || [[]],
+        onceFlags = otherActions.onceFlags = otherActions.onceFlags || {};
+
+    iterateSet(this, function (target, method) { // TODO: once
+      var targetIndex = target === null ? 0 : arrayIndexOf(targets, target), methodIndex, targetMethods;
+
+      if (targetIndex !== -1) {
+        targetMethods = methods[targetIndex];
+        methodIndex = arrayIndexOf(targetMethods, method);
+        if (methodIndex === -1) {
+          targetMethods.push(method);
+        }
+      } else {
+        targets.push(target);
+        methods.push([method]);
+      }
+    });
+  },
+
+  diff: function(otherActions) {
+    var targets = otherActions.targets = otherActions.targets || [null],
+        methods = otherActions.methods = otherActions.methods || [[]],
+        onceFlags = otherActions.onceFlags = otherActions.onceFlags || {},
+        diffActions = {targets: [], methods: [], onceFlags: {}};
+    iterateSet(this, function (target, method, once) {
+      var targetIndex = target === null ? 0 : arrayIndexOf(targets, target),
+          targetMethods = methods[targetIndex],
+          targetMethodIndex = targetMethods && arrayIndexOf(targetMethods, method);
+      if (targetMethods && targetMethodIndex !== -1) return;
+      addAction(otherActions, target, method, once);
+      addAction(diffActions, target, method, once);
+    });
+    return diffActions;
+  }
+};
+
 function actionsFor(obj, eventName, target, writable) {
   // FIXME: target arg is unused
   var meta = metaFor(obj, writable);
@@ -54,32 +160,16 @@ function actionsFor(obj, eventName, target, writable) {
   }
 
   // create or clone actions
-  var actions = meta.listeners[eventName] = meta.listeners[eventName] || {__ember_source__: obj};
+  var actions = meta.listeners[eventName] = meta.listeners[eventName] || new EventActions(obj);
   if (actions && actions.__ember_source__ !== obj) {
     meta.listeners = o_create(meta.listeners);
     meta.listeners.__ember_source__ = obj;
 
-    var methodsCopy = [];
-    for (var i = 0, l = actions.methods.length; i < l; i++) {
-      methodsCopy.push(actions.methods[i].slice());
-    }
-
-    actions = meta.listeners[eventName] = {
-      targets: actions.targets.slice(),
-      methods: methodsCopy,
-      onceFlags: {}
-    };
-  } else {
-    actions.targets = actions.targets || [];
-    actions.methods = actions.methods || [];
-    actions.onceFlags = actions.onceFlags || {};
+    actions = meta.listeners[eventName] = actions.copyTo(obj);
   }
+
   return actions;
 }
-
-// TODO: This knowledge should really be a part of the
-// meta system.
-var SKIP_PROPERTIES = { __ember_source__: true };
 
 function iterateSet(actions, callback) {
   if (!actions || !actions.targets) { return false; }
@@ -103,34 +193,18 @@ function iterateSet(actions, callback) {
   return false;
 }
 
-function targetSetUnion(obj, eventName, actions) {
+function targetSetUnion(obj, eventName, otherActions) {
   var meta = metaFor(obj, false),
-      eventActions = meta.listeners && meta.listeners[eventName],
-      targets = actions.targets = actions.targets || [],
-      methods = actions.methods = actions.methods || [],
-      onceFlags = actions.onceFlags = actions.onceFlags || {};
+      actions = meta.listeners && meta.listeners[eventName] || new EventActions(obj);
 
-  iterateSet(eventActions, function (target, method) {
-    var targetIndex = arrayIndexOf(targets, target), methodIndex, targetMethods;
-
-    if (targetIndex !== -1) {
-      targetMethods = actions.methods[targetIndex];
-      methodIndex = arrayIndexOf(targetMethods, method);
-      if (methodIndex === -1) {
-        targetMethods.push(method);
-      }
-    } else {
-      actions.targets.push(target);
-      actions.methods.push([method]);
-    }
-  });
+  actions.union(otherActions);
 }
 
 function addAction(actions, target, method, once) {
   var targets = actions.targets,
       methods = actions.methods,
       onceFlags = actions.onceFlags,
-      targetIndex = arrayIndexOf(targets, target),
+      targetIndex = target === null ? 0 : arrayIndexOf(targets, target),
       targetMethods = methods[targetIndex],
       targetMethodIndex = targetMethods && arrayIndexOf(targetMethods, method);
   if (targetMethods && targetMethodIndex === -1) {
@@ -147,22 +221,11 @@ function addAction(actions, target, method, once) {
   }
 }
 
-function targetSetDiff(obj, eventName, actions) {
+function targetSetDiff(obj, eventName, otherActions) {
   var meta = metaFor(obj, false),
-      eventActions = meta.listeners && meta.listeners[eventName],
-      targets = actions.targets = actions.targets || [],
-      methods = actions.methods = actions.methods || [],
-      onceFlags = actions.onceFlags = actions.onceFlags || {},
-      diffActions = {targets: [], methods: [], onceFlags: {}};
-  iterateSet(eventActions, function (target, method, once) {
-    var targetIndex = arrayIndexOf(targets, target),
-        targetMethods = actions.methods[targetIndex],
-        targetMethodIndex = targetMethods && arrayIndexOf(targetMethods, method);
-    if (targetMethods && targetMethodIndex !== -1) return;
-    addAction(actions, target, method, once);
-    addAction(diffActions, target, method, once);
-  });
-  return diffActions;
+      actions = meta.listeners && meta.listeners[eventName] || new EventActions(obj);
+
+  return actions.diff(otherActions);
 }
 
 /**
@@ -183,28 +246,9 @@ function addListener(obj, eventName, target, method, once) {
     target = null;
   }
 
-  var actions = actionsFor(obj, eventName, target, true),
-      targets = actions.targets,
-      methods = actions.methods,
-      onceFlags = actions.onceFlags,
-      targetIndex = arrayIndexOf(actions.targets, target);
-  if (targetIndex !== -1) {
-    var targetMethods = actions.methods[targetIndex] = actions.methods[targetIndex] || [],
-        targetMethodIndex = arrayIndexOf(targetMethods, method);
+  var actions = actionsFor(obj, eventName, target, true);
 
-    if (targetMethodIndex === -1) {
-      targetMethods.push(method);
-      if (once) {
-        onceFlags['' + targetIndex + '-' + (targetMethods.length - 1)] = true;
-      }
-    }
-  } else {
-    targets.push(target);
-    methods.push([method]);
-    if (once) {
-      onceFlags['' + (targets.length - 1) + '-' + (methods.length - 1)] = true;
-    }
-  }
+  actions.add(target, method, once);
 
   if ('function' === typeof obj.didAddListener) {
     obj.didAddListener(eventName, target, method);
@@ -232,22 +276,9 @@ function removeListener(obj, eventName, target, method) {
   }
 
   function _removeListener(target, method) {
-    var actions = actionsFor(obj, eventName, target, true),
-        targets = actions.targets,
-        methods = actions.methods,
-        onceFlags = actions.onceFlags,
-        targetIndex = arrayIndexOf(targets, target),
-        targetMethods = methods[targetIndex] || [];
+    var actions = actionsFor(obj, eventName, target, true);
 
-    var targetMethodIndex = arrayIndexOf(targetMethods, method);
-    if (targetMethodIndex !== -1) {
-      targetMethods.splice(targetMethodIndex, 1);
-      delete onceFlags['' + targetIndex + '-' + targetMethodIndex];
-    }
-    if (!targetMethods.length) {
-      targets.splice(targetIndex, 1);
-      methods.splice(targetIndex, 1);
-    }
+    actions.remove(target, method);
 
     if ('function' === typeof obj.didRemoveListener) {
       obj.didRemoveListener(eventName, target, method);
@@ -355,6 +386,11 @@ function suspendListeners(obj, eventNames, target, method, callback) {
     }
   }
 }
+
+
+// TODO: This knowledge should really be a part of the
+// meta system.
+var SKIP_PROPERTIES = { __ember_source__: true };
 
 /**
   @private
