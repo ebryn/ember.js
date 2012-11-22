@@ -21,7 +21,7 @@ var o_create = Ember.create,
       {
         listeners: {       // variable name: `listenerSet`
           "foo:changed": [ // variable name: `actions`
-            [method, target, onceFlag]
+            [target, method, onceFlag]
           ]
         }
       }
@@ -29,16 +29,16 @@ var o_create = Ember.create,
 */
 
 function indexOf(array, target, method, once) {
+  // FIXME: Should we use `once` for matching?
   var index = -1;
   for (var i = 0, l = array.length; i < l; i++) {
-    if (method === array[i][0] && target === array[i][1] /* FIXME && once === array[i][2]*/) { index = i; break; }
+    if (target === array[i][0] && method === array[i][1]) { index = i; break; }
   }
   return index;
 }
 
-// FIXME: writable isn't used anymore
-function actionsFor(obj, eventName, writable) {
-  var meta = metaFor(obj, writable),
+function actionsFor(obj, eventName) {
+  var meta = metaFor(obj, true),
       actions;
 
   if (!meta.listeners) { meta.listeners = {}; }
@@ -48,7 +48,6 @@ function actionsFor(obj, eventName, writable) {
     meta.listeners = o_create(meta.listeners);
   }
 
-  // copy the actions from the parent if they exist, or initialize to an empty array
   actions = meta.listeners[eventName];
 
   // if there are actions, but the eventName doesn't exist in our listeners, then copy them from the prototype
@@ -61,43 +60,41 @@ function actionsFor(obj, eventName, writable) {
   return actions;
 }
 
-function iterateSet(actions, callback) {
-  if (!actions) { return false; }
-
-  // loop backwards because of removeListener
-  for (var i = actions.length - 1; i >= 0; i--) {
-    if (!actions[i]) { continue; } // needed for removing an observer inside an observer?
-    if (callback(actions[i][1], actions[i][0], actions[i][2]) === true) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function targetSetUnion(obj, eventName, otherActions) {
+function actionsUnion(obj, eventName, otherActions) {
   var meta = metaFor(obj, false),
       actions = meta.listeners && meta.listeners[eventName];
 
-  iterateSet(actions, function (target, method, once) {
-    var actionIndex = indexOf(otherActions, target, method, once);
+  if (!actions) { return; }
+  for (var i = actions.length - 1; i >= 0; i--) {
+    var target = actions[i][0],
+        method = actions[i][1],
+        once = actions[i][2],
+        actionIndex = indexOf(otherActions, target, method);
 
     if (actionIndex === -1) {
-      otherActions.push([method, target, once]);
+      otherActions.push([target, method, once]);
     }
-  });
+  }
 }
 
-function targetSetDiff(obj, eventName, otherActions) {
+function actionsDiff(obj, eventName, otherActions) {
   var meta = metaFor(obj, false),
       actions = meta.listeners && meta.listeners[eventName],
       diffActions = [];
-  iterateSet(actions, function (target, method, once) {
-    var actionIndex = indexOf(otherActions, target, method, once);
-    if (actionIndex !== -1) { return; }
-    otherActions.push([method, target, once]);
-    diffActions.push([method, target, once]);
-  });
+
+  if (!actions) { return; }
+  for (var i = actions.length - 1; i >= 0; i--) {
+    var target = actions[i][0],
+        method = actions[i][1],
+        once = actions[i][2],
+        actionIndex = indexOf(otherActions, target, method);
+
+    if (actionIndex !== -1) { continue; }
+
+    otherActions.push([target, method, once]);
+    diffActions.push([target, method, once]);
+  }
+
   return diffActions;
 }
 
@@ -119,12 +116,12 @@ function addListener(obj, eventName, target, method, once) {
     target = null;
   }
 
-  var actions = actionsFor(obj, eventName, true),
-      actionIndex = indexOf(actions, target, method, once);
+  var actions = actionsFor(obj, eventName),
+      actionIndex = indexOf(actions, target, method);
 
   if (actionIndex !== -1) { return; }
 
-  actions.push([method, target, once]);
+  actions.push([target, method, once]);
 
   if ('function' === typeof obj.didAddListener) {
     obj.didAddListener(eventName, target, method);
@@ -152,8 +149,8 @@ function removeListener(obj, eventName, target, method) {
   }
 
   function _removeListener(target, method, once) {
-    var actions = actionsFor(obj, eventName, true),
-        actionIndex = indexOf(actions, target, method, once);
+    var actions = actionsFor(obj, eventName),
+        actionIndex = indexOf(actions, target, method);
 
     // action doesn't exist, give up silently
     if (actionIndex === -1) { return; }
@@ -171,9 +168,10 @@ function removeListener(obj, eventName, target, method) {
     var meta = metaFor(obj, false),
         actions = meta.listeners && meta.listeners[eventName];
 
-    iterateSet(actions, function(target, method, once) {
-      _removeListener(target, method, once);
-    });
+    if (!actions) { return; }
+    for (var i = actions.length - 1; i >= 0; i--) {
+      _removeListener(actions[i][0], actions[i][1]);
+    }
   }
 }
 
@@ -201,8 +199,8 @@ function suspendListener(obj, eventName, target, method, callback) {
     target = null;
   }
 
-  var actions = actionsFor(obj, eventName, true),
-      actionIndex = indexOf(actions, target, method), // not passing once...?
+  var actions = actionsFor(obj, eventName),
+      actionIndex = indexOf(actions, target, method),
       action;
 
   if (actionIndex !== -1) {
@@ -245,8 +243,8 @@ function suspendListeners(obj, eventNames, target, method, callback) {
 
   for (i=0, l=eventNames.length; i<l; i++) {
     eventName = eventNames[i];
-    actions = actionsFor(obj, eventName, true);
-    var actionIndex = indexOf(actions, target, method); // FIXME: not passing once?
+    actions = actionsFor(obj, eventName);
+    var actionIndex = indexOf(actions, target, method);
 
     if (actionIndex !== -1) {
       removedActions.push(actions.splice(actionIndex, 1)[0]);
@@ -256,7 +254,7 @@ function suspendListeners(obj, eventNames, target, method, callback) {
   try {
     return callback.call(target);
   } finally {
-    for (i=0, l=removedActions.length; i<l; i++) {
+    for (i = 0, l = removedActions.length; i < l; i++) {
       actions.push(removedActions[i]);
     }
   }
@@ -296,18 +294,26 @@ function watchedEvents(obj) {
   @param {Array} params
   @return true
 */
-function sendEvent(obj, eventName, params, targetSet) {
+function sendEvent(obj, eventName, params, actions) {
   // first give object a chance to handle it
   if (obj !== Ember && 'function' === typeof obj.sendEvent) {
     obj.sendEvent(eventName, params);
   }
 
-  if (!targetSet) {
+  if (!actions) {
     var meta = metaFor(obj, false);
-    targetSet = meta.listeners && meta.listeners[eventName];
+    actions = meta.listeners && meta.listeners[eventName];
   }
 
-  iterateSet(targetSet, function (target, method, once) {
+  if (!actions) { return; }
+
+  for (var i = actions.length - 1; i >= 0; i--) { // looping in reverse for once listeners
+    if (!actions[i]) { continue; }
+
+    var target = actions[i][0],
+        method = actions[i][1],
+        once = actions[i][2];
+
     if (once) { removeListener(obj, eventName, target, method); }
     if (!target) { target = obj; }
     if ('string' === typeof method) { method = target[method]; }
@@ -316,7 +322,7 @@ function sendEvent(obj, eventName, params, targetSet) {
     } else {
       method.apply(target);
     }
-  });
+  }
   return true;
 }
 
@@ -329,17 +335,9 @@ function sendEvent(obj, eventName, params, targetSet) {
 */
 function hasListeners(obj, eventName) {
   var meta = metaFor(obj, false),
-      eventActions = meta.listeners && meta.listeners[eventName];
-  if (iterateSet(eventActions, function() { return true; })) {
-    return true;
-  }
+      actions = meta.listeners && meta.listeners[eventName];
 
-  // no listeners!  might as well clean this up so it is faster later.
-  // FIXME: verify this
-  var set = metaPath(obj, ['listeners'], true);
-  set[eventName] = null;
-
-  return false;
+  return !!(actions && actions.length);
 }
 
 /**
@@ -354,9 +352,14 @@ function listenersFor(obj, eventName) {
   var meta = metaFor(obj, false),
       actions = meta.listeners && meta.listeners[eventName];
 
-  iterateSet(actions, function (target, method) {
-    ret.unshift([target, method]); // unshift since iterateSet is in reverse order
-  });
+  if (!actions) { return ret; }
+
+  for (var i = 0, l = actions.length; i < l; i++) {
+    var target = actions[i][0],
+        method = actions[i][1];
+    ret.push([target, method]);
+  }
+
   return ret;
 }
 
@@ -368,5 +371,5 @@ Ember.sendEvent = sendEvent;
 Ember.hasListeners = hasListeners;
 Ember.watchedEvents = watchedEvents;
 Ember.listenersFor = listenersFor;
-Ember.listenersDiff = targetSetDiff;
-Ember.listenersUnion = targetSetUnion;
+Ember.listenersDiff = actionsDiff;
+Ember.listenersUnion = actionsUnion;
