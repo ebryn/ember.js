@@ -80,7 +80,7 @@ test("should dispatch events to views", function() {
 test("should not dispatch events to views not inDOM", function() {
   var receivedEvent;
 
-  view = Ember.View.create({
+  view = Ember.View.createWithMixins({
     render: function(buffer) {
       buffer.push('some <span id="awesome">awesome</span> content');
       this._super(buffer);

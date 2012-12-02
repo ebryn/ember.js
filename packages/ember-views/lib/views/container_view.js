@@ -8,7 +8,8 @@ require('ember-views/views/view');
 var get = Ember.get, set = Ember.set, meta = Ember.meta;
 var forEach = Ember.EnumerableUtils.forEach;
 
-var childViewsProperty = Ember.computed(function() {
+var childViewsProperty = Ember.computed(function(key, value) {
+  if (arguments.length == 2) { set(this, '_childViews', value); }
   return get(this, '_childViews');
 }).property('_childViews');
 

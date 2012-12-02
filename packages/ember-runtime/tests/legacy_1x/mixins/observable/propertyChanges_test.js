@@ -24,7 +24,7 @@ var revMatches = false , ObjectA;
 
 module("object.propertyChanges", {
   setup: function() {
-    ObjectA = ObservableObject.create({
+    ObjectA = ObservableObject.createWithMixins({
       foo  : 'fooValue',
       prop : 'propValue',
 

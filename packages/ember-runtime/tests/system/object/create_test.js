@@ -1,11 +1,11 @@
 /*globals TestObject:true */
 
-module('Ember.Object.create');
+module('Ember.Object.createWithMixins');
 
 test("Creates a new object that contains passed properties", function() {
 
   var called = false;
-  var obj = Ember.Object.create({
+  var obj = Ember.Object.createWithMixins({
     prop: 'FOO',
     method: function() { called=true; }
   });
@@ -24,7 +24,7 @@ test("Creates a new object that contains passed properties", function() {
 test("Creates a new object that includes mixins and properties", function() {
 
   var MixinA = Ember.Mixin.create({ mixinA: 'A' });
-  var obj = Ember.Object.create(MixinA, { prop: 'FOO' });
+  var obj = Ember.Object.createWithMixins(MixinA, { prop: 'FOO' });
 
   equal(Ember.get(obj, 'mixinA'), 'A', 'obj.mixinA');
   equal(Ember.get(obj, 'prop'), 'FOO', 'obj.prop');
@@ -37,7 +37,7 @@ test("Creates a new object that includes mixins and properties", function() {
 test("Configures _super() on methods with override", function() {
   var completed = false;
   var MixinA = Ember.Mixin.create({ method: function() {} });
-  var obj = Ember.Object.create(MixinA, {
+  var obj = Ember.Object.createWithMixins(MixinA, {
     method: function() {
       this._super();
       completed = true;
@@ -50,7 +50,7 @@ test("Configures _super() on methods with override", function() {
 
 test("Calls init if defined", function() {
   var completed = false;
-  var obj = Ember.Object.create({
+  var obj = Ember.Object.createWithMixins({
     init: function() {
       this._super();
       completed = true;
@@ -70,7 +70,7 @@ test("Calls all mixin inits if defined", function() {
     init: function() { this._super(); completed++; }
   });
 
-  Ember.Object.create(Mixin1, Mixin2);
+  Ember.Object.createWithMixins(Mixin1, Mixin2);
   equal(completed, 2, 'should have called init for both mixins.');
 });
 
@@ -79,7 +79,7 @@ test('creating an object with required properties', function() {
     foo: Ember.required()
   });
 
-  var obj = ClassA.create({ foo: 'FOO' }); // should not throw
+  var obj = ClassA.createWithMixins({ foo: 'FOO' }); // should not throw
   equal(Ember.get(obj,'foo'), 'FOO');
 });
 
@@ -105,7 +105,7 @@ test('create should not break observed values', function() {
     }, 'value')
   });
 
-  var obj = CountObject.create({ value: 'foo' });
+  var obj = CountObject.createWithMixins({ value: 'foo' });
   equal(obj._count, 0, 'should not fire yet');
 
   Ember.set(obj, 'value', 'BAR');
@@ -113,7 +113,7 @@ test('create should not break observed values', function() {
 });
 
 test('bindings on a class should only sync on instances', function() {
-  TestObject = Ember.Object.create({
+  TestObject = Ember.Object.createWithMixins({
     foo: 'FOO'
   });
 
@@ -124,7 +124,7 @@ test('bindings on a class should only sync on instances', function() {
       fooBinding: 'TestObject.foo'
     });
 
-    inst = Class.create();
+    inst = Class.createWithMixins();
   });
 
   equal(Ember.get(Class.prototype, 'foo'), undefined, 'should not sync binding');
@@ -134,7 +134,7 @@ test('bindings on a class should only sync on instances', function() {
 
 
 test('inherited bindings should only sync on instances', function() {
-  TestObject = Ember.Object.create({
+  TestObject = Ember.Object.createWithMixins({
     foo: 'FOO'
   });
 
@@ -148,7 +148,7 @@ test('inherited bindings should only sync on instances', function() {
 
   Ember.run(function() {
     Subclass = Class.extend();
-    inst = Subclass.create();
+    inst = Subclass.createWithMixins();
   });
 
   equal(Ember.get(Class.prototype, 'foo'), undefined, 'should not sync binding on Class');
@@ -168,8 +168,57 @@ test('inherited bindings should only sync on instances', function() {
 test("created objects should not share a guid with their superclass", function() {
   ok(Ember.guidFor(Ember.Object), "Ember.Object has a guid");
 
-  var objA = Ember.Object.create(),
-      objB = Ember.Object.create();
+  var objA = Ember.Object.createWithMixins(),
+      objB = Ember.Object.createWithMixins();
 
   ok(Ember.guidFor(objA) !== Ember.guidFor(objB), "two instances do not share a guid");
+});
+
+module('Ember.Object.fastCreate');
+
+test("simple properties are set", function() {
+  var o = Ember.Object.fastCreate({ohai: 'there'});
+  equal(o.get('ohai'), 'there');
+});
+
+test("calls computed property setters", function() {
+  var MyClass = Ember.Object.extend({
+    foo: Ember.computed(function(key, val) {
+      if (arguments.length === 2) { return val; }
+      return "this is not the value you're looking for";
+    })
+  });
+
+  var o = MyClass.fastCreate({foo: 'bar'});
+  equal(o.get('foo'), 'bar');
+});
+
+test("sets up mandatory setters for watched simple properties", function() {
+  var MyClass = Ember.Object.extend({
+    foo: null,
+    bar: null,
+    fooDidChange: Ember.observer(function() {}, 'foo')
+  });
+
+  var o = MyClass.fastCreate({foo: 'bar', bar: 'baz'});
+  equal(o.get('foo'), 'bar');
+
+  var descriptor = Object.getOwnPropertyDescriptor(o, 'foo');
+  ok(descriptor.set, 'Mandatory setter was setup');
+
+  descriptor = Object.getOwnPropertyDescriptor(o, 'bar');
+  ok(!descriptor.set, 'Mandatory setter was not setup');
+});
+
+test("calls setUnknownProperty if defined", function() {
+  var setUnknownPropertyCalled = false;
+
+  var MyClass = Ember.Object.extend({
+    setUnknownProperty: function(key, value) {
+      setUnknownPropertyCalled = true;
+    }
+  });
+
+  var o = MyClass.fastCreate({foo: 'bar'});
+  ok(setUnknownPropertyCalled, 'setUnknownProperty was called');
 });

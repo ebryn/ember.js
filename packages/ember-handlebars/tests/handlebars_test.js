@@ -103,7 +103,7 @@ test("template view should call the function of the associated template", functi
 });
 
 test("template view should call the function of the associated template with itself as the context", function() {
-  view = Ember.View.create({
+  view = Ember.View.createWithMixins({
     templateName: 'test_template',
 
     _personName: "Tom DAAAALE",
@@ -2332,7 +2332,7 @@ test("should call a registered helper for mustache without parameters", function
 });
 
 test("should bind to the property if no registered helper found for a mustache without parameters", function() {
-  view = Ember.View.create({
+  view = Ember.View.createWithMixins({
     template: Ember.Handlebars.compile("{{view.foobarProperty}}"),
     foobarProperty: Ember.computed(function() {
       return 'foobarProperty';

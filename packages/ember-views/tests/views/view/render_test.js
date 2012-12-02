@@ -10,7 +10,7 @@ module("Ember.View#render");
 test("default implementation does not render child views", function() {
 
   var rendered = 0, updated = 0, parentRendered = 0, parentUpdated = 0 ;
-  var view = Ember.ContainerView.create({
+  var view = Ember.ContainerView.createWithMixins({
     childViews: ["child"],
 
     render: function(buffer) {
@@ -38,7 +38,7 @@ test("default implementation does not render child views", function() {
 test("should invoke renderChildViews if layer is destroyed then re-rendered", function() {
 
   var rendered = 0, parentRendered = 0, parentUpdated = 0 ;
-  var view = Ember.ContainerView.create({
+  var view = Ember.ContainerView.createWithMixins({
     childViews: ["child"],
 
     render: function(buffer) {
@@ -46,7 +46,7 @@ test("should invoke renderChildViews if layer is destroyed then re-rendered", fu
       this._super(buffer);
     },
 
-    child: Ember.View.create({
+    child: Ember.View.createWithMixins({
       render: function(buffer) {
         rendered++;
         this._super(buffer);
@@ -89,6 +89,8 @@ test("should render child views with a different tagName", function() {
   Ember.run(function(){
     view.createElement();
   });
+
+  debugger;
 
   equal(view.$('aside').length, 1);
 });
