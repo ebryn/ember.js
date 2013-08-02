@@ -304,3 +304,26 @@ test("The container can get options that should be applied to all factories for 
 
   ok(postView1 !== postView2, "The two lookups are different");
 });
+
+test("A registered factory with pooling enabled can return a released instance", function() {
+  var container = new Container();
+  var PostController = factory();
+
+  container.register('controller:post', PostController, {pool: true});
+
+  var postController = container.lookup('controller:post');
+
+  ok(postController instanceof PostController, "The lookup is an instance of the factory");
+
+  var postController2 = container.lookup('controller:post');
+
+  ok(postController !== postController2, "Another instance was returned from the container");
+
+  container.release(postController);
+
+  equal(postController, container.lookup('controller:post'), "The previously released instance was returned");
+
+  container.release(postController2);
+
+  equal(postController2, container.lookup('controller:post'), "The previously released instance was returned");
+});

@@ -383,11 +383,17 @@ define("container",
         @return {any}
       */
       lookup: function(fullName, options) {
+        var usePool = isPooled(this, fullName);
+
         fullName = this.normalize(fullName);
 
         options = options || {};
 
-        if (this.cache.has(fullName) && options.singleton !== false) {
+        if (usePool) {
+          var poolKey = fullName + ":pool";
+          var pool = this.cache.get(poolKey);
+          if (pool && pool.length) { return pool.pop(); }
+        } else if (this.cache.has(fullName) && options.singleton !== false) {
           return this.cache.get(fullName);
         }
 
@@ -395,7 +401,7 @@ define("container",
 
         if (!value) { return; }
 
-        if (isSingleton(this, fullName) && options.singleton !== false) {
+        if (!usePool && isSingleton(this, fullName) && options.singleton !== false) {
           this.cache.set(fullName, value);
         }
 
@@ -411,6 +417,15 @@ define("container",
       */
       lookupFactory: function(fullName) {
         return factoryFor(this, fullName);
+      },
+
+      release: function(instance) {
+        var poolKey = instance._debugContainerKey + ":pool";
+        if (this.cache.has(poolKey)) {
+          this.cache.get(poolKey).push(instance);
+        } else {
+          this.cache.set(poolKey, [instance]);
+        }
       },
 
       /**
@@ -620,6 +635,12 @@ define("container",
       var singleton = option(container, fullName, 'singleton');
 
       return singleton !== false;
+    }
+
+    function isPooled(container, fullName) {
+      var pool = option(container, fullName, 'pool');
+
+      return pool === true;
     }
 
     function buildInjections(container, injections) {
