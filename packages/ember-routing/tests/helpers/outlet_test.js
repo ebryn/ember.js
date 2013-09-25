@@ -201,3 +201,40 @@ test("should support layouts", function() {
   // Replace whitespace for older IE
   equal(view.$().text().replace(/\s+/,''), 'HIBYE');
 });
+
+test("nesting an outlet inside a condition", function() {
+  var parentTemplate = "<h1>HI</h1>{{#if view.showOutlet}}{{outlet}}{{/if}}";
+  var childTemplate = "<h3>CHILD</h3>";
+
+  view = Ember.View.create({
+    showOutlet: true,
+    template: compile(parentTemplate)
+  });
+
+  var bottomView = Ember._MetamorphView.create({
+    template: compile(childTemplate)
+  });
+
+  appendView(view);
+
+  Ember.run(function() {
+    view.connectOutlet('main', bottomView);
+  });
+
+  // Replace whitespace for older IE
+  equal(view.$().text().replace(/\s+/,''), 'HICHILD', "Outlet content initially displays");
+
+  Ember.run(function() {
+    view.set('showOutlet', false);
+  });
+
+  // Replace whitespace for older IE
+  equal(view.$().text().replace(/\s+/,''), 'HI', "Outlet content is hidden");
+
+  Ember.run(function() {
+    view.set('showOutlet', true);
+  });
+
+  // Replace whitespace for older IE
+  equal(view.$().text().replace(/\s+/,''), 'HICHILD', "Outlet content redisplays");
+});
