@@ -140,7 +140,8 @@ EmberHandlebars.ViewHelper = Ember.Object.create({
     } else if (Ember.isGlobalPath(path)) {
       return null;
     } else if (path === 'this' || path === '') {
-      return '_parentView.context';
+      // If we're inside a GroupedEach, use our context, which is the Handlebars context.
+      return data.insideEach ? 'context': '_parentView.context';
     } else {
       return '_parentView.context.' + path;
     }
