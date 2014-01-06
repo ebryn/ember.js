@@ -120,12 +120,12 @@ function addListener(obj, eventName, target, method, once) {
   }
 
   var actions = actionsFor(obj, eventName),
-      actionIndex = indexOf(actions, target, method),
+      // actionIndex = indexOf(actions, target, method),
       flags = 0;
 
   if (once) flags |= ONCE;
 
-  if (actionIndex !== -1) { return; }
+  // if (actionIndex !== -1) { return; }
 
   actions.push(target, method, flags);
 

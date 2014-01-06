@@ -154,6 +154,7 @@ function Meta(obj) {
   this.watching = {};
   this.cache = {};
   this.source = obj;
+  this.proto = null;
 }
 
 Meta.prototype = {

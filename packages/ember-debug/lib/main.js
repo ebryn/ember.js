@@ -35,7 +35,7 @@ if (Ember.ENV) {
 }
 
 if (!('MANDATORY_SETTER' in Ember.ENV)) {
-  Ember.ENV.MANDATORY_SETTER = true; // default to true for debug dist
+  Ember.ENV.MANDATORY_SETTER = false; // default to true for debug dist
 }
 
 /**

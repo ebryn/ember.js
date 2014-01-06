@@ -41,7 +41,7 @@ function propertyWillChange(obj, keyName) {
   if (!watching) { return; }
   if (proto === obj) { return; }
   if (desc && desc.willChange) { desc.willChange(obj, keyName); }
-  dependentKeysWillChange(obj, keyName, m);
+  if (m.deps) { dependentKeysWillChange(obj, keyName, m); }
   chainsWillChange(obj, keyName, m);
   notifyBeforeObservers(obj, keyName);
 }
@@ -74,7 +74,7 @@ function propertyDidChange(obj, keyName) {
   if (desc && desc.didChange) { desc.didChange(obj, keyName); }
   if (!watching && keyName !== 'length') { return; }
 
-  dependentKeysDidChange(obj, keyName, m);
+  if (m.deps) { dependentKeysDidChange(obj, keyName, m); }
   chainsDidChange(obj, keyName, m, false);
   notifyObservers(obj, keyName);
 }
