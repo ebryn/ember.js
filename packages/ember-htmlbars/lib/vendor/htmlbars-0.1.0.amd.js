@@ -1661,6 +1661,7 @@ define("htmlbars/compiler/template",
                 params = mustacheInfo[1],
                 helperOptions = mustacheInfo[2];
             helperOptions.helpers = helpers;
+            helperOptions.data = options.data;
             if (!helperOptions.element) { helperOptions.element = helperOptions.range; }
 
             if (name === 'ATTRIBUTE') {
@@ -2109,6 +2110,9 @@ define("htmlbars/runtime/range",
             start = this.start,
             end = this.end,
             current, previous;
+
+        // HAX
+        if (!parent.childNodes.length) { parent = this.parent = (this.end || this.start).parentNode; }
 
         if (end === null) {
           current = parent.lastChild;

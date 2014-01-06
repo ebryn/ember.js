@@ -3,6 +3,10 @@ require('ember-htmlbars/vendor/handlebars.amd');
 require('ember-htmlbars/vendor/htmlbars-0.1.0.amd');
 require('ember-htmlbars/vendor/bound-templates.js-0.1.0.amd');
 
+Ember.HTMLBars = Ember.HTMLBars || {};
+
+require('ember-htmlbars/view');
+
 var HTMLBars = requireModule('htmlbars'),
     BoundTemplates = requireModule('bound-templates');
 
@@ -10,7 +14,6 @@ var get = Ember.get,
     addObserver = Ember.addObserver,
     removeObserver = Ember.removeObserver;
 
-Ember.HTMLBars = Ember.HTMLBars || {};
 
 Ember.HTMLBars.compile = function(string, options) {
   options = options || {};
@@ -62,5 +65,9 @@ EmberObserverStream.prototype = {
 };
 
 function STREAM_FOR(context, path) {
-  return new EmberObserverStream(context, path);
+  if (context.isView) {
+    return context.streamFor(path);
+  } else {
+    return new EmberObserverStream(context, path);
+  }
 }
