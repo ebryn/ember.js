@@ -12,6 +12,7 @@ View.prototype = {
   classNames: ['ember-view'],
   template: null,
 
+  parentView: null,
   childViews: null,
   context: null,
   streams: null,
@@ -19,13 +20,13 @@ View.prototype = {
   render: function(parentEl) {
     var el = this.element = document.createElement(this.tagName),
         fragment = this.template(this, {data: {view: this}});
+
     if (this.elementId) { el.setAttribute('id', this.elementId); }
     if (this.classNames) { el.setAttribute('class', this.classNames.join(' ')); }
+
     el.appendChild(fragment);
     if (parentEl) { parentEl.appendChild(el); }
-
     this.childViews.forEach(function(cv) { cv.render(el); });
-
     return el;
   },
 
