@@ -1,7 +1,13 @@
-var View = Ember.HTMLBars.View = function View(template) {
+var get = Ember.get,
+    set = Ember.set;
+
+var View = Ember.HTMLBars.View = function View(template, parentView, context) {
+  this.parentView = parentView;
+  this.context = context || parentView && parentView.context || this;
   this.template = template;
   this.streams = {};
   this.childViews = [];
+  // we're intentionally avoiding chains, so finishChains isn't necessary
 };
 
 View.prototype = {
@@ -31,8 +37,7 @@ View.prototype = {
   },
 
   createChildView: function(template) {
-    var childView = new View(template);
-    childView.parentView = this;
+    var childView = new View(template, this);
     this.childViews.push(childView);
     return childView;
   },
@@ -47,23 +52,59 @@ View.prototype = {
     if (stream) { return stream; }
     stream = streams[path] = new ViewManagedStream();
 
-    var context = Ember.get(this, 'context');
+    var context = this.context;
     Ember.addObserver(context, path, this, 'streamPropertyDidChange');
-    stream.next(Ember.get(context, path));
+    stream.next(get(context, path));
     return stream;
+  },
+
+  _previousContext: null, // used to avoid double looping streams
+  contextWillChange: function() {
+    this._previousContext = this.context;
+  },
+
+  contextDidChange: function() {
+    var previousContext = this._previousContext,
+        context = this.context,
+        streams = this.streams;
+    for (var path in streams) {
+      Ember.removeObserver(previousContext, path, this, 'streamPropertyDidChange');
+      Ember.addObserver(context, path, this, 'streamPropertyDidChange');
+      streams[path].next(get(context, path));
+    }
+    this._previousContext = null;
+
+    // Notifying children manually avoids chains, which saves us a lot of upfront work
+    var childViews = this.childViews;
+    for (var i = 0, l = childViews.length; i < l; i++) {
+      childViews[i].parentViewContextDidChange(context);
+    }
   },
 
   streamPropertyDidChange: function(obj, path) {
     var streams = this.streams,
         stream = streams[path];
-    stream.next(Ember.get(obj, path));
+    stream.next(get(obj, path));
+  },
+
+  parentViewContextDidChange: function(parentContext) {
+    set(this, 'context', parentContext);
   }
 };
 
-Ember.defineProperty(View.prototype, 'context', Ember.computed(function() {
-  // TODO: controller
-  return this.parentView && this.parentView.context || this;
-}));
+Ember.addBeforeObserver(View.prototype, 'context', null, 'contextWillChange');
+Ember.addObserver(View.prototype, 'context', null, 'contextDidChange');
+
+// Do we still need to do this if we're avoiding chains?
+// View.prototype[Ember.META_KEY].proto = View.prototype;
+
+// Turns out simple properties and observers wins perf wise over a CP for context
+// Ember.defineProperty(View.prototype, 'context', Ember.computed(function(/*key, value*/) {
+//   // if (arguments.length === 2) { return value; }
+//   // TODO: controller
+//   var parentView = this.parentView;
+//   return get(parentView, 'context') || this;
+// }));
 
 function ViewManagedStream() {
   this.subscribers = [];

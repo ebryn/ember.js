@@ -70,3 +70,22 @@ test("View with a child", function() {
   Ember.set(context, 'foo', 'i pity the foo');
   equalHTML(el, '<div class="ember-view"><div class="ember-view"> i pity the foo</div></div>');
 });
+
+test("View creation performance - 60,000 views", function() {
+  var t = template("{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}");
+
+  var start = Date.now();
+  console.profile();
+  for (var i = 0, l = 10000; i < l; i++) {
+    var context = {foo: 'foo is here'};
+    var view = new View(t, null, context);
+    var el = view.render();
+    view.append();
+  }
+  console.profileEnd();
+
+  var elapsed = Date.now() - start;
+  console.log(elapsed);
+
+  ok(elapsed < 2000, "Actual time: " + elapsed + "ms. Target is less than 2000ms.");
+});
