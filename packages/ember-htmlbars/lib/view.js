@@ -110,6 +110,10 @@ View.prototype = {
 
   parentViewContextDidChange: function(parentContext) {
     set(this, 'context', parentContext);
+  },
+
+  destroy: function() {
+    this.element = this.template = this.parentView = this.childViews = this.context = this.streams = null;
   }
 };
 
@@ -182,16 +186,24 @@ Ember.merge(EachView.prototype, {
   // },
 
   arrayDidChange: function(content, start, removed, added) {
-    var addedViews = [];
+    // teardown old views
+    var childViews = this.childViews, childView;
+    for (var idx = start; idx < start+removed; idx++) {
+      childView = childViews[idx];
+      childView.element.clear();
+      childView.destroy();
+    }
 
-    for (var idx = start; idx < start+added; idx++) {
+    var spliceArgs = [start, removed];
+
+    for (idx = start; idx < start+added; idx++) {
       var item = content[idx];
-      var childView = this.createChildView(VirtualView, this.template, item);
-      addedViews.push(childView);
+      childView = this.createChildView(VirtualView, this.template, item);
+      spliceArgs.push(childView);
       childView.render(this.element);
     }
 
-    this.childViews.splice(start, 0, addedViews);
+    childViews.splice.apply(childViews, spliceArgs);
   }
 });
 

@@ -41,16 +41,18 @@ var helpers = {
   },
 
   each: function(params, options) {
-    var eachView;
+    var view = options.data.view,
+        template = function(context, templateOptions) {
+          options.data = templateOptions.data;
+          return options.render(context, options);
+        },
+        eachView = view.createChildView(EachView, template);
+
+    eachView.element = options.element;
+    eachView.templateData = options.data;
+
     params[0].subscribe(function(value) {
-      var view = options.data.view;
-      var template = function(context, templateOptions) {
-        options.data = templateOptions.data;
-        return options.render(context, options);
-      };
-      eachView = view.createChildView(EachView, template, value);
-      eachView.element = options.element;
-      eachView.templateData = options.data;
+      eachView.arrayStream.updateObj(value);
     });
     // return eachView.arrayStream;
   }
@@ -107,6 +109,10 @@ test("#each", function() {
   var elapsed = Date.now() - start;
   console.log(elapsed);
   console.log($('li', view.element).length);
+
+  Ember.run(Ember, Ember.set, context, 'rows', ['just lonely ol me']);
+
+  equalHTML(el, '<div class="ember-view"><ul><li> just lonely ol me</li></ul></div>');
 });
 
 /*

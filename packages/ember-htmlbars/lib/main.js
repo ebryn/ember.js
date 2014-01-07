@@ -118,14 +118,14 @@ var SimpleObservableArrayMixin = Ember.Mixin.create({
     return this;
   },
 
-  removeArrayObserver: function() {
+  removeArrayObserver: function(target) {
     Ember.removeListener(this, '@array:change', target, 'arrayDidChange');
     return this;
   }
 });
 
 Ember.HTMLBars.A = function HTMLBarsA(arr) {
-  if ( arguments.length === 0 ) { arr = []; }
+  if (typeof arr === 'undefined') { arr = []; }
   return SimpleObservableArrayMixin.detect(arr) ? arr : SimpleObservableArrayMixin.apply(arr);
 };
 
@@ -141,6 +141,8 @@ ArrayObserverStream.prototype = {
   complete: null,
 
   updateObj: function(newObj) {
+    newObj = Ember.HTMLBars.A(newObj);
+
     var oldLength = 0;
     if (this.obj) {
       oldLength = this.obj.length;
