@@ -1694,6 +1694,7 @@ define("htmlbars/compiler/template",
                 params = mustacheInfo[1],
                 helperOptions = mustacheInfo[2];
             helperOptions.helpers = helpers;
+            helperOptions.data = options.data;
             if (!helperOptions.element) { helperOptions.element = helperOptions.range; }
 
             if (name === 'ATTRIBUTE') {
