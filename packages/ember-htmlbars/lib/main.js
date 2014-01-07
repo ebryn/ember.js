@@ -65,6 +65,70 @@ EmberObserverStream.prototype = {
   }
 };
 
+
+// SimpleObservableArrayMixin: the insanely faster way of observing arrays
+var SimpleObservableArrayMixin = Ember.Mixin.create({
+  pushObject: function(obj) {
+    this.replace(this.length, 0, [obj]);
+  },
+
+  replace: function(idx, amt, objects) {
+    // if we replaced exactly the same number of items, then pass only the
+    // replaced range. Otherwise, pass the full remaining array length
+    // since everything has shifted
+    var len = objects ? objects.length : 0;
+    if (len === 0) {
+      this.splice(idx, amt);
+    } else {
+      Ember.EnumerableUtils._replace(this, idx, amt, objects);
+    }
+    this.arrayContentDidChange(idx, amt, len);
+    return this;
+  },
+
+  arrayContentDidChange: function(startIdx, removeAmt, addAmt) {
+    // if no args are passed assume everything changes
+    if (startIdx === undefined) {
+      startIdx = 0;
+      removeAmt = addAmt = -1;
+    } else {
+      if (removeAmt === undefined) removeAmt =- 1;
+      if (addAmt    === undefined) addAmt =- 1;
+    }
+
+    Ember.sendEvent(this, '@array:change', [this, startIdx, removeAmt, addAmt]);
+
+    // var length      = get(this, 'length'),
+    //     cachedFirst = cacheFor(this, 'firstObject'),
+    //     cachedLast  = cacheFor(this, 'lastObject');
+    // if (this.objectAt(0) !== cachedFirst) {
+    //   Ember.propertyWillChange(this, 'firstObject');
+    //   Ember.propertyDidChange(this, 'firstObject');
+    // }
+    // if (this.objectAt(length-1) !== cachedLast) {
+    //   Ember.propertyWillChange(this, 'lastObject');
+    //   Ember.propertyDidChange(this, 'lastObject');
+    // }
+
+    return this;
+  },
+
+  addArrayObserver: function(target) {
+    Ember.addListener(this, '@array:change', target, 'arrayDidChange');
+    return this;
+  },
+
+  removeArrayObserver: function() {
+    Ember.removeListener(this, '@array:change', target, 'arrayDidChange');
+    return this;
+  }
+});
+
+Ember.HTMLBars.A = function HTMLBarsA(arr) {
+  if ( arguments.length === 0 ) { arr = []; }
+  return SimpleObservableArrayMixin.detect(arr) ? arr : SimpleObservableArrayMixin.apply(arr);
+};
+
 var ArrayObserverStream = Ember.HTMLBars.ArrayObserverStream = function ArrayObserverStream(obj) {
   if (obj) { this.updateObj(obj); }
 };

@@ -140,7 +140,7 @@ VirtualView.prototype = Object.create(View.prototype);
 
 var EachView = Ember.HTMLBars.EachView = function EachView(template, parentView, items) {
   var self = this;
-  items = Ember.A(items);
+  items = Ember.HTMLBars.A(items);
   View.call(this, template, parentView, items);
   this.arrayStream = new Ember.HTMLBars.ArrayObserverStream();
   this.arrayStream.subscribe(function(value) {
