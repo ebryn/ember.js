@@ -46,6 +46,10 @@ View.prototype = {
     document.body.appendChild(this.element);
   },
 
+  appendTo: function(el) {
+    el.appendChild(this.element);
+  },
+
   streamFor: function(path) {
     var streams = this.streams,
         stream = streams[path];

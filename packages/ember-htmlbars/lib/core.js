@@ -1,0 +1,1 @@
+Ember.HTMLBars = Ember.HTMLBars || {};

@@ -1,10 +1,8 @@
 require('ember-metal');
+require('ember-htmlbars/core');
 require('ember-htmlbars/vendor/handlebars.amd');
 require('ember-htmlbars/vendor/htmlbars-0.1.0.amd');
 require('ember-htmlbars/vendor/bound-templates.js-0.1.0.amd');
-
-Ember.HTMLBars = Ember.HTMLBars || {};
-
 require('ember-htmlbars/view');
 
 var HTMLBars = requireModule('htmlbars'),
