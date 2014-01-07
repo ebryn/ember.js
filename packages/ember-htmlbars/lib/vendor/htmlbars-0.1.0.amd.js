@@ -1,5 +1,4 @@
-/* jshint ignore:start */
-define("htmlbars",
+define("htmlbars", 
   ["htmlbars/parser","htmlbars/ast","htmlbars/compiler","htmlbars/helpers","htmlbars/macros","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -21,7 +20,7 @@ define("htmlbars",
     __exports__.removeMacro = removeMacro;
     __exports__.registerMacro = registerMacro;
   });
-define("htmlbars/ast",
+define("htmlbars/ast", 
   ["handlebars/compiler/ast","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -85,7 +84,7 @@ define("htmlbars/ast",
     __exports__.HTMLElement = HTMLElement;
     __exports__.BlockElement = BlockElement;
   });
-define("htmlbars/compiler",
+define("htmlbars/compiler", 
   ["htmlbars/parser","htmlbars/compiler/compile","htmlbars/runtime","htmlbars/helpers","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -105,7 +104,57 @@ define("htmlbars/compiler",
 
     __exports__.compileSpec = compileSpec;
   });
-define("htmlbars/compiler/attr",
+define("htmlbars/compiler/ast_walker", 
+  ["htmlbars/ast","exports"],
+  function(__dependency1__, __exports__) {
+    "use strict";
+    var BlockElement = __dependency1__.BlockElement;
+
+    function Node(ast, parent) {
+      this.parent = parent;
+      this.ast = ast;
+      this.pos = ast.length-1;
+      this.count = 0;
+      this.inverse = false;
+    }
+
+    Node.prototype.nextChild = function() {
+      var node;
+      if (this.inverse) {
+        this.inverse = false;
+        node = this.ast[this.pos];
+        this.pos--;
+        this.count++;
+        return new Node(node.children, this);
+      }
+      while (this.pos >= 0) {
+        node = this.ast[this.pos];
+        if (node instanceof BlockElement) {
+          this.inverse = true;
+          this.count++;
+          return new Node(node.inverse, this);
+        }
+        this.pos--;
+      }
+      return null;
+    };
+
+    function walkTree(ast, visit) {
+      var node = new Node(ast, null), next;
+      while (node) {
+        var nextChild = node.nextChild();
+        if (nextChild === null) {
+          visit(node.ast, node.count);
+          node = node.parent;
+        } else {
+          node = nextChild;
+        }
+      }
+    }
+
+    __exports__.walkTree = walkTree;
+  });
+define("htmlbars/compiler/attr", 
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -196,7 +245,7 @@ define("htmlbars/compiler/attr",
 
     __exports__.AttrCompiler = AttrCompiler;
   });
-define("htmlbars/compiler/compile",
+define("htmlbars/compiler/compile", 
   ["htmlbars/compiler/pass1","htmlbars/compiler/pass2","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -215,7 +264,7 @@ define("htmlbars/compiler/compile",
 
     __exports__.compileAST = compileAST;
   });
-define("htmlbars/compiler/elements",
+define("htmlbars/compiler/elements", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -232,7 +281,7 @@ define("htmlbars/compiler/elements",
     }
     __exports__.topElement = topElement;
   });
-define("htmlbars/compiler/fragment",
+define("htmlbars/compiler/fragment", 
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/elements","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
     "use strict";
@@ -316,7 +365,7 @@ define("htmlbars/compiler/fragment",
 
     __exports__.FragmentCompiler = FragmentCompiler;
   });
-define("htmlbars/compiler/fragment2",
+define("htmlbars/compiler/fragment2", 
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/elements","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
     "use strict";
@@ -400,7 +449,7 @@ define("htmlbars/compiler/fragment2",
 
     __exports__.Fragment2 = Fragment2;
   });
-define("htmlbars/compiler/fragment_opcode",
+define("htmlbars/compiler/fragment_opcode", 
   ["htmlbars/ast","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -497,7 +546,7 @@ define("htmlbars/compiler/fragment_opcode",
 
     __exports__.FragmentOpcodeCompiler = FragmentOpcodeCompiler;
   });
-define("htmlbars/compiler/helpers",
+define("htmlbars/compiler/helpers", 
   ["htmlbars/compiler/quoting","htmlbars/compiler/stack","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -550,7 +599,7 @@ define("htmlbars/compiler/helpers",
 
     __exports__.prepareHelper = prepareHelper;
   });
-define("htmlbars/compiler/hydration",
+define("htmlbars/compiler/hydration", 
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -691,7 +740,7 @@ define("htmlbars/compiler/hydration",
 
     __exports__.HydrationCompiler = HydrationCompiler;
   });
-define("htmlbars/compiler/hydration2",
+define("htmlbars/compiler/hydration2", 
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -832,7 +881,7 @@ define("htmlbars/compiler/hydration2",
 
     __exports__.Hydration2 = Hydration2;
   });
-define("htmlbars/compiler/hydration_attr",
+define("htmlbars/compiler/hydration_attr", 
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -915,7 +964,7 @@ define("htmlbars/compiler/hydration_attr",
 
     __exports__.HydrationAttrCompiler = HydrationAttrCompiler;
   });
-define("htmlbars/compiler/hydration_opcode",
+define("htmlbars/compiler/hydration_opcode", 
   ["htmlbars/utils","htmlbars/ast","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -1009,8 +1058,6 @@ define("htmlbars/compiler/hydration_opcode",
     };
 
     compiler1.element = function(element, childIndex, childrenLength, currentDOMChildIndex) {
-      // this.opcode('openElement', element.tag);
-
       element.attributes.forEach(function(attribute) {
         this.attribute(attribute);
       }, this);
@@ -1020,8 +1067,6 @@ define("htmlbars/compiler/hydration_opcode",
       }, this);
 
       processChildren(this, element.children);
-
-      // this.opcode('closeElement');
     };
 
     compiler1.attribute = function(attribute) {
@@ -1073,8 +1118,6 @@ define("htmlbars/compiler/hydration_opcode",
         processHash(this, mustache.hash);
         this.opcode('helper', mustache.id.string, mustache.params.length, mustache.escaped, this.paths.slice(), start, end);
       }
-
-      // appendMustache(this, mustache);
     };
 
     compiler1.mustacheInAttr = function(mustache) {
@@ -1088,8 +1131,6 @@ define("htmlbars/compiler/hydration_opcode",
         processHash(this, mustache.hash);
         this.opcode('helperAttr', mustache.id.string, mustache.params.length, mustache.escaped);
       }
-
-      // appendMustache(this, mustache);
     };
 
     compiler1.ID = function(id) {
@@ -1147,17 +1188,9 @@ define("htmlbars/compiler/hydration_opcode",
       }
     }
 
-    function appendMustache(compiler, mustache) {
-      if (mustache.escaped) {
-        compiler.opcode('appendText');
-      } else {
-        compiler.opcode('appendHTML');
-      }
-    }
-
     __exports__.HydrationOpcodeCompiler = HydrationOpcodeCompiler;
   });
-define("htmlbars/compiler/invoke",
+define("htmlbars/compiler/invoke", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1179,7 +1212,7 @@ define("htmlbars/compiler/invoke",
     }
     __exports__.helper = helper;
   });
-define("htmlbars/compiler/pass1",
+define("htmlbars/compiler/pass1", 
   ["htmlbars/utils","htmlbars/ast","htmlbars/compiler/attr","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -1404,7 +1437,7 @@ define("htmlbars/compiler/pass1",
 
     __exports__.Compiler1 = Compiler1;
   });
-define("htmlbars/compiler/pass2",
+define("htmlbars/compiler/pass2", 
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/elements","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
     "use strict";
@@ -1546,7 +1579,7 @@ define("htmlbars/compiler/pass2",
 
     __exports__.Compiler2 = Compiler2;
   });
-define("htmlbars/compiler/quoting",
+define("htmlbars/compiler/quoting", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1578,7 +1611,7 @@ define("htmlbars/compiler/quoting",
 
     __exports__.hash = hash;
   });
-define("htmlbars/compiler/stack",
+define("htmlbars/compiler/stack", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1595,7 +1628,7 @@ define("htmlbars/compiler/stack",
 
     __exports__.popStack = popStack;
   });
-define("htmlbars/compiler/template",
+define("htmlbars/compiler/template", 
   ["htmlbars/compiler/fragment_opcode","htmlbars/compiler/hydration_opcode","htmlbars/compiler/fragment","htmlbars/compiler/hydration","htmlbars/parser","htmlbars/runtime","htmlbars/runtime/range","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __exports__) {
     "use strict";
@@ -1661,7 +1694,6 @@ define("htmlbars/compiler/template",
                 params = mustacheInfo[1],
                 helperOptions = mustacheInfo[2];
             helperOptions.helpers = helpers;
-            helperOptions.data = options.data;
             if (!helperOptions.element) { helperOptions.element = helperOptions.range; }
 
             if (name === 'ATTRIBUTE') {
@@ -1691,7 +1723,7 @@ define("htmlbars/compiler/template",
 
     __exports__.TemplateCompiler = TemplateCompiler;
   });
-define("htmlbars/compiler/utils",
+define("htmlbars/compiler/utils", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1707,7 +1739,7 @@ define("htmlbars/compiler/utils",
 
     __exports__.stream = stream;
   });
-define("htmlbars/helpers",
+define("htmlbars/helpers", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1723,7 +1755,7 @@ define("htmlbars/helpers",
 
     __exports__.removeHelper = removeHelper;__exports__.helpers = helpers;
   });
-define("htmlbars/html-parser/process-token",
+define("htmlbars/html-parser/process-token", 
   ["htmlbars/ast","simple-html-tokenizer","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -1819,7 +1851,7 @@ define("htmlbars/html-parser/process-token",
 
     __exports__.config = config;
   });
-define("htmlbars/macros",
+define("htmlbars/macros", 
   ["htmlbars/html-parser/process-token","htmlbars/ast","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -1863,7 +1895,7 @@ define("htmlbars/macros",
     // configure the HTML Parser
     config.processHTMLMacros = processHTMLMacros;
   });
-define("htmlbars/parser",
+define("htmlbars/parser", 
   ["simple-html-tokenizer","htmlbars/ast","htmlbars/html-parser/process-token","handlebars","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -2001,7 +2033,7 @@ define("htmlbars/parser",
       helpers.push(helper);
     };
   });
-define("htmlbars/runtime",
+define("htmlbars/runtime", 
   ["htmlbars/utils","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -2031,7 +2063,7 @@ define("htmlbars/runtime",
 
     __exports__.domHelpers = domHelpers;
   });
-define("htmlbars/runtime/helpers",
+define("htmlbars/runtime/helpers", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2088,11 +2120,24 @@ define("htmlbars/runtime/helpers",
 
     __exports__.ATTRIBUTE = ATTRIBUTE;
   });
-define("htmlbars/runtime/range",
+define("htmlbars/runtime/range", 
   ["exports"],
   function(__exports__) {
     "use strict";
     function Range(parent, start, end) {
+      // if fragment, we need to ensure start and end
+      // to track where we get inserted to
+      if (parent.nodeType === 11) {
+        if (start === null) {
+          start = parent.ownerDocument.createTextNode('');
+          parent.insertBefore(start, parent.firstChild);
+        }
+        if (end === null) {
+          end = parent.ownerDocument.createTextNode('');
+          parent.insertBefore(end, null);
+        }
+      }
+
       this.parent = parent;
       this.start = start;
       this.end = end;
@@ -2105,14 +2150,18 @@ define("htmlbars/runtime/range",
     };
 
     Range.prototype = {
+      checkParent: function () {
+        if (this.parent !== this.start.parentNode) {
+          this.parent = this.start.parentNode;
+        }
+      },
       clear: function() {
+        if (this.parent.nodeType === 11) this.checkParent();
+
         var parent = this.parent,
             start = this.start,
             end = this.end,
             current, previous;
-
-        // HAX
-        if (!parent.childNodes.length) { parent = this.parent = (this.end || this.start).parentNode; }
 
         if (end === null) {
           current = parent.lastChild;
@@ -2128,12 +2177,16 @@ define("htmlbars/runtime/range",
       },
       replace: function(node) {
         this.clear();
-        this.appendChild(node);
+        this.parent.insertBefore(node, this.end);
       },
       appendChild: function(node) {
+        if (this.parent.nodeType === 11) this.checkParent();
+
         this.parent.insertBefore(node, this.end);
       },
       appendChildren: function(nodeList) {
+        if (this.parent.nodeType === 11) this.checkParent();
+
         var parent = this.parent,
             ref = this.end,
             i = nodeList.length,
@@ -2145,9 +2198,14 @@ define("htmlbars/runtime/range",
         }
       },
       appendText: function (str) {
-        this.appendChild(this.parent.ownerDocument.createTextNode(str));
+        if (this.parent.nodeType === 11) this.checkParent();
+
+        var parent = this.parent;
+        parent.insertBefore(parent.ownerDocument.createTextNode(str), this.end);
       },
       appendHTML: function (html) {
+        if (this.parent.nodeType === 11) this.checkParent();
+
         var parent = this.parent, element;
         if (parent.nodeType === 11) {
           /* TODO require templates always have a contextual element
@@ -2161,7 +2219,7 @@ define("htmlbars/runtime/range",
       }
     };
   });
-define("htmlbars/utils",
+define("htmlbars/utils", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2175,7 +2233,7 @@ define("htmlbars/utils",
 
     __exports__.merge = merge;
   });
-define("simple-html-tokenizer",
+define("simple-html-tokenizer", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2608,7 +2666,7 @@ define("simple-html-tokenizer",
     CommentToken.prototype = {
       type: 'CommentToken',
       constructor: CommentToken,
-
+      
       finalize: function() { return this; },
 
       addChar: function(char) {
@@ -2661,6 +2719,5 @@ define("simple-html-tokenizer",
     __exports__.Chars = Chars;
     __exports__.CommentToken = CommentToken;
   });
-/* jshint ignore:end */
 //
 //# sourceMappingURL=htmlbars-0.1.0.amd.js.map
