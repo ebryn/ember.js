@@ -1,7 +1,8 @@
 module("Ember.HTMLBars");
 
-var View = Ember.HTMLBars.View;
-var merge = requireModule('htmlbars/utils').merge;
+var View = Ember.HTMLBars.View,
+    EachView = Ember.HTMLBars.EachView,
+    merge = requireModule('htmlbars/utils').merge;
 
 function template(str) {
   return Ember.HTMLBars.compile(str, {helpers: helpers});
@@ -37,6 +38,21 @@ var helpers = {
       return options.render(context, options);
     };
     childView.templateData = options.data;
+  },
+
+  each: function(params, options) {
+    var eachView;
+    params[0].subscribe(function(value) {
+      var view = options.data.view;
+      var template = function(context, templateOptions) {
+        options.data = templateOptions.data;
+        return options.render(context, options);
+      };
+      eachView = view.createChildView(EachView, template, value);
+      eachView.element = options.element;
+      eachView.templateData = options.data;
+    });
+    // return eachView.arrayStream;
   }
 };
 
@@ -71,6 +87,29 @@ test("View with a child", function() {
   equalHTML(el, '<div class="ember-view"><div class="ember-view"> i pity the foo</div></div>');
 });
 
+test("#each", function() {
+  var context = {rows: ["one", "two", "three"]};
+  var view = new View(template("<ul>{{#each rows}}<li> {{this}}</li>{{/each}}</ul>"), null, context);
+
+  var el = Ember.run(view, view.render);
+  view.append();
+  window.lastView = view;
+  equalHTML(el, '<div class="ember-view"><ul><li> one</li><li> two</li><li> three</li></ul></div>');
+
+  var start = Date.now();
+  console.profile();
+  Ember.run(function() {
+    for (var i = 0, l = 10; i < l; i++) {
+      context.rows.pushObject("mic check " + i);
+    }
+  });
+  console.profileEnd();
+  var elapsed = Date.now() - start;
+  console.log(elapsed);
+  console.log($('li', view.element).length);
+});
+
+/*
 test("View creation performance - 60,000 views", function() {
   var t = template("{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}");
 
@@ -89,3 +128,4 @@ test("View creation performance - 60,000 views", function() {
 
   ok(elapsed < 2000, "Actual time: " + elapsed + "ms. Target is less than 2000ms.");
 });
+*/
