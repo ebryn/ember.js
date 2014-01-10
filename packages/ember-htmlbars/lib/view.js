@@ -120,8 +120,10 @@ View.prototype = {
 };
 
 View.prototype[META_KEY] = Ember.platform.defineProperty(View.prototype, META_KEY, Ember.META_DESC);
+View.prototype[META_KEY] = null;
 Ember.addBeforeObserver(View.prototype, 'context', null, 'contextWillChange');
 Ember.addObserver(View.prototype, 'context', null, 'contextDidChange');
+Ember.addObserver(View.prototype, 'parentView.context', null, 'parentViewContextDidChange');
 
 // Do we still need to do this if we're avoiding chains?
 // View.prototype[Ember.META_KEY].proto = View.prototype;
@@ -225,8 +227,13 @@ ViewManagedStream.prototype = {
   },
 
   next: function next(value) {
+    var subscribers = this.subscribers,
+        sub;
     this.lastValue = value;
-    this.subscribers.forEach(function(sub) { if (sub.next) sub.next(value); });
+    for (var i = 0, l = subscribers.length; i < l; i++) {
+      sub = subscribers[i];
+      if (sub.next) { sub.next(value); }
+    }
   },
 
   complete: function complete() {

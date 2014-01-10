@@ -115,7 +115,6 @@ test("#each", function() {
   equalHTML(el, '<div class="ember-view"><ul><li> just lonely ol me</li></ul></div>');
 });
 
-/*
 test("View creation performance - 60,000 views", function() {
   var t = template("{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}");
 
@@ -134,4 +133,3 @@ test("View creation performance - 60,000 views", function() {
 
   ok(elapsed < 2000, "Actual time: " + elapsed + "ms. Target is less than 2000ms.");
 });
-*/

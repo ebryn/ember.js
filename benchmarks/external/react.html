@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+    <title>Basic Example</title>
+    <link rel="stylesheet" href="../shared/css/base.css" />
+  </head>
+  <body>
+    <div id='container'></div>
+    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="../../dist/ember-htmlbars.prod.js"></script>
+    <script>
+      var template = Ember.HTMLBars.compile("React has been successfully running for {{seconds}} seconds.");
+      var context = {seconds: 0};
+      var view = new Ember.HTMLBars.View(template, null, context);
+
+      document.getElementById('container').appendChild(view.render());
+      // var ExampleApplication = React.createClass({
+      //   render: function() {
+      //     var elapsed = Math.round(this.props.elapsed  / 100);
+      //     var seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0' );
+      //     var message =
+      //       'React has been successfully running for ' + seconds + ' seconds.';
+
+      //     return React.DOM.p(null, message);
+      //   }
+      // });
+      console.profile();
+      var start = new Date().getTime();
+      setInterval(function() {
+        var since = new Date().getTime() - start;
+        if (since > 10000) { console.profileEnd(); }
+
+        var elapsed = Math.round(since  / 100);
+        var seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0' );
+        Ember.set(context, 'seconds', seconds);
+        // React.renderComponent(
+        //   ExampleApplication({elapsed: new Date().getTime() - start}),
+        //   document.getElementById('container')
+        // );
+      }, 50);
+    </script>
+  </body>
+</html>
