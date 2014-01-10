@@ -1,7 +1,9 @@
 var get = Ember.get,
     set = Ember.set;
 
-var Range = requireModule('htmlbars/runtime/range').Range;
+var Range = requireModule('htmlbars/runtime/range').Range,
+    finishChains = Ember.finishChains,
+    META_KEY = Ember.META_KEY;
 
 var View = Ember.HTMLBars.View = function View(template, parentView, context) {
   this.parentView = parentView;
@@ -9,7 +11,7 @@ var View = Ember.HTMLBars.View = function View(template, parentView, context) {
   this.template = template;
   this.streams = {};
   this.childViews = [];
-  // we're intentionally avoiding chains, so finishChains isn't necessary
+  finishChains(this);
 };
 
 View.prototype = {
@@ -117,6 +119,7 @@ View.prototype = {
   }
 };
 
+View.prototype[META_KEY] = Ember.platform.defineProperty(View.prototype, META_KEY, Ember.META_DESC);
 Ember.addBeforeObserver(View.prototype, 'context', null, 'contextWillChange');
 Ember.addObserver(View.prototype, 'context', null, 'contextDidChange');
 
