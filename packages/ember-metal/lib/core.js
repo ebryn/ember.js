@@ -1,5 +1,17 @@
 /*globals Em:true ENV EmberENV MetamorphENV:true */
 
+Ember.assert = function() {};
+
+// window.optStatus = function optStatus(fn) {
+//     switch(%GetOptimizationStatus(fn)) { // jshint ignore:line
+//         case 1: console.log("Function " + fn.name + " is optimized"); break;
+//         case 2: console.log("Function " + fn.name + "  is not optimized"); break;
+//         case 3: console.log("Function " + fn.name + "  is always optimized"); break;
+//         case 4: console.log("Function " + fn.name + "  is never optimized"); break;
+//         case 6: console.log("Function " + fn.name + "  is maybe deoptimized"); break;
+//     }
+// }
+
 /**
 @module ember
 @submodule ember-metal

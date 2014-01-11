@@ -7,6 +7,7 @@ require('ember-metal/utils');
 */
 
 var o_create = Ember.create,
+    Utils = Ember.Utils,
     metaFor = Ember.meta,
     META_KEY = Ember.META_KEY,
     a_slice = [].slice,
@@ -40,8 +41,12 @@ function indexOf(array, target, method) {
 }
 
 function actionsFor(obj, eventName) {
-  var meta = metaFor(obj, true),
+  var meta = obj.__ember_meta,
       actions;
+
+  if (!meta || meta.source !== obj) {
+    meta = Utils.createMeta(obj);
+  }
 
   if (!meta.listeners) { meta.listeners = {}; }
 

@@ -134,7 +134,7 @@ var META_DESC = Ember.META_DESC = {
   value: null
 };
 
-var META_KEY = Ember.GUID_KEY+'_meta';
+var META_KEY = '__ember_meta';
 
 /**
   The key used to store meta information on object for property observing.
@@ -211,23 +211,23 @@ Ember.EMPTY_META = EMPTY_META;
 */
 Ember.meta = function meta(obj, writable) {
 
-  var ret = obj[META_KEY];
+  var ret = obj.__ember_meta;
   if (writable===false) return ret || EMPTY_META;
 
   if (!ret) {
-    if (!isDefinePropertySimulated) o_defineProperty(obj, META_KEY, META_DESC);
+    if (!isDefinePropertySimulated) o_defineProperty(obj, '__ember_meta', META_DESC);
 
     ret = new Meta(obj);
 
     if (MANDATORY_SETTER) { ret.values = {}; }
 
-    obj[META_KEY] = ret;
+    obj.__ember_meta = ret;
 
     // make sure we don't accidentally try to create constructor like desc
     ret.descs.constructor = null;
 
   } else if (ret.source !== obj) {
-    if (!isDefinePropertySimulated) o_defineProperty(obj, META_KEY, META_DESC);
+    if (!isDefinePropertySimulated) o_defineProperty(obj, '__ember_meta', META_DESC);
 
     ret = o_create(ret);
     ret.descs    = o_create(ret.descs);
@@ -237,10 +237,70 @@ Ember.meta = function meta(obj, writable) {
 
     if (MANDATORY_SETTER) { ret.values = o_create(ret.values); }
 
-    obj[META_KEY] = ret;
+    obj.__ember_meta = ret;
   }
   return ret;
 };
+
+Ember.Utils = {
+  EMPTY_META: EMPTY_META,
+  isDefinePropertySimulated: isDefinePropertySimulated,
+  o_defineProperty: o_defineProperty,
+  META_DESC: META_DESC,
+  Meta: Meta,
+  MANDATORY_SETTER: MANDATORY_SETTER,
+  o_create: o_create,
+
+  createMeta: function(obj) {
+    if (!this.isDefinePropertySimulated) this.o_defineProperty(obj, '__ember_meta', this.META_DESC);
+
+    var ret = new this.Meta(obj);
+
+    if (this.MANDATORY_SETTER) { ret.values = {}; }
+
+    obj.__ember_meta = ret;
+
+    // make sure we don't accidentally try to create constructor like desc
+    ret.descs.constructor = null;
+
+    return ret;
+  },
+
+  inheritMeta: function(obj) {
+    var meta     = obj.__ember_meta,
+        ret      = this.o_create(meta);
+    ret.descs    = this.o_create(ret.descs);
+    ret.watching = this.o_create(ret.watching);
+    ret.cache    = {};
+    ret.source   = obj;
+
+    if (this.MANDATORY_SETTER) { ret.values = this.o_create(ret.values); }
+
+    obj.__ember_meta = ret;
+    return ret;
+  },
+
+  updateMeta: function(obj) {
+    var meta = obj.__ember_meta;
+
+    if (!this.isDefinePropertySimulated) this.o_defineProperty(obj, '__ember_meta', this.META_DESC);
+    var ret      = this.o_create(meta);
+    ret.descs    = this.o_create(ret.descs);
+    ret.watching = this.o_create(ret.watching);
+    ret.cache    = {};
+    ret.source   = obj;
+
+    if (this.MANDATORY_SETTER) { ret.values = this.o_create(ret.values); }
+
+    obj.__ember_meta = ret;
+    return ret;
+  },
+
+  meta: function fastMeta(obj, writable) {
+    if (writable===false) return obj.__ember_meta || this.EMPTY_META;
+    return (obj.__ember_meta ? this.updateMeta(obj) : this.createMeta(obj));
+  }
+}
 
 Ember.getMeta = function getMeta(obj, property) {
   var meta = Ember.meta(obj, false);

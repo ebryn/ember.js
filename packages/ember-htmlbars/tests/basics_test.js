@@ -122,7 +122,7 @@ test("View creation performance - 60,000 views", function() {
   console.profile();
   for (var i = 0, l = 10000; i < l; i++) {
     var context = {foo: 'foo is here'};
-    var view = new View(t, null, context);
+    var view = window.lastView = new View(t, null, context);
     var el = view.render();
     view.append();
   }

@@ -33,6 +33,7 @@ Ember.flushPendingChains = function() {
   warn('Watching an undefined global, Ember expects watched globals to be setup by the time the run loop is flushed, check for typos', pendingQueue.length === 0);
 };
 
+var Utils = Ember.Utils;
 
 function addChainWatcher(obj, keyName, node) {
   if (!obj || ('object' !== typeof obj)) { return; } // nothing to do
@@ -71,6 +72,7 @@ var removeChainWatcher = Ember.removeChainWatcher = function(obj, keyName, node)
 var ChainNode = Ember._ChainNode = function(parent, key, value) {
   this._parent = parent;
   this._key    = key;
+  this._chains = null;
 
   // _watching is true when calling get(this._parent, this._key) will
   // return the value of this node.
@@ -85,6 +87,9 @@ var ChainNode = Ember._ChainNode = function(parent, key, value) {
   if (this._watching) {
     this._object = parent.value();
     if (this._object) { addChainWatcher(this._object, this._key, this); }
+  } else {
+    // Make sure to set so we have the same object shape
+    this._object = null;
   }
 
   // Special-case: the EachProxy relies on immediate evaluation to
@@ -322,10 +327,11 @@ ChainNodePrototype.didChange = function(events) {
 
 Ember.finishChains = function(obj) {
   // We only create meta if we really have to
-  var m = obj[META_KEY], chains = m && m.chains;
+  var m = obj.__ember_meta, chains = m && m.chains;
   if (chains) {
     if (chains.value() !== obj) {
-      metaFor(obj).chains = chains = chains.copy(obj);
+      if (m.source !== obj) { m = Utils.createMeta(obj); }
+      m.chains = chains = chains.copy(obj);
     } else {
       chains.didChange(null);
     }

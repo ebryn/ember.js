@@ -2,6 +2,7 @@ var get = Ember.get,
     set = Ember.set;
 
 var Range = requireModule('htmlbars/runtime/range').Range,
+    Utils = Ember.Utils,
     finishChains = Ember.finishChains,
     META_KEY = Ember.META_KEY;
 
@@ -11,6 +12,7 @@ var View = Ember.HTMLBars.View = function View(template, parentView, context) {
   this.template = template;
   this.streams = {};
   this.childViews = [];
+  Utils.inheritMeta(this);
   finishChains(this);
 };
 
