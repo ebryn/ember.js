@@ -41,12 +41,8 @@ function indexOf(array, target, method) {
 }
 
 function actionsFor(obj, eventName) {
-  var meta = obj.__ember_meta,
+  var meta = Utils.meta(obj),
       actions;
-
-  if (!meta || meta.source !== obj) {
-    meta = Utils.createMeta(obj);
-  }
 
   if (!meta.listeners) { meta.listeners = {}; }
 

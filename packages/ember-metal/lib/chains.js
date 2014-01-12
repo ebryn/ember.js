@@ -38,7 +38,7 @@ var Utils = Ember.Utils;
 function addChainWatcher(obj, keyName, node) {
   if (!obj || ('object' !== typeof obj)) { return; } // nothing to do
 
-  var m = metaFor(obj), nodes = m.chainWatchers;
+  var m = Utils.meta(obj), nodes = m.chainWatchers;
 
   if (!m.hasOwnProperty('chainWatchers')) {
     nodes = m.chainWatchers = {};
@@ -73,6 +73,7 @@ var ChainNode = Ember._ChainNode = function(parent, key, value) {
   this._parent = parent;
   this._key    = key;
   this._chains = null;
+  this.count   = 0;
 
   // _watching is true when calling get(this._parent, this._key) will
   // return the value of this node.
@@ -107,7 +108,7 @@ var ChainNodePrototype = ChainNode.prototype;
 function lazyGet(obj, key) {
   if (!obj) return undefined;
 
-  var meta = obj[META_KEY];
+  var meta = obj.__ember_meta;
   // check if object meant only to be a prototype
   if (meta && meta.proto === obj) return undefined;
 
@@ -159,7 +160,11 @@ ChainNodePrototype.add = function(path) {
   var obj, tuple, key, src, paths;
 
   paths = this._paths;
-  paths[path] = (paths[path] || 0) + 1;
+  if (paths[path]) {
+    paths[path]++;
+  } else {
+    paths[path] = 1;
+  }
 
   obj = this.value();
   tuple = normalizeTuple(obj, path);
@@ -243,18 +248,19 @@ ChainNodePrototype.unchain = function(key, path) {
   // delete node if needed.
   node.count--;
   if (node.count<=0) {
-    delete chains[node._key];
+    chains[node._key] = null;
     node.destroy();
   }
 
 };
 
 ChainNodePrototype.willChange = function(events) {
-  var chains = this._chains;
+  var chains = this._chains, chain;
   if (chains) {
     for(var key in chains) {
-      if (!chains.hasOwnProperty(key)) { continue; }
-      chains[key].willChange(events);
+      chain = chains[key];
+      if (!chain || !chains.hasOwnProperty(key)) { continue; }
+      chain.willChange(events);
     }
   }
 
@@ -310,11 +316,12 @@ ChainNodePrototype.didChange = function(events) {
   }
 
   // then notify chains...
-  var chains = this._chains;
+  var chains = this._chains, chain;
   if (chains) {
     for(var key in chains) {
-      if (!chains.hasOwnProperty(key)) { continue; }
-      chains[key].didChange(events);
+      chain = chains[key];
+      if (!chain || !chains.hasOwnProperty(key)) { continue; }
+      chain.didChange(events);
     }
   }
 

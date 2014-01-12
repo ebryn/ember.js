@@ -283,24 +283,29 @@ Ember.Utils = {
   updateMeta: function(obj) {
     var meta = obj.__ember_meta;
 
-    if (!this.isDefinePropertySimulated) this.o_defineProperty(obj, '__ember_meta', this.META_DESC);
-    var ret      = this.o_create(meta);
-    ret.descs    = this.o_create(ret.descs);
-    ret.watching = this.o_create(ret.watching);
-    ret.cache    = {};
-    ret.source   = obj;
+    if (meta.source !== obj) {
+      if (!this.isDefinePropertySimulated) this.o_defineProperty(obj, '__ember_meta', this.META_DESC);
+      var ret      = this.o_create(meta);
+      ret.descs    = this.o_create(ret.descs);
+      ret.watching = this.o_create(ret.watching);
+      ret.cache    = {};
+      ret.source   = obj;
 
-    if (this.MANDATORY_SETTER) { ret.values = this.o_create(ret.values); }
+      if (this.MANDATORY_SETTER) { ret.values = this.o_create(ret.values); }
 
-    obj.__ember_meta = ret;
-    return ret;
+      obj.__ember_meta = ret;
+      return ret;
+    } else {
+      return meta;
+    }
   },
 
   meta: function fastMeta(obj, writable) {
-    if (writable===false) return obj.__ember_meta || this.EMPTY_META;
-    return (obj.__ember_meta ? this.updateMeta(obj) : this.createMeta(obj));
+    var meta = obj.__ember_meta;
+    if (writable===false) return meta || this.EMPTY_META;
+    return (meta ? (meta.source === obj ? meta : this.updateMeta(obj)) : this.createMeta(obj));
   }
-}
+};
 
 Ember.getMeta = function getMeta(obj, property) {
   var meta = Ember.meta(obj, false);
