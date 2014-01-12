@@ -69,7 +69,7 @@ var removeChainWatcher = Ember.removeChainWatcher = function(obj, keyName, node)
 // A ChainNode watches a single key on an object. If you provide a starting
 // value for the key then the node won't actually watch it. For a root node
 // pass null for parent and key and object for value.
-var ChainNode = Ember._ChainNode = function(parent, key, value) {
+var ChainNode = Ember._ChainNode = function(parent, key, value, parentObj) {
   this._parent = parent;
   this._key    = key;
   this._chains = null;
@@ -86,7 +86,7 @@ var ChainNode = Ember._ChainNode = function(parent, key, value) {
   this._value  = value;
   this._paths = {};
   if (this._watching) {
-    this._object = parent.value();
+    this._object = parentObj || parent.value();
     if (this._object) { addChainWatcher(this._object, this._key, this); }
   } else {
     // Make sure to set so we have the same object shape
@@ -149,14 +149,14 @@ ChainNodePrototype.copy = function(obj) {
       paths = this._paths, path;
   for (path in paths) {
     if (paths[path] <= 0) { continue; } // this check will also catch non-number vals.
-    ret.add(path);
+    ret.add(path, obj);
   }
   return ret;
 };
 
 // called on the root node of a chain to setup watchers on the specified
 // path.
-ChainNodePrototype.add = function(path) {
+ChainNodePrototype.add = function(path, parentObj) {
   var obj, tuple, key, src, paths;
 
   paths = this._paths;
@@ -166,7 +166,7 @@ ChainNodePrototype.add = function(path) {
     paths[path] = 1;
   }
 
-  obj = this.value();
+  obj = parentObj || this.value();
   tuple = normalizeTuple(obj, path);
 
   // the path was a local path
@@ -190,7 +190,7 @@ ChainNodePrototype.add = function(path) {
   }
 
   tuple.length = 0;
-  this.chain(key, path, src);
+  this.chain(key, path, src, obj);
 };
 
 // called on the root node of a chain to teardown watcher on the specified
@@ -219,12 +219,12 @@ ChainNodePrototype.remove = function(path) {
 
 ChainNodePrototype.count = 0;
 
-ChainNodePrototype.chain = function(key, path, src) {
+ChainNodePrototype.chain = function(key, path, src, parentObj) {
   var chains = this._chains, node;
   if (!chains) { chains = this._chains = {}; }
 
   node = chains[key];
-  if (!node) { node = chains[key] = new ChainNode(this, key, src); }
+  if (!node) { node = chains[key] = new ChainNode(this, key, src, parentObj); }
   node.count++; // count chains...
 
   // chain rest of path if there is one
