@@ -1,7 +1,5 @@
 /*globals Em:true ENV EmberENV MetamorphENV:true */
 
-Ember.assert = function() {};
-
 // window.optStatus = function optStatus(fn) {
 //     switch(%GetOptimizationStatus(fn)) { // jshint ignore:line
 //         case 1: console.log("Function " + fn.name + " is optimized"); break;

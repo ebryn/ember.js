@@ -30,13 +30,18 @@ View.prototype = {
   streams: null,
 
   render: function(parentEl) {
-    var fragment = this.template(this, {data: {view: this}});
+    var fragment = this.template(this, {data: {view: this}}),
+        childViews = this.childViews,
+        childView, i, l;
 
     if (this.isVirtual) {
       var range = new Range(parentEl.parent, fragment.firstChild, fragment.lastChild);
       this.element = range;
       parentEl.appendChild(fragment);
-      this.childViews.forEach(function(cv) { cv.render(range); });
+      for (i = 0, l = childViews.length; i < l; i++) {
+        childView = childViews[i];
+        childView.render(range);
+      }
       return parentEl;
     } else {
       var el = this.element = document.createElement(this.tagName);
@@ -45,7 +50,10 @@ View.prototype = {
 
       el.appendChild(fragment);
       if (parentEl) { parentEl.appendChild(el); }
-      this.childViews.forEach(function(cv) { cv.render(el); });
+      for (i = 0, l = childViews.length; i < l; i++) {
+        childView = childViews[i];
+        childView.render(el);
+      }
       return el;
     }
   },
@@ -167,11 +175,14 @@ Ember.merge(EachView.prototype, {
   tagName: null,
 
   render: function(parentEl) {
-    var el = this.element;
+    var el = this.element,
+        childViews = this.childViews,
+        childView;
 
-    this.childViews.forEach(function(cv) {
-      cv.render(el);
-    }, this);
+    for (var i = 0, l = childViews.length; i < l; i++) {
+      childView = childViews[i];
+      childView.render(el);
+    }
   },
 
   createChildView: function(ViewClass, template, context) {

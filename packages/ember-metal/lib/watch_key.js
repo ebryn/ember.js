@@ -13,8 +13,10 @@ Ember.watchKey = function(obj, keyName, meta) {
 
   var m = meta || Utils.meta(obj), watching = m.watching;
 
-  // activate watching first time
-  if (!watching[keyName]) {
+  if (watching[keyName]) {
+    watching[keyName]++;
+  } else {
+    // activate watching first time
     watching[keyName] = 1;
 
     if ('function' === typeof obj.willWatchProperty) {
@@ -29,12 +31,6 @@ Ember.watchKey = function(obj, keyName, meta) {
         set: Ember.MANDATORY_SETTER_FUNCTION,
         get: Ember.DEFAULT_GETTER_FUNCTION(keyName)
       });
-    }
-  } else {
-    if (watching[keyName]) {
-      watching[keyName]++;
-    } else {
-      watching[keyName] = 1;
     }
   }
 };

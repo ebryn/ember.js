@@ -8,28 +8,6 @@ function template(str) {
   return Ember.HTMLBars.compile(str, {helpers: helpers});
 }
 
-function equalHTML(fragment, html) {
-  var div = document.createElement("div");
-  div.appendChild(fragment.cloneNode(true));
-  equal(div.innerHTML, html);
-}
-
-test("it works", function() {
-  var template = Ember.HTMLBars.compile("ohai");
-  equalHTML(template(), "ohai");
-});
-
-test("basic binding", function() {
-  var template = Ember.HTMLBars.compile(" {{foo}}"),
-      obj = {foo: "foo is here"},
-      fragment = template(obj);
-
-  equalHTML(fragment, " foo is here");
-
-  Ember.set(obj, 'foo', 'foo is still here');
-  equalHTML(fragment, " foo is still here");
-});
-
 var helpers = {
   view: function(params, options) {
     var childView = options.data.view.createChildView();
@@ -57,6 +35,28 @@ var helpers = {
     // return eachView.arrayStream;
   }
 };
+
+function equalHTML(fragment, html) {
+  var div = document.createElement("div");
+  div.appendChild(fragment.cloneNode(true));
+  equal(div.innerHTML, html);
+}
+
+test("it works", function() {
+  var template = Ember.HTMLBars.compile("ohai");
+  equalHTML(template(), "ohai");
+});
+
+test("basic binding", function() {
+  var template = Ember.HTMLBars.compile(" {{foo}}"),
+      obj = {foo: "foo is here"},
+      fragment = template(obj);
+
+  equalHTML(fragment, " foo is here");
+
+  Ember.set(obj, 'foo', 'foo is still here');
+  equalHTML(fragment, " foo is still here");
+});
 
 test("View", function() {
   var view = new View(template("ohai")),

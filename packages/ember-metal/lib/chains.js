@@ -44,8 +44,11 @@ function addChainWatcher(obj, keyName, node) {
     nodes = m.chainWatchers = {};
   }
 
-  if (!nodes[keyName]) { nodes[keyName] = []; }
-  nodes[keyName].push(node);
+  if (!nodes[keyName]) {
+    nodes[keyName] = [node];
+  } else {
+    nodes[keyName].push(node);
+  }
   watchKey(obj, keyName, m);
 }
 
@@ -221,16 +224,18 @@ ChainNodePrototype.count = 0;
 
 ChainNodePrototype.chain = function(key, path, src, parentObj) {
   var chains = this._chains, node;
-  if (!chains) { chains = this._chains = {}; }
+  if (!chains) {
+    chains = this._chains = {};
+  }
 
   node = chains[key];
   if (!node) { node = chains[key] = new ChainNode(this, key, src, parentObj); }
   node.count++; // count chains...
 
   // chain rest of path if there is one
-  if (path && path.length>0) {
+  if (path && path.length > 0) {
     key = firstKey(path);
-    path = path.slice(key.length+1);
+    path = path.slice(key.length + 1);
     node.chain(key, path); // NOTE: no src means it will observe changes...
   }
 };
