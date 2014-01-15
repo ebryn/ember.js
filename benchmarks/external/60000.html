@@ -1,0 +1,49 @@
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <div id="container"></div>
+  <script>
+    jQuery = {event: {fixHooks: {}}};
+  </script>
+  <script src="http://localhost:9292/ember-htmlbars.prod.js"></script>
+  <script>
+
+    function template(str) {
+      return Ember.HTMLBars.compile(str);
+    }
+
+    var View = Ember.HTMLBars.View;
+
+    var context = {foo: 'foo is here'};
+
+    function run() {
+      var t = template("{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}");
+      var container = document.getElementById('container');
+
+      var start = Date.now();
+      console.profile();
+      for (var i = 0, l = 10000; i < l; i++) {
+        var view = new View(t, null, context);
+        var el = view.render();
+        container.appendChild(el);
+      }
+      console.profileEnd();
+
+      var elapsed = Date.now() - start;
+      console.log(elapsed);
+    }
+
+    function update() {
+      var start = Date.now();
+      console.profile();
+      Ember.set(context, 'foo', 'foo is still here!');
+      console.profileEnd();
+
+      var elapsed = Date.now() - start;
+      console.log(elapsed);
+    }
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@
 
 var get = Ember.get, set = Ember.set;
 
+if (Ember.View) {
 Ember.View.reopen({
 
   /**
@@ -144,3 +145,4 @@ Ember.View.reopen({
     }
   }
 });
+}
