@@ -1,4 +1,4 @@
-define("htmlbars", 
+define("htmlbars",
   ["htmlbars/parser","htmlbars/ast","htmlbars/compiler","htmlbars/helpers","htmlbars/macros","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -20,7 +20,7 @@ define("htmlbars",
     __exports__.removeMacro = removeMacro;
     __exports__.registerMacro = registerMacro;
   });
-define("htmlbars/ast", 
+define("htmlbars/ast",
   ["handlebars/compiler/ast","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -84,77 +84,129 @@ define("htmlbars/ast",
     __exports__.HTMLElement = HTMLElement;
     __exports__.BlockElement = BlockElement;
   });
-define("htmlbars/compiler", 
-  ["htmlbars/parser","htmlbars/compiler/compile","htmlbars/runtime","htmlbars/helpers","exports"],
+define("htmlbars/compiler",
+  ["htmlbars/parser","htmlbars/compiler/template","htmlbars/runtime/dom_helpers","htmlbars/runtime/range","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
+    /*jshint evil:true*/
     var preprocess = __dependency1__.preprocess;
-    var compileAST = __dependency2__.compileAST;
+    var TemplateCompiler = __dependency2__.TemplateCompiler;
     var domHelpers = __dependency3__.domHelpers;
-    var helpers = __dependency4__.helpers;
+    var Range = __dependency4__.Range;
 
     function compile(string, options) {
-      return compileSpec(string, options)(domHelpers(helpers));
+      return compileSpec(string, options)(domHelpers(), Range);
     }
 
     __exports__.compile = compile;function compileSpec(string, options) {
       var ast = preprocess(string, options);
-      return compileAST(ast, options);
+      var compiler = new TemplateCompiler();
+      var program = compiler.compile(ast);
+      return new Function("dom", "Range", "return " + program);
     }
 
     __exports__.compileSpec = compileSpec;
   });
-define("htmlbars/compiler/ast_walker", 
+define("htmlbars/compiler/ast_walker",
   ["htmlbars/ast","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
+    var HTMLElement = __dependency1__.HTMLElement;
     var BlockElement = __dependency1__.BlockElement;
 
-    function Node(ast, parent) {
+    function Frame(children, parent, isBlock) {
       this.parent = parent;
-      this.ast = ast;
-      this.pos = ast.length-1;
-      this.count = 0;
+      this.children = children;
+      this.length = children.length;
+
+      // cursor
+      this.pos = this.length-1;
       this.inverse = false;
+      this.close = false;
+
+      // block tracking
+      this.isBlock = isBlock;
+      this.block = isBlock ? this : parent.block;
+      this.stack = isBlock ? [['endTemplate']] : null;
+      this.count = 0;
     }
 
-    Node.prototype.nextChild = function() {
+    Frame.prototype.next = function() {
       var node;
-      if (this.inverse) {
-        this.inverse = false;
-        node = this.ast[this.pos];
-        this.pos--;
-        this.count++;
-        return new Node(node.children, this);
-      }
       while (this.pos >= 0) {
-        node = this.ast[this.pos];
-        if (node instanceof BlockElement) {
+        node = this.children[this.pos];
+        if (this.inverse) {
+          this.inverse = false;
+          this.pos--;
+          this.block.count++;
+          return new Frame(node.children, this, true);
+        }
+        if (typeof node === 'string') {
+          this.block.stack.push(['text', node, this.pos, this.length]);
+        } else if (node instanceof BlockElement) {
+          this.block.stack.push(['block', node, this.pos, this.length]);
           this.inverse = true;
-          this.count++;
-          return new Node(node.inverse, this);
+          this.block.count++;
+          return new Frame(node.inverse, this, true);
+        } else if (node instanceof HTMLElement) {
+          if (this.close) {
+            this.close = false;
+            this.block.stack.push(['openElement', node, this.pos, this.length]);
+          } else {
+            this.close = true;
+            this.block.stack.push(['closeElement', node, this.pos, this.length]);
+            return new Frame(node.children, this, false);
+          }
+        } else {
+          this.block.stack.push(['node', node, this.pos, this.length]);
         }
         this.pos--;
+      }
+      if (this.isBlock) {
+        this.block.stack.push(['startTemplate', this.block.count]);
       }
       return null;
     };
 
-    function walkTree(ast, visit) {
-      var node = new Node(ast, null), next;
-      while (node) {
-        var nextChild = node.nextChild();
-        if (nextChild === null) {
-          visit(node.ast, node.count);
-          node = node.parent;
-        } else {
-          node = nextChild;
-        }
-      }
+    function ASTWalker(compiler) {
+      this.compiler = compiler;
     }
 
-    __exports__.walkTree = walkTree;
+    __exports__.ASTWalker = ASTWalker;// Walks tree backwards depth first so that child
+    // templates can be push onto stack then popped
+    // off for its parent.
+    ASTWalker.prototype.visit = function (children) {
+      var frame = new Frame(children, null, true), next;
+      while (frame) {
+        next = frame.next();
+        if (next === null) {
+          if (frame.isBlock) {
+            this.send(frame.stack);
+          }
+          frame = frame.parent;
+        } else {
+          frame = next;
+        }
+      }
+    };
+
+    ASTWalker.prototype.send = function(stack) {
+      var compiler = this.compiler, tuple, name;
+      while(tuple = stack.pop()) {
+        name = tuple.shift();
+        compiler[name].apply(compiler, tuple);
+      }
+    };
+
+    // compiler.startTemplate(childBlockCount);
+    // compiler.endTemplate();
+    // compiler.block(block, index, length);
+    // compiler.openElement(element, index, length);
+    // compiler.text(text, index, length);
+    // compiler.closeElement(element, index, length);
+    // compiler.node(node, index, length)
   });
-define("htmlbars/compiler/attr", 
+define("htmlbars/compiler/attr",
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -245,7 +297,7 @@ define("htmlbars/compiler/attr",
 
     __exports__.AttrCompiler = AttrCompiler;
   });
-define("htmlbars/compiler/compile", 
+define("htmlbars/compiler/compile",
   ["htmlbars/compiler/pass1","htmlbars/compiler/pass2","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -264,7 +316,7 @@ define("htmlbars/compiler/compile",
 
     __exports__.compileAST = compileAST;
   });
-define("htmlbars/compiler/elements", 
+define("htmlbars/compiler/elements",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -281,91 +333,55 @@ define("htmlbars/compiler/elements",
     }
     __exports__.topElement = topElement;
   });
-define("htmlbars/compiler/fragment", 
-  ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/elements","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
+define("htmlbars/compiler/fragment",
+  ["htmlbars/compiler/utils","htmlbars/compiler/quoting","exports"],
+  function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
-    /*jshint evil:true*/
-
     var processOpcodes = __dependency1__.processOpcodes;
-    var prepareHelper = __dependency2__.prepareHelper;
-    var call = __dependency3__.call;
-    var helper = __dependency3__.helper;
-    var pushElement = __dependency4__.pushElement;
-    var popElement = __dependency4__.popElement;
-    var topElement = __dependency4__.topElement;
-    var pushStack = __dependency5__.pushStack;
-    var popStack = __dependency5__.popStack;
-    var string = __dependency6__.string;
-    var quotedArray = __dependency6__.quotedArray;
-    var hash = __dependency6__.hash;
+    var string = __dependency2__.string;
 
-    function FragmentCompiler() {}
+    function FragmentCompiler() {
+      this.fn = null;
+      this.depth = 0;
+    }
 
-    var compiler2 = FragmentCompiler.prototype;
+    __exports__.FragmentCompiler = FragmentCompiler;FragmentCompiler.prototype.compile = function(opcodes) {
+      this.depth = 0;
+      this.fn =
+        'function build() {\n' +
+        '  var frag = el0 = dom.createDocumentFragment();\n';
 
-    compiler2.compile = function(opcodeTree) {
-      this.output = [];
-      this.elementNumber = 0;
+      processOpcodes(this, opcodes);
 
-      this.output.push("return function template() {");
-      this.preamble();
-      processOpcodes(this, opcodeTree.opcodes);
-      this.postamble();
-      this.output.push("};");
+      this.fn +=
+        '  return frag;\n'+
+        '}\n';
 
-      var childCompiler = new FragmentCompiler();
-      return {
-        fn: new Function('dom', this.output.join("\n")),
-        children: opcodeTree.children.map(function (opcodes) {
-          return childCompiler.compile(opcodes);
-        })
-      };
+      return this.fn;
     };
 
-    compiler2.preamble = function() {
-      this.push("var element0, el");
-      this.push("var frag = element0 = dom.createDocumentFragment()");
+    FragmentCompiler.prototype.openElement = function(tagName) {
+      var el = 'el'+(++this.depth);
+      this.fn += '  var '+el+' = dom.createElement('+string(tagName)+');\n';
     };
 
-    compiler2.postamble = function() {
-      this.output.push("return frag;");
+    FragmentCompiler.prototype.setAttribute = function(name, value) {
+      var el = 'el'+this.depth;
+      this.fn += '  dom.setAttribute('+el+','+string(name)+','+string(value)+');\n';
     };
 
-    compiler2.program = function(programId, inverseId) {
-      pushStack(this.stack, inverseId);
-      pushStack(this.stack, programId);
+    FragmentCompiler.prototype.text = function(str) {
+      var el = 'el'+this.depth;
+      this.fn += '  dom.appendText('+el+','+string(str)+');\n';
     };
 
-    compiler2.content = function(str) {
-      this.push(helper('appendText', this.el(), string(str)));
+    FragmentCompiler.prototype.closeElement = function() {
+      var child = 'el'+(this.depth--);
+      var el = 'el'+this.depth;
+      this.fn += '  '+el+'.appendChild('+child+');\n';
     };
-
-    compiler2.push = function(string) {
-      this.output.push(string + ";");
-    };
-
-    compiler2.el = function() {
-      return topElement(this);
-    };
-
-    compiler2.openElement = function(tagName) {
-      var elRef = pushElement(this);
-      this.push("var " + elRef + " = el = " + call('dom.createElement', string(tagName)));
-    };
-
-    compiler2.setAttribute = function(name, value) {
-      this.push(call('dom.setAttribute', 'el', string(name), string(value)));
-    };
-
-    compiler2.closeElement = function() {
-      var elRef = popElement(this);
-      this.push(call([this.el(), 'appendChild'], elRef));
-    };
-
-    __exports__.FragmentCompiler = FragmentCompiler;
   });
-define("htmlbars/compiler/fragment2", 
+define("htmlbars/compiler/fragment2",
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/elements","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
     "use strict";
@@ -449,111 +465,68 @@ define("htmlbars/compiler/fragment2",
 
     __exports__.Fragment2 = Fragment2;
   });
-define("htmlbars/compiler/fragment_opcode", 
-  ["htmlbars/ast","exports"],
+define("htmlbars/compiler/fragment_opcode",
+  ["./ast_walker","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
-    var HTMLElement = __dependency1__.HTMLElement;
-    var BlockElement = __dependency1__.BlockElement;
+    var ASTWalker = __dependency1__.ASTWalker;
 
-    function FragmentOpcodeCompiler() {}
-
-    var prototype = FragmentOpcodeCompiler.prototype;
-
-    prototype.compile = function(ast) {
+    function FragmentOpcodeCompiler() {
       this.opcodes = [];
-      this.children = [];
-      processChildren(this, ast);
-      return {
-        opcodes: this.opcodes,
-        children: this.children
-      };
-    };
-
-    function processChildren(compiler, children) {
-      var node, lastNode;
-
-      for (var i=0, l=children.length; i<l; i++) {
-        node = children[i];
-
-        if (typeof node === 'string') {
-          compiler.string(node);
-        } else if (node instanceof HTMLElement) {
-          compiler.element(node);
-        } else if (node instanceof BlockElement) {
-          compiler.block(node);
-        }
-
-        lastNode = node;
-      }
     }
 
-    prototype.opcode = function(type) {
-      var params = [].slice.call(arguments, 1);
-      this.opcodes.push({ type: type, params: params });
+    FragmentOpcodeCompiler.prototype.compile = function(ast) {
+      var astWalker = new ASTWalker(this);
+      astWalker.visit(ast);
+      return this.opcodes;
     };
 
-    prototype.string = function(string) {
-      this.opcode('content', string);
+    FragmentOpcodeCompiler.prototype.opcode = function(type, params) {
+      this.opcodes.push([type, params]);
     };
 
-    prototype.element = function(element) {
-      this.opcode('openElement', element.tag);
+    FragmentOpcodeCompiler.prototype.text = function(string) {
+      this.opcode('text', [string]);
+    };
+
+    FragmentOpcodeCompiler.prototype.openElement = function(element) {
+      this.opcode('openElement', [element.tag]);
 
       element.attributes.forEach(function(attribute) {
         this.attribute(attribute);
       }, this);
-
-      processChildren(this, element.children);
-
-      this.opcode('closeElement');
     };
 
-    prototype.attribute = function(attribute) {
-      var name = attribute[0],
-          value = attribute[1],
-          hasMustache = false;
+    FragmentOpcodeCompiler.prototype.closeElement = function(element) {
+      this.opcode('closeElement', [element.tag]);
+    };
 
+    FragmentOpcodeCompiler.prototype.startTemplate = function() {
+      this.opcodes.length = 0;
+    };
+
+    FragmentOpcodeCompiler.prototype.endTemplate = function() {};
+
+    FragmentOpcodeCompiler.prototype.node = function () {};
+
+    FragmentOpcodeCompiler.prototype.block = function () {};
+
+    FragmentOpcodeCompiler.prototype.attribute = function(attribute) {
+      var name = attribute[0], value = attribute[1];
       if (value.length === 1 && typeof value[0] === 'string') {
-        this.opcode('setAttribute', name, value[0]);
+        this.opcode('setAttribute', [name, value[0]]);
       }
-    };
-
-    prototype.ID = function(id) {
-      this.opcode('id', id.parts);
-    };
-
-    prototype.STRING = function(string) {
-      this.opcode('string', string.stringModeValue);
-    };
-
-    prototype.BOOLEAN = function(boolean) {
-      this.opcode('literal', boolean.stringModeValue);
-    };
-
-    prototype.INTEGER = function(integer) {
-      this.opcode('literal', integer.stringModeValue);
-    };
-
-    prototype.block = function(block) {
-      var compiler = new FragmentOpcodeCompiler(),
-          program = compiler.compile(block.children, this.options),
-          inverse = compiler.compile(block.inverse, this.options);
-
-      this.children.push(program);
-      this.children.push(inverse);
     };
 
     __exports__.FragmentOpcodeCompiler = FragmentOpcodeCompiler;
   });
-define("htmlbars/compiler/helpers", 
-  ["htmlbars/compiler/quoting","htmlbars/compiler/stack","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+define("htmlbars/compiler/helpers",
+  ["htmlbars/compiler/quoting","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
     var array = __dependency1__.array;
     var hash = __dependency1__.hash;
     var string = __dependency1__.string;
-    var popStack = __dependency2__.popStack;
 
     function prepareHelper(stack, size) {
       var args = [],
@@ -563,32 +536,30 @@ define("htmlbars/compiler/helpers",
           keyName,
           i;
 
-      var hashSize = popStack(stack);
+      var hashSize = stack.pop();
 
       for (i=0; i<hashSize; i++) {
-        keyName = popStack(stack);
-        hashPairs.unshift(keyName + ':' + popStack(stack));
-        hashTypes.unshift(keyName + ':' + popStack(stack));
+        keyName = stack.pop();
+        hashPairs.unshift(keyName + ':' + stack.pop());
+        hashTypes.unshift(keyName + ':' + stack.pop());
       }
 
       for (i=0; i<size; i++) {
-        args.unshift(popStack(stack));
-        types.unshift(popStack(stack));
+        args.unshift(stack.pop());
+        types.unshift(stack.pop());
       }
 
-      var programId = popStack(stack);
-      var inverseId = popStack(stack);
+      var programId = stack.pop();
+      var inverseId = stack.pop();
 
       var options = ['types:' + array(types), 'hashTypes:' + hash(hashTypes), 'hash:' + hash(hashPairs)];
 
       if (programId !== null) {
-        options.push('render:childTemplates[' + programId + ']');
+        options.push('render:child' + programId);
       }
 
-      // TODO ensure inverseId always initialized
-      // and remove undefined check
-      if (inverseId !== null && inverseId !== undefined) {
-        options.push('inverse:childTemplates[' + inverseId + ']');
+      if (inverseId !== null) {
+        options.push('inverse:child' + inverseId);
       }
 
       return {
@@ -599,52 +570,40 @@ define("htmlbars/compiler/helpers",
 
     __exports__.prepareHelper = prepareHelper;
   });
-define("htmlbars/compiler/hydration", 
-  ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
+define("htmlbars/compiler/hydration",
+  ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/quoting","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
-    /*jshint evil:true*/
-
     var processOpcodes = __dependency1__.processOpcodes;
     var prepareHelper = __dependency2__.prepareHelper;
-    var call = __dependency3__.call;
-    var helper = __dependency3__.helper;
-    var pushStack = __dependency4__.pushStack;
-    var popStack = __dependency4__.popStack;
-    var string = __dependency5__.string;
-    var quotedArray = __dependency5__.quotedArray;
-    var hash = __dependency5__.hash;
-    var array = __dependency5__.array;
+    var string = __dependency3__.string;
+    var quotedArray = __dependency3__.quotedArray;
+    var hash = __dependency3__.hash;
+    var array = __dependency3__.array;
 
-    function HydrationCompiler() {}
+    function HydrationCompiler() {
+      this.stack = [];
+      this.mustaches = [];
+    }
 
     var prototype = HydrationCompiler.prototype;
 
-    prototype.compile = function(opcodeTree) {
-      this.output = [];
-      this.stack = [];
+    prototype.compile = function(opcodes, childTemplates) {
+      this.stack.length = 0;
+      this.mustaches.length = 0;
 
-      this.output.push("return function hydrate(fragment, childTemplates) {");
+      processOpcodes(this, opcodes);
 
-      this.mustaches = [];
+      var fn =  'function hydrate(fragment) {\n';
+      for (var i=0, l=childTemplates.length; i<l; i++) {
+        fn +=   '  var child' + i + '=' + childTemplates[i] + ';\n';
+      }
+      fn +=     '  return [\n' +
+                '  ' + this.mustaches.join(',\n  ') + '\n' +
+                '  ];\n' +
+                '}\n';
 
-      processOpcodes(this, opcodeTree.opcodes);
-
-      this.output.push("return [\n"+this.mustaches.join(",\n")+"\n];");
-      this.output.push("};");
-
-      var childCompiler = new HydrationCompiler();
-
-      return {
-        fn: new Function("Range", this.output.join("\n")),
-        children: opcodeTree.children.map(function (opcodes) {
-          return childCompiler.compile(opcodes);
-        })
-      };
-    };
-
-    prototype.push = function(string) {
-      this.output.push(string + ";");
+      return fn;
     };
 
     prototype.program = function(programId, inverseId) {
@@ -653,26 +612,22 @@ define("htmlbars/compiler/hydration",
     };
 
     prototype.id = function(parts) {
-      pushStack(this.stack, string('id'));
-      pushStack(this.stack, string(parts.join('.')));
+      this.stack.push(string('id'));
+      this.stack.push(string(parts.join('.')));
     };
 
     prototype.literal = function(literal) {
-      pushStack(this.stack, string(typeof literal));
-      pushStack(this.stack, literal);
+      this.stack.push(string(typeof literal));
+      this.stack.push(literal);
+    };
+
+    prototype.stringLiteral = function(str) {
+      this.stack.push(string('string'));
+      this.stack.push(string(str));
     };
 
     prototype.stackLiteral = function(literal) {
-      pushStack(this.stack, literal);
-    };
-
-    prototype.string = function(str) {
-      pushStack(this.stack, string('string'));
-      pushStack(this.stack, string(str));
-    };
-
-    prototype.content = function(str) {
-      pushStack(this.stack, string(str));
+      this.stack.push(literal);
     };
 
     prototype.helper = function(name, size, escaped, parentPath, startIndex, endIndex) {
@@ -686,20 +641,24 @@ define("htmlbars/compiler/hydration",
     };
 
     prototype.ambiguousAttr = function(str, escaped) {
-      pushStack(this.stack, '['+string(str)+', [], {escaped:'+escaped+'}]');
+      this.stack.push('['+string(str)+', [], {escaped:'+escaped+'}]');
     };
 
     prototype.helperAttr = function(name, size, escaped, elementPath) {
       var prepared = prepareHelper(this.stack, size);
       prepared.options.push('escaped:'+escaped);
 
-      pushStack(this.stack, '['+string(name)+','+prepared.args+','+ hash(prepared.options)+']');
+      this.stack.push('['+string(name)+','+prepared.args+','+ hash(prepared.options)+']');
+    };
+
+    prototype.string = function(str) {
+      this.stack.push(string(str));
     };
 
     prototype.attribute = function(name, size, elementPath) {
       var args = [];
       for (var i = 0; i < size; i++) {
-        args.push(popStack(this.stack));
+        args.push(this.stack.pop());
       }
 
       var element = "fragment";
@@ -740,7 +699,7 @@ define("htmlbars/compiler/hydration",
 
     __exports__.HydrationCompiler = HydrationCompiler;
   });
-define("htmlbars/compiler/hydration2", 
+define("htmlbars/compiler/hydration2",
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -881,7 +840,7 @@ define("htmlbars/compiler/hydration2",
 
     __exports__.Hydration2 = Hydration2;
   });
-define("htmlbars/compiler/hydration_attr", 
+define("htmlbars/compiler/hydration_attr",
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -964,100 +923,42 @@ define("htmlbars/compiler/hydration_attr",
 
     __exports__.HydrationAttrCompiler = HydrationAttrCompiler;
   });
-define("htmlbars/compiler/hydration_opcode", 
-  ["htmlbars/utils","htmlbars/ast","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+define("htmlbars/compiler/hydration_opcode",
+  ["./ast_walker","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
-    var merge = __dependency1__.merge;
-    var HTMLElement = __dependency2__.HTMLElement;
-    var BlockElement = __dependency2__.BlockElement;
+    var ASTWalker = __dependency1__.ASTWalker;
 
-    function HydrationOpcodeCompiler(options) {
-      this.options = options || {};
-
-      var knownHelpers = {
-        'helperMissing': true,
-        'blockHelperMissing': true,
-        'each': true,
-        'if': true,
-        'unless': true,
-        'with': true,
-        'log': true
-      };
-
-      this.options.knownHelpers = this.options.knownHelpers || {};
-      merge(knownHelpers, this.options.knownHelpers);
-    }
-
-    var compiler1 = HydrationOpcodeCompiler.prototype;
-
-    compiler1.compile = function(ast) {
+    function HydrationOpcodeCompiler() {
       this.opcodes = [];
       this.paths = [];
-      this.children = [];
-      processChildren(this, ast);
-      return {
-        opcodes: this.opcodes,
-        children: this.children
-      };
-    };
-
-    function processChildren(compiler, children) {
-      var node, lastNode, currentDOMChildIndex = -1;
-
-      for (var i=0, l=children.length; i<l; i++) {
-        node = children[i];
-
-        if (typeof node === 'string') {
-          ++currentDOMChildIndex;
-          // compiler.string(node);
-        } else if (node instanceof HTMLElement) {
-          compiler.paths.push(++currentDOMChildIndex);
-          compiler.element(node, i, l, currentDOMChildIndex);
-          compiler.paths.pop();
-        } else if (node instanceof BlockElement) {
-          compiler.block(node, i, l, currentDOMChildIndex);
-        } else {
-          compiler[node.type](node, i, l, currentDOMChildIndex);
-        }
-
-        lastNode = node;
-      }
+      this.templateId = 0;
+      this.currentDOMChildIndex = 0;
     }
 
-    compiler1.block = function(block, childIndex, childrenLength, currentDOMChildIndex) {
-      var compiler = new HydrationOpcodeCompiler();
-
-      var program = compiler.compile(block.children, this.options),
-          inverse = compiler.compile(block.inverse, this.options),
-          mustache = block.helper;
-
-
-      var start = (currentDOMChildIndex < 0 ? null : currentDOMChildIndex),
-          end = (childIndex === childrenLength - 1 ? null : currentDOMChildIndex + 1);
-
-      this.children.push(program);
-      var programId = this.children.length - 1;
-
-      this.children.push(inverse);
-      var inverseId = this.children.length - 1;
-
-      this.opcode('program', programId, inverseId);
-      processParams(this, mustache.params);
-      processHash(this, mustache.hash);
-      this.opcode('helper', mustache.id.string, mustache.params.length, mustache.escaped, this.paths.slice(), start, end);
+    HydrationOpcodeCompiler.prototype.compile = function(ast) {
+      var astWalker = new ASTWalker(this);
+      astWalker.visit(ast);
+      return this.opcodes;
     };
 
-    compiler1.opcode = function(type) {
-      var params = [].slice.call(arguments, 1);
-      this.opcodes.push({ type: type, params: params });
+    HydrationOpcodeCompiler.prototype.startTemplate = function() {
+      this.opcodes.length = 0;
+      this.paths.length = 0;
+      this.templateId = 0;
+      this.currentDOMChildIndex = -1;
     };
 
-    compiler1.string = function(string) {
-      this.opcode('content', string);
+    HydrationOpcodeCompiler.prototype.endTemplate = function() {};
+
+    HydrationOpcodeCompiler.prototype.text = function(string) {
+      ++this.currentDOMChildIndex;
     };
 
-    compiler1.element = function(element, childIndex, childrenLength, currentDOMChildIndex) {
+    HydrationOpcodeCompiler.prototype.openElement = function(element) {
+      this.paths.push(++this.currentDOMChildIndex);
+      this.currentDOMChildIndex = -1;
+
       element.attributes.forEach(function(attribute) {
         this.attribute(attribute);
       }, this);
@@ -1065,109 +966,108 @@ define("htmlbars/compiler/hydration_opcode",
       element.helpers.forEach(function(helper) {
         this.nodeHelper(helper);
       }, this);
-
-      processChildren(this, element.children);
     };
 
-    compiler1.attribute = function(attribute) {
-      var name = attribute[0],
-          value = attribute[1],
-          hasMustache = false;
-
-      // TODO: improve this
-      value.forEach(function(node) {
-        if (typeof node !== 'string') {
-          hasMustache = true;
-        }
-      });
-
-      if (hasMustache) {
-        var node;
-        for (var i = value.length - 1; i >= 0; i--) {
-          node = value[i];
-
-          if (typeof node === 'string') {
-            this.string(node);
-          } else {
-            this[node.type + 'InAttr'](node);
-          }
-        }
-        this.opcode('attribute', name, value.length, this.paths.slice());
-      }
+    HydrationOpcodeCompiler.prototype.closeElement = function(element) {
+      this.currentDOMChildIndex = this.paths.pop();
     };
 
-    compiler1.nodeHelper = function(mustache) {
-      this.opcode('program', null);
-      processParams(this, mustache.params);
-      processHash(this, mustache.hash);
-
-      this.opcode('nodeHelper', mustache.id.string, mustache.params.length, this.paths.slice());
+    HydrationOpcodeCompiler.prototype.node = function (node, childIndex, childrenLength) {
+      this[node.type](node, childIndex, childrenLength);
     };
 
-    compiler1.mustache = function(mustache, childIndex, childrenLength, currentDOMChildIndex) {
-      var type = classifyMustache(mustache, this.options);
+    HydrationOpcodeCompiler.prototype.block = function(block, childIndex, childrenLength) {
+      var currentDOMChildIndex = this.currentDOMChildIndex,
+          mustache = block.helper;
 
       var start = (currentDOMChildIndex < 0 ? null : currentDOMChildIndex),
           end = (childIndex === childrenLength - 1 ? null : currentDOMChildIndex + 1);
 
-      if (type === 'simple' || type === 'ambiguous') {
-        this.opcode('ambiguous', mustache.id.string, mustache.escaped, this.paths.slice(), start, end);
-      } else {
-        this.opcode('program', null);
-        processParams(this, mustache.params);
-        processHash(this, mustache.hash);
-        this.opcode('helper', mustache.id.string, mustache.params.length, mustache.escaped, this.paths.slice(), start, end);
+      this.opcode('program', this.templateId++, this.templateId++);
+      processParams(this, mustache.params);
+      processHash(this, mustache.hash);
+      this.opcode('helper', mustache.id.string, mustache.params.length, mustache.escaped, this.paths.slice(), start, end);
+    };
+
+    HydrationOpcodeCompiler.prototype.opcode = function(type) {
+      var params = [].slice.call(arguments, 1);
+      this.opcodes.push([type, params]);
+    };
+
+    HydrationOpcodeCompiler.prototype.attribute = function(attribute) {
+      var name = attribute[0], value = attribute[1];
+
+      if (value.length === 0 || (value.length === 1 && typeof value[0] === 'string')) {
+        return;
       }
-    };
 
-    compiler1.mustacheInAttr = function(mustache) {
-      var type = classifyMustache(mustache, this.options);
+      var node;
+      for (var i = value.length - 1; i >= 0; i--) {
+        node = value[i];
 
-      if (type === 'simple' || type === 'ambiguous') {
-        this.opcode('ambiguousAttr', mustache.id.string, mustache.escaped);
-      } else {
-        this.opcode('program', null);
-        processParams(this, mustache.params);
-        processHash(this, mustache.hash);
-        this.opcode('helperAttr', mustache.id.string, mustache.params.length, mustache.escaped);
-      }
-    };
-
-    compiler1.ID = function(id) {
-      this.opcode('id', id.parts);
-    };
-
-    compiler1.STRING = function(string) {
-      this.opcode('string', string.stringModeValue);
-    };
-
-    compiler1.BOOLEAN = function(boolean) {
-      this.opcode('literal', boolean.stringModeValue);
-    };
-
-    compiler1.INTEGER = function(integer) {
-      this.opcode('literal', integer.stringModeValue);
-    };
-
-    function classifyMustache(mustache, options) {
-      var isHelper   = mustache.isHelper;
-      var isEligible = mustache.eligibleHelper;
-
-      // if ambiguous, we can possibly resolve the ambiguity now
-      if (isEligible && !isHelper) {
-        var name = mustache.id.parts[0];
-
-        if (options.knownHelpers[name]) {
-          isHelper = true;
-        } else if (options.knownHelpersOnly) {
-          isEligible = false;
+        if (typeof node === 'string') {
+          this.string(node);
+        } else {
+          this[node.type + 'InAttr'](node);
         }
       }
 
-      if (isHelper) { return "helper"; }
-      else if (isEligible) { return "ambiguous"; }
-      else { return "simple"; }
-    }
+      this.opcode('attribute', name, value.length, this.paths.slice());
+    };
+
+    HydrationOpcodeCompiler.prototype.nodeHelper = function(mustache) {
+      this.opcode('program', null, null);
+      processParams(this, mustache.params);
+      processHash(this, mustache.hash);
+      this.opcode('nodeHelper', mustache.id.string, mustache.params.length, this.paths.slice());
+    };
+
+    HydrationOpcodeCompiler.prototype.mustache = function(mustache, childIndex, childrenLength) {
+      var currentDOMChildIndex = this.currentDOMChildIndex;
+
+      var start = (currentDOMChildIndex < 0 ? null : currentDOMChildIndex),
+          end = (childIndex === childrenLength - 1 ? null : currentDOMChildIndex + 1);
+
+      if (mustache.isHelper) {
+        this.opcode('program', null, null);
+        processParams(this, mustache.params);
+        processHash(this, mustache.hash);
+        this.opcode('helper', mustache.id.string, mustache.params.length, mustache.escaped, this.paths.slice(), start, end);
+      } else {
+        this.opcode('ambiguous', mustache.id.string, mustache.escaped, this.paths.slice(), start, end);
+      }
+    };
+
+    HydrationOpcodeCompiler.prototype.string = function(str) {
+      this.opcode('string', str);
+    };
+
+    HydrationOpcodeCompiler.prototype.mustacheInAttr = function(mustache) {
+      if (mustache.isHelper) {
+        this.opcode('program', null, null);
+        processParams(this, mustache.params);
+        processHash(this, mustache.hash);
+        this.opcode('helperAttr', mustache.id.string, mustache.params.length, mustache.escaped);
+      } else {
+        this.opcode('ambiguousAttr', mustache.id.string, mustache.escaped);
+      }
+    };
+
+    HydrationOpcodeCompiler.prototype.ID = function(id) {
+      this.opcode('id', id.parts);
+    };
+
+    HydrationOpcodeCompiler.prototype.STRING = function(string) {
+      this.opcode('stringLiteral', string.stringModeValue);
+    };
+
+    HydrationOpcodeCompiler.prototype.BOOLEAN = function(boolean) {
+      this.opcode('literal', boolean.stringModeValue);
+    };
+
+    HydrationOpcodeCompiler.prototype.INTEGER = function(integer) {
+      this.opcode('literal', integer.stringModeValue);
+    };
 
     function processParams(compiler, params) {
       params.forEach(function(param) {
@@ -1190,7 +1090,7 @@ define("htmlbars/compiler/hydration_opcode",
 
     __exports__.HydrationOpcodeCompiler = HydrationOpcodeCompiler;
   });
-define("htmlbars/compiler/invoke", 
+define("htmlbars/compiler/invoke",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1212,7 +1112,7 @@ define("htmlbars/compiler/invoke",
     }
     __exports__.helper = helper;
   });
-define("htmlbars/compiler/pass1", 
+define("htmlbars/compiler/pass1",
   ["htmlbars/utils","htmlbars/ast","htmlbars/compiler/attr","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -1437,7 +1337,7 @@ define("htmlbars/compiler/pass1",
 
     __exports__.Compiler1 = Compiler1;
   });
-define("htmlbars/compiler/pass2", 
+define("htmlbars/compiler/pass2",
   ["htmlbars/compiler/utils","htmlbars/compiler/helpers","htmlbars/compiler/invoke","htmlbars/compiler/elements","htmlbars/compiler/stack","htmlbars/compiler/quoting","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __exports__) {
     "use strict";
@@ -1579,7 +1479,7 @@ define("htmlbars/compiler/pass2",
 
     __exports__.Compiler2 = Compiler2;
   });
-define("htmlbars/compiler/quoting", 
+define("htmlbars/compiler/quoting",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1611,7 +1511,7 @@ define("htmlbars/compiler/quoting",
 
     __exports__.hash = hash;
   });
-define("htmlbars/compiler/stack", 
+define("htmlbars/compiler/stack",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1628,119 +1528,131 @@ define("htmlbars/compiler/stack",
 
     __exports__.popStack = popStack;
   });
-define("htmlbars/compiler/template", 
-  ["htmlbars/compiler/fragment_opcode","htmlbars/compiler/hydration_opcode","htmlbars/compiler/fragment","htmlbars/compiler/hydration","htmlbars/parser","htmlbars/runtime","htmlbars/runtime/range","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __exports__) {
+define("htmlbars/compiler/template",
+  ["./fragment_opcode","./fragment","./hydration_opcode","./hydration","./ast_walker","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
     var FragmentOpcodeCompiler = __dependency1__.FragmentOpcodeCompiler;
-    var HydrationOpcodeCompiler = __dependency2__.HydrationOpcodeCompiler;
-    var FragmentCompiler = __dependency3__.FragmentCompiler;
+    var FragmentCompiler = __dependency2__.FragmentCompiler;
+    var HydrationOpcodeCompiler = __dependency3__.HydrationOpcodeCompiler;
     var HydrationCompiler = __dependency4__.HydrationCompiler;
-    var preprocess = __dependency5__.preprocess;
-    var domHelpers = __dependency6__.domHelpers;
-    var Range = __dependency7__.Range;
+    var ASTWalker = __dependency5__.ASTWalker;
 
-    function compileAST(ast, options) {
-      var fragmentCompiler = new FragmentOpcodeCompiler(options),
-          hydrationCompiler = new HydrationOpcodeCompiler(compileAST, options),
-          fragment2 = new FragmentCompiler(),
-          hydration2 = new HydrationCompiler();
-
-      var fragmentOpcodeTree = fragmentCompiler.compile(ast);
-      var hydrationOpcodeTree = hydrationCompiler.compile(ast);
-
-      var dom = domHelpers({});
-      function closeOverDOM(tree) {
-        var children = tree.children;
-        tree.fn = tree.fn(dom);
-        for (var i=0; i<children.length; i++) {
-          closeOverDOM(children[i]);
-        }
-      }
-
-      var fragmentFnTree = fragment2.compile(fragmentOpcodeTree);
-      closeOverDOM(fragmentFnTree);
-
-      function closeOverRange(tree) {
-        var children = tree.children;
-        tree.fn = tree.fn(Range);
-        for (var i=0; i<children.length; i++) {
-          closeOverRange(children[i]);
-        }
-      }
-      var hydrationFnTree = hydration2.compile(hydrationOpcodeTree);
-      closeOverRange(hydrationFnTree);
-
-      function buildTemplate(fragmentFnTree, hydrationFnTree) {
-        var childTemplates = [];
-        for (var i=0, l=fragmentFnTree.children.length; i<l; i++) {
-          childTemplates.push(buildTemplate(fragmentFnTree.children[i], hydrationFnTree.children[i]));
-        }
-
-        var cachedFragment;
-        return function templateFunction(context, options) {
-          if (!cachedFragment) {
-            cachedFragment = fragmentFnTree.fn(context, options);
-          }
-
-          var clone = cachedFragment.cloneNode(true);
-          var mustacheInfos = hydrationFnTree.fn(clone, childTemplates);
-          var helpers = options && options.helpers || {};
-
-          var mustacheInfo;
-          for (var i = 0, l = mustacheInfos.length; i < l; i++) {
-            mustacheInfo = mustacheInfos[i];
-            var name = mustacheInfo[0],
-                params = mustacheInfo[1],
-                helperOptions = mustacheInfo[2];
-            helperOptions.helpers = helpers;
-            helperOptions.data = options.data;
-            if (!helperOptions.element) { helperOptions.element = helperOptions.range; }
-
-            if (name === 'ATTRIBUTE') {
-              helpers.ATTRIBUTE(context, helperOptions.name, params, helperOptions);
-            } else {
-              helpers.RESOLVE(context, name, params, helperOptions);
-            }
-          }
-
-          return clone;
-        };
-      }
-
-      return buildTemplate(fragmentFnTree, hydrationFnTree);
+    function TemplateCompiler() {
+      this.fragmentOpcodeCompiler = new FragmentOpcodeCompiler();
+      this.fragmentCompiler = new FragmentCompiler();
+      this.hydrationOpcodeCompiler = new HydrationOpcodeCompiler();
+      this.hydrationCompiler = new HydrationCompiler();
+      this.templates = [];
+      this.childTemplates = [];
     }
 
-    function TemplateCompiler(options) {
+    __exports__.TemplateCompiler = TemplateCompiler;TemplateCompiler.prototype.compile = function(ast) {
+      var astWalker = new ASTWalker(this);
+      astWalker.visit(ast);
+      return this.templates.pop();
+    };
 
-    }
+    TemplateCompiler.prototype.startTemplate = function(childCount) {
+      this.fragmentOpcodeCompiler.startTemplate();
+      this.hydrationOpcodeCompiler.startTemplate();
 
-    TemplateCompiler.prototype = {
-      compile: function(html, options) {
-        var ast = preprocess(html, options);
-        return compileAST(ast);
+      this.childTemplates.length = 0;
+      while(childCount--) {
+        this.childTemplates.push(this.templates.pop());
       }
     };
 
-    __exports__.TemplateCompiler = TemplateCompiler;
+    TemplateCompiler.prototype.endTemplate = function() {
+      this.fragmentOpcodeCompiler.endTemplate();
+      this.hydrationOpcodeCompiler.endTemplate();
+
+      // function build(dom) { return fragment; }
+      var fragmentProgram = this.fragmentCompiler.compile(
+        this.fragmentOpcodeCompiler.opcodes
+      );
+
+      // function hydrate(fragment) { return mustaches; }
+      var hydrationProgram = this.hydrationCompiler.compile(
+        this.hydrationOpcodeCompiler.opcodes, this.childTemplates
+      );
+
+      var template =
+        '(function (){\n' +
+          fragmentProgram +
+          hydrationProgram +
+        'var cachedFragment = null;\n' +
+        'return function template(context, options) {\n' +
+        '  if (cachedFragment === null) {\n' +
+        '    cachedFragment = build(dom);\n' +
+        '  }\n' +
+        '  var clone = cachedFragment.cloneNode(true);\n' +
+        '  var mustaches = hydrate(clone);\n' +
+        '  var helpers = options && options.helpers || {};\n' +
+        '  var mustache;\n' +
+        '  for (var i = 0, l = mustaches.length; i < l; i++) {\n' +
+        '    mustache = mustaches[i];\n' +
+        '    var name = mustache[0],\n' +
+        '        params = mustache[1],\n' +
+        '        helperOptions = mustache[2];\n' +
+        '    helperOptions.helpers = helpers;\n' +
+        '    helperOptions.data = options && options.data;\n' +
+        '    if (!helperOptions.element) {\n' +
+        '      helperOptions.element = helperOptions.range;\n' +
+        '    }\n' +
+        '    if (name === "ATTRIBUTE") {\n' +
+        '      helpers.ATTRIBUTE(context, helperOptions.name, params, helperOptions);\n' +
+        '    } else {\n' +
+        '      helpers.RESOLVE(context, name, params, helperOptions);\n' +
+        '    }\n' +
+        '  }\n' +
+        '  return clone;\n' +
+        '};\n' +
+        '}())';
+
+      this.templates.push(template);
+    };
+
+    TemplateCompiler.prototype.openElement = function(element, i, l) {
+      this.fragmentOpcodeCompiler.openElement(element, i, l);
+      this.hydrationOpcodeCompiler.openElement(element, i, l);
+    };
+
+    TemplateCompiler.prototype.closeElement = function(element, i, l) {
+      this.fragmentOpcodeCompiler.closeElement(element, i, l);
+      this.hydrationOpcodeCompiler.closeElement(element, i, l);
+    };
+
+    TemplateCompiler.prototype.block = function(block, i, l) {
+      this.fragmentOpcodeCompiler.block(block, i, l);
+      this.hydrationOpcodeCompiler.block(block, i, l);
+    };
+
+    TemplateCompiler.prototype.text = function(string, i, l) {
+      this.fragmentOpcodeCompiler.text(string, i, l);
+      this.hydrationOpcodeCompiler.text(string, i, l);
+    };
+
+    TemplateCompiler.prototype.node = function (node, i, l) {
+      this.fragmentOpcodeCompiler.node(node, i, l);
+      this.hydrationOpcodeCompiler.node(node, i, l);
+    };
   });
-define("htmlbars/compiler/utils", 
+define("htmlbars/compiler/utils",
   ["exports"],
   function(__exports__) {
     "use strict";
     function processOpcodes(compiler, opcodes) {
-      opcodes.forEach(function(opcode) {
-        compiler[opcode.type].apply(compiler, opcode.params);
-      });
+      for (var i=0, l=opcodes.length; i<l; i++) {
+        var method = opcodes[i][0];
+        var params = opcodes[i][1];
+        compiler[method].apply(compiler, params);
+      }
     }
 
-    __exports__.processOpcodes = processOpcodes;function stream(string) {
-      return "dom.stream(function(stream) { return " + string + " })";
-    }
-
-    __exports__.stream = stream;
+    __exports__.processOpcodes = processOpcodes;
   });
-define("htmlbars/helpers", 
+define("htmlbars/helpers",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1756,7 +1668,7 @@ define("htmlbars/helpers",
 
     __exports__.removeHelper = removeHelper;__exports__.helpers = helpers;
   });
-define("htmlbars/html-parser/process-token", 
+define("htmlbars/html-parser/process-token",
   ["htmlbars/ast","simple-html-tokenizer","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -1852,7 +1764,7 @@ define("htmlbars/html-parser/process-token",
 
     __exports__.config = config;
   });
-define("htmlbars/macros", 
+define("htmlbars/macros",
   ["htmlbars/html-parser/process-token","htmlbars/ast","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -1896,7 +1808,7 @@ define("htmlbars/macros",
     // configure the HTML Parser
     config.processHTMLMacros = processHTMLMacros;
   });
-define("htmlbars/parser", 
+define("htmlbars/parser",
   ["simple-html-tokenizer","htmlbars/ast","htmlbars/html-parser/process-token","handlebars","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -2034,13 +1946,26 @@ define("htmlbars/parser",
       helpers.push(helper);
     };
   });
-define("htmlbars/runtime", 
+define("htmlbars/runtime",
+  ["htmlbars/runtime/dom_helpers","htmlbars/runtime/range","exports"],
+  function(__dependency1__, __dependency2__, __exports__) {
+    "use strict";
+    var domHelpers = __dependency1__.domHelpers;
+    var Range = __dependency2__.Range;
+
+    function hydrate(spec, options) {
+      return spec(domHelpers(options && options.extensions), Range);
+    }
+
+    __exports__.hydrate = hydrate;
+  });
+define("htmlbars/runtime/dom_helpers",
   ["htmlbars/utils","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
     var merge = __dependency1__.merge;
 
-    function domHelpers(helpers, extensions) {
+    function domHelpers(extensions) {
       var base = {
         appendText: function(element, text) {
           element.appendChild(document.createTextNode(text));
@@ -2050,12 +1975,12 @@ define("htmlbars/runtime",
           element.setAttribute(name, value);
         },
 
-        createElement: function() {
-          return document.createElement.apply(document, arguments);
+        createElement: function(tagName) {
+          return document.createElement(tagName);
         },
 
         createDocumentFragment: function() {
-          return document.createDocumentFragment.apply(document, arguments);
+          return document.createDocumentFragment();
         }
       };
 
@@ -2064,7 +1989,7 @@ define("htmlbars/runtime",
 
     __exports__.domHelpers = domHelpers;
   });
-define("htmlbars/runtime/helpers", 
+define("htmlbars/runtime/helpers",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2121,7 +2046,7 @@ define("htmlbars/runtime/helpers",
 
     __exports__.ATTRIBUTE = ATTRIBUTE;
   });
-define("htmlbars/runtime/range", 
+define("htmlbars/runtime/range",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2220,7 +2145,7 @@ define("htmlbars/runtime/range",
       }
     };
   });
-define("htmlbars/utils", 
+define("htmlbars/utils",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2234,7 +2159,7 @@ define("htmlbars/utils",
 
     __exports__.merge = merge;
   });
-define("simple-html-tokenizer", 
+define("simple-html-tokenizer",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2667,7 +2592,7 @@ define("simple-html-tokenizer",
     CommentToken.prototype = {
       type: 'CommentToken',
       constructor: CommentToken,
-      
+
       finalize: function() { return this; },
 
       addChar: function(char) {
