@@ -63,7 +63,7 @@ get = function get(obj, keyName) {
     return getPath(obj, keyName);
   }
 
-  var meta = obj[META_KEY], desc = meta && meta.descs[keyName], ret;
+  var meta = obj.__ember_meta, desc = meta && meta.descs[keyName], ret;
   if (desc) {
     return desc.get(obj, keyName);
   } else {

@@ -2,6 +2,7 @@ require('ember-metal/utils');
 require('ember-metal/platform');
 
 var metaFor = Ember.meta, // utils.js
+    Utils = Ember.Utils,
     typeOf = Ember.typeOf, // utils.js
     MANDATORY_SETTER = Ember.ENV.MANDATORY_SETTER,
     o_defineProperty = Ember.platform.defineProperty;
@@ -10,10 +11,12 @@ Ember.watchKey = function(obj, keyName, meta) {
   // can't watch length on Array - it is special...
   if (keyName === 'length' && typeOf(obj) === 'array') { return; }
 
-  var m = meta || metaFor(obj), watching = m.watching;
+  var m = meta || Utils.meta(obj), watching = m.watching;
 
-  // activate watching first time
-  if (!watching[keyName]) {
+  if (watching[keyName]) {
+    watching[keyName]++;
+  } else {
+    // activate watching first time
     watching[keyName] = 1;
 
     if ('function' === typeof obj.willWatchProperty) {
@@ -29,14 +32,12 @@ Ember.watchKey = function(obj, keyName, meta) {
         get: Ember.DEFAULT_GETTER_FUNCTION(keyName)
       });
     }
-  } else {
-    watching[keyName] = (watching[keyName] || 0) + 1;
   }
 };
 
 
 Ember.unwatchKey = function(obj, keyName, meta) {
-  var m = meta || metaFor(obj), watching = m.watching;
+  var m = meta || Utils.meta(obj), watching = m.watching;
 
   if (watching[keyName] === 1) {
     watching[keyName] = 0;

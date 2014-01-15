@@ -119,7 +119,7 @@ Ember.destroy = function (obj) {
         nodes = node._chains;
         if (nodes) {
           for (key in nodes) {
-            if (nodes.hasOwnProperty(key)) {
+            if (nodes[key] && nodes.hasOwnProperty(key)) {
               NODE_STACK.push(nodes[key]);
             }
           }
