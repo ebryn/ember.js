@@ -1,0 +1,75 @@
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <script>
+    jQuery = {event: {fixHooks: {}}};
+  </script>
+  <script src="../../dist/ember-htmlbars.prod.js"></script>
+  <script>
+
+    function template(str) {
+      return Ember.HTMLBars.compile(str, {helpers: helpers});
+    }
+
+    var helpers = {
+      view: function(params, options) {
+        var childView = options.data.view.createChildView();
+        childView.template = function(context, templateOptions) {
+          options.data = templateOptions.data;
+          return options.render(context, options);
+        };
+        childView.templateData = options.data;
+      },
+
+      each: function(params, options) {
+        var view = options.data.view,
+            template = function(context, templateOptions) {
+              options.data = templateOptions.data;
+              return options.render(context, options);
+            },
+            eachView = view.createChildView(EachView, template);
+
+        eachView.element = options.element;
+        eachView.templateData = options.data;
+
+        params[0].subscribe(function(value) {
+          eachView.arrayStream.updateObj(value);
+        });
+        // return eachView.arrayStream;
+      }
+    };
+
+    var View = Ember.HTMLBars.View;
+
+    var context = {foo: 'foo is here'};
+
+    function run() {
+      var t = template("{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}");
+
+      var start = Date.now();
+      console.profile();
+      for (var i = 0, l = 10000; i < l; i++) {
+        var view = new View(t, null, context);
+        var el = view.render();
+        view.append();
+      }
+      console.profileEnd();
+
+      var elapsed = Date.now() - start;
+      console.log(elapsed);
+    }
+
+    function update() {
+      var start = Date.now();
+      console.profile();
+      Ember.set(context, 'foo', 'foo is still here!');
+      console.profileEnd();
+
+      var elapsed = Date.now() - start;
+      console.log(elapsed);
+    }
+  </script>
+</body>
+</html>

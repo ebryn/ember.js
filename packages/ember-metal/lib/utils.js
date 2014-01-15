@@ -17,7 +17,7 @@ Ember.GUID_PREFIX = 'ember';
 var o_defineProperty = Ember.platform.defineProperty,
     o_create = Ember.create,
     // Used for guid generation...
-    GUID_KEY = '__ember'+ (+ new Date()),
+    GUID_KEY = '__ember_guid', //+ (+ new Date()),
     uuid         = 0,
     numberCache  = [],
     stringCache  = {};
@@ -40,7 +40,7 @@ var MANDATORY_SETTER = Ember.ENV.MANDATORY_SETTER;
 */
 Ember.GUID_KEY = GUID_KEY;
 
-var GUID_DESC = {
+var GUID_DESC = Ember.GUID_DESC = {
   writable:    false,
   configurable: false,
   enumerable:  false,

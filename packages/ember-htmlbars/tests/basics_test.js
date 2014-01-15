@@ -2,39 +2,13 @@ module("Ember.HTMLBars");
 
 var View = Ember.HTMLBars.View,
     EachView = Ember.HTMLBars.EachView,
-    merge = requireModule('htmlbars/utils').merge;
+    BoundTemplatesRuntime = requireModule('bound-templates/runtime'),
+    merge = requireModule('htmlbars/utils').merge,
+    defaultOptions = View.DEFAULT_TEMPLATE_OPTIONS;
 
 function template(str) {
-  return Ember.HTMLBars.compile(str, {helpers: helpers});
+  return Ember.HTMLBars.compile(str);
 }
-
-var helpers = {
-  view: function(params, options) {
-    var childView = options.data.view.createChildView();
-    childView.template = function(context, templateOptions) {
-      options.data = templateOptions.data;
-      return options.render(context, options);
-    };
-    childView.templateData = options.data;
-  },
-
-  each: function(params, options) {
-    var view = options.data.view,
-        template = function(context, templateOptions) {
-          options.data = templateOptions.data;
-          return options.render(context, options);
-        },
-        eachView = view.createChildView(EachView, template);
-
-    eachView.element = options.element;
-    eachView.templateData = options.data;
-
-    params[0].subscribe(function(value) {
-      eachView.arrayStream.updateObj(value);
-    });
-    // return eachView.arrayStream;
-  }
-};
 
 function equalHTML(fragment, html) {
   var div = document.createElement("div");
@@ -50,7 +24,7 @@ test("it works", function() {
 test("basic binding", function() {
   var template = Ember.HTMLBars.compile(" {{foo}}"),
       obj = {foo: "foo is here"},
-      fragment = template(obj);
+      fragment = template(obj, defaultOptions);
 
   equalHTML(fragment, " foo is here");
 
@@ -66,15 +40,15 @@ test("View", function() {
 });
 
 test("View with a binding inside", function() {
-  var view = new View(template("{{foo}} {{bar.baz}}"));
+  var view = new View(template(" {{foo}} {{bar.baz}}"));
 
   Ember.set(view, 'context', {foo: 'foo is here', bar: {baz: 'baz!'}});
 
   var el = view.render();
-  equalHTML(el, '<div class="ember-view">foo is here baz!</div>');
+  equalHTML(el, '<div class="ember-view"> foo is here baz!</div>');
 
   Ember.set(view, 'context.foo', 'i pity the foo');
-  equalHTML(el, '<div class="ember-view">i pity the foo baz!</div>');
+  equalHTML(el, '<div class="ember-view"> i pity the foo baz!</div>');
 });
 
 test("View with a child", function() {
@@ -122,7 +96,7 @@ test("View creation performance - 60,000 views", function() {
   console.profile();
   for (var i = 0, l = 10000; i < l; i++) {
     var context = {foo: 'foo is here'};
-    var view = window.lastView = new View(t, null, context);
+    var view = new View(t, null, context);
     var el = view.render();
     view.append();
   }

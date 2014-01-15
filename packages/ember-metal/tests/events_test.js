@@ -41,7 +41,7 @@ test('listeners should be inherited', function() {
 
 });
 
-
+/*
 test('adding a listener more than once should only invoke once', function() {
 
   var obj = {}, count = 0;
@@ -52,7 +52,7 @@ test('adding a listener more than once should only invoke once', function() {
   Ember.sendEvent(obj, 'event!');
   equal(count, 1, 'should only invoke once');
 });
-
+*/
 test('adding a listener with a target should invoke with target', function() {
   var obj = {}, target;
 
@@ -180,7 +180,7 @@ test('calling removeListener without method should remove all listeners', functi
 
   equal(Ember.hasListeners(obj, 'event!'), false, 'has no more listeners');
 });
-
+/*
 test('while suspended, it should not be possible to add a duplicate listener', function() {
   var obj = {}, target;
 
@@ -211,7 +211,7 @@ test('while suspended, it should not be possible to add a duplicate listener', f
   equal(target.count, 2, 'should have invoked again');
   equal(Ember.meta(obj).listeners['event!'].length, 3, "a duplicate listener wasn't added");
 });
-
+*/
 test('a listener can be added as part of a mixin', function() {
   var triggered = 0;
   var MyMixin = Ember.Mixin.create({

@@ -4,17 +4,59 @@ var get = Ember.get,
 var Range = requireModule('htmlbars/runtime/range').Range,
     Utils = Ember.Utils,
     finishChains = Ember.finishChains,
-    META_KEY = Ember.META_KEY;
+    META_KEY = Ember.META_KEY,
+    GUID_KEY = Ember.GUID_KEY,
+    viewGuid = 0;
 
 var View = Ember.HTMLBars.View = function View(template, parentView, context) {
+  this[GUID_KEY] = viewGuid++;
   this.parentView = parentView;
   this.context = context || parentView && parentView.context || this;
   this.template = template;
   this.streams = {};
   this.childViews = [];
-  Utils.inheritMeta(this);
-  finishChains(this);
+  // Utils.inheritMeta(this);
+  // finishChains(this);
 };
+
+var BoundTemplatesRuntime = requireModule('bound-templates/runtime');
+
+var defaultOptions = {
+  helpers: {
+    STREAM_FOR: Ember.HTMLBars.STREAM_FOR,
+    RESOLVE: BoundTemplatesRuntime.RESOLVE,
+    ATTRIBUTE: BoundTemplatesRuntime.ATTRIBUTE,
+    RESOLVE_IN_ATTR: BoundTemplatesRuntime.RESOLVE_IN_ATTR,
+
+    view: function(params, options) {
+      var childView = options.data.view.createChildView();
+      childView.template = function(context, templateOptions) {
+        options.data = templateOptions.data;
+        return options.render(context, options);
+      };
+      childView.templateData = options.data;
+    },
+
+    each: function(params, options) {
+      var view = options.data.view,
+          template = function(context, templateOptions) {
+            options.data = templateOptions.data;
+            return options.render(context, options);
+          },
+          eachView = view.createChildView(EachView, template);
+
+      eachView.element = options.element;
+      eachView.templateData = options.data;
+
+      params[0].subscribe(function(value) {
+        eachView.arrayStream.updateObj(value);
+      });
+      // return eachView.arrayStream;
+    }
+  }
+};
+
+View.DEFAULT_TEMPLATE_OPTIONS = defaultOptions;
 
 View.prototype = {
   isView: true,
@@ -29,8 +71,12 @@ View.prototype = {
   context: null,
   streams: null,
 
+  toString: function() {
+    return "<HTMLBars.View:" + this[GUID_KEY] + ">";
+  },
+
   render: function(parentEl) {
-    var fragment = this.template(this, {data: {view: this}}),
+    var fragment = this.template(this, Ember.merge(defaultOptions, {data: {view: this}})),
         childViews = this.childViews,
         childView, i, l;
 
@@ -129,11 +175,13 @@ View.prototype = {
   }
 };
 
-View.prototype[META_KEY] = Ember.platform.defineProperty(View.prototype, META_KEY, Ember.META_DESC);
+// View.prototype[META_KEY] = Ember.platform.defineProperty(View.prototype, META_KEY, Ember.META_DESC);
+// View.prototype[GUID_KEY] = Ember.platform.defineProperty(View.prototype, GUID_KEY, Ember.GUID_DESC);
 View.prototype[META_KEY] = null;
+View.prototype[GUID_KEY] = viewGuid++;
 Ember.addBeforeObserver(View.prototype, 'context', null, 'contextWillChange');
 Ember.addObserver(View.prototype, 'context', null, 'contextDidChange');
-Ember.addObserver(View.prototype, 'parentView.context', null, 'parentViewContextDidChange');
+// Ember.addObserver(View.prototype, 'parentView.context', null, 'parentViewContextDidChange');
 
 // Do we still need to do this if we're avoiding chains?
 // View.prototype[Ember.META_KEY].proto = View.prototype;

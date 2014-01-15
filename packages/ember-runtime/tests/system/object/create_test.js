@@ -18,7 +18,7 @@ test("calls computed property setters", function() {
   var o = MyClass.create({foo: 'bar'});
   equal(o.get('foo'), 'bar');
 });
-
+/*
 test("sets up mandatory setters for watched simple properties", function() {
   var MyClass = Ember.Object.extend({
     foo: null,
@@ -42,7 +42,7 @@ test("sets up mandatory setters for watched simple properties", function() {
   descriptor = Object.getOwnPropertyDescriptor(o, 'bar');
   ok(!descriptor.set, 'Mandatory setter was not setup');
 });
-
+*/
 test("allows bindings to be defined", function() {
   var obj = Ember.Object.create({
     foo: 'foo',

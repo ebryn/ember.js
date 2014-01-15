@@ -1,9 +1,8 @@
-/* jshint ignore:start */
-define("bound-templates",
-  ["htmlbars/compiler/template","bound-templates/stream","bound-templates/runtime","htmlbars/utils","exports"],
+define("bound-templates", 
+  ["htmlbars/compiler","bound-templates/stream","bound-templates/runtime","htmlbars/utils","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
-    var TemplateCompiler = __dependency1__.TemplateCompiler;
+    var compile = __dependency1__.compile;
     var Stream = __dependency2__.Stream;
     var RESOLVE = __dependency3__.RESOLVE;
     var RESOLVE_IN_ATTR = __dependency3__.RESOLVE_IN_ATTR;
@@ -11,8 +10,6 @@ define("bound-templates",
     var merge = __dependency4__.merge;
 
     function compile(string, options) {
-      var compiler = new TemplateCompiler();
-
       options = options || {};
       options.helpers = options.helpers || {};
 
@@ -20,7 +17,7 @@ define("bound-templates",
       options.helpers.RESOLVE_IN_ATTR = RESOLVE_IN_ATTR;
       options.helpers.ATTRIBUTE = ATTRIBUTE;
 
-      var template = compiler.compile(string);
+      var template = compile(string);
 
       return function(context, templateOptions) {
         var templateOptions = templateOptions || {};
@@ -33,7 +30,7 @@ define("bound-templates",
     __exports__.compile = compile;__exports__.Stream = Stream;
   });
 
-define("bound-templates/compiler",
+define("bound-templates/compiler", 
   ["htmlbars/runtime","htmlbars/utils","bound-templates/stream","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -82,7 +79,7 @@ define("bound-templates/compiler",
     __exports__.hydrate = hydrate;
   });
 
-define("bound-templates/runtime",
+define("bound-templates/runtime", 
   ["bound-templates/stream","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -220,7 +217,7 @@ define("bound-templates/runtime",
     __exports__.RESOLVE_IN_ATTR = RESOLVE_IN_ATTR;
   });
 
-define("bound-templates/stream",
+define("bound-templates/stream", 
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -385,4 +382,3 @@ define("bound-templates/stream",
       array.splice(index, 1);
     }
   });
-/* jshint ignore:end */
