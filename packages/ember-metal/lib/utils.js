@@ -251,7 +251,7 @@ Ember.Utils = {
   MANDATORY_SETTER: MANDATORY_SETTER,
   o_create: o_create,
 
-  createMeta: function(obj) {
+  createMeta: function createMeta(obj) {
     if (!this.isDefinePropertySimulated) this.o_defineProperty(obj, '__ember_meta', this.META_DESC);
 
     var ret = new this.Meta(obj);
@@ -266,7 +266,7 @@ Ember.Utils = {
     return ret;
   },
 
-  inheritMeta: function(obj) {
+  inheritMeta: function inheritMeta(obj) {
     var meta     = obj.__ember_meta,
         ret      = this.o_create(meta);
     ret.descs    = this.o_create(ret.descs);
@@ -280,7 +280,7 @@ Ember.Utils = {
     return ret;
   },
 
-  updateMeta: function(obj) {
+  updateMeta: function updateMeta(obj) {
     var meta = obj.__ember_meta;
 
     if (meta.source !== obj) {

@@ -16,12 +16,10 @@
 
     var View = Ember.HTMLBars.View;
 
-    var context = {foo: 'foo is here'};
-
     function run() {
       var t = template("{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}{{#view}} {{foo}}{{/view}}");
       var container = document.getElementById('container');
-
+      var context = {foo: 'foo is here'};
       var start = Date.now();
       console.profile();
       for (var i = 0, l = 10000; i < l; i++) {

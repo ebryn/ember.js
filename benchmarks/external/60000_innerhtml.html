@@ -3,18 +3,24 @@
   <title></title>
 </head>
 <body>
+  <div id="container"></div>
 </body>
   <script>
-    var html = '';
 
-    for (var i = 0, l = 10000; i < l; i++) {
-      html += '<div class="ember-view">';
-      for (var j = 5; j >= 0; j--) {
-        html += '<div class="ember-view"> foo is here</div>';
+    function run() {
+      console.profile();
+      var html = '';
+
+      for (var i = 0, l = 10000; i < l; i++) {
+        html += '<div class="ember-view">';
+        for (var j = 5; j >= 0; j--) {
+          html += '<div class="ember-view"> foo is here</div>';
+        }
+        html += '</div>'
       }
-      html += '</div>'
-    }
 
-    document.body.innerHTML = html;
+      document.getElementById('container').innerHTML = html;
+      console.profileEnd();
+    }
   </script>
 </html>
