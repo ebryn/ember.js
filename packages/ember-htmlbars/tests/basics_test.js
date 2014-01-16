@@ -64,12 +64,12 @@ test("View with a child", function() {
 });
 
 test("#each", function() {
+  var container = document.getElementById('qunit-fixture');
   var context = {rows: ["one", "two", "three"]};
   var view = new View(template("<ul>{{#each rows}}<li> {{this}}</li>{{/each}}</ul>"), null, context);
 
   var el = Ember.run(view, view.render);
-  view.append();
-  window.lastView = view;
+  view.appendTo(container);
   equalHTML(el, '<div class="ember-view"><ul><li> one</li><li> two</li><li> three</li></ul></div>');
 
   var start = Date.now();
