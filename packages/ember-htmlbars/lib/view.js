@@ -13,8 +13,9 @@ var View = Ember.HTMLBars.View = function View(template, parentView, context) {
   this.parentView = parentView;
   this.context = context || parentView && parentView.context || this;
   this.template = template;
-  this.streams = {};
-  this.childViews = [];
+  // this.streams = {};
+  // this.childViews = [];
+  // this.classNames = this.classNames.slice();
   // Utils.inheritMeta(this);
   // finishChains(this);
 };
@@ -22,6 +23,8 @@ var View = Ember.HTMLBars.View = function View(template, parentView, context) {
 var BoundTemplatesRuntime = requireModule('bound-templates/runtime');
 
 var defaultOptions = {
+  data: {view: null},
+
   helpers: {
     STREAM_FOR: Ember.HTMLBars.STREAM_FOR,
     RESOLVE: BoundTemplatesRuntime.RESOLVE,
@@ -29,12 +32,7 @@ var defaultOptions = {
     RESOLVE_IN_ATTR: BoundTemplatesRuntime.RESOLVE_IN_ATTR,
 
     view: function(params, options) {
-      var childView = options.data.view.createChildView();
-      childView.template = function(context, templateOptions) {
-        options.data = templateOptions.data;
-        return options.render(context, options);
-      };
-      childView.templateData = options.data;
+      options.data.view.createChildView(View, options.render);
     },
 
     each: function(params, options) {
@@ -76,26 +74,26 @@ View.prototype = {
   },
 
   render: function(parentEl) {
-    var fragment = this.template(this, Ember.merge(defaultOptions, {data: {view: this}})),
+    var templateOptions = {helpers: defaultOptions.helpers, data: {view: this}},
+        fragment = this.template(this, templateOptions),
         childViews = this.childViews,
+        classNames = this.classNames,
         childView, i, l;
 
     if (this.isVirtual) {
-      var range = new Range(parentEl.parent, fragment.firstChild, fragment.lastChild);
-      this.element = range;
-      parentEl.appendChild(fragment);
-      for (i = 0, l = childViews.length; i < l; i++) {
-        childView = childViews[i];
-        childView.render(range);
-      }
-      return parentEl;
+      return this._renderVirtual(parentEl, fragment, childViews);
     } else {
       var el = this.element = document.createElement(this.tagName);
       if (this.elementId) { el.setAttribute('id', this.elementId); }
-      if (this.classNames) { el.setAttribute('class', this.classNames.join(' ')); }
+      if (classNames && classNames.length === 1) {
+        el.setAttribute('class', this.classNames[0]);
+      } else if (classNames && classNames.length > 1) {
+        el.setAttribute('class', this.classNames.join(' '));
+      }
 
       el.appendChild(fragment);
       if (parentEl) { parentEl.appendChild(el); }
+      if (!childViews) { return el; }
       for (i = 0, l = childViews.length; i < l; i++) {
         childView = childViews[i];
         childView.render(el);
@@ -104,10 +102,28 @@ View.prototype = {
     }
   },
 
+  _renderVirtual: function(parentEl, fragment, childViews) {
+    var range = new Range(parentEl.parent, fragment.firstChild, fragment.lastChild),
+        childView, i, l;
+    this.element = range;
+    parentEl.appendChild(fragment);
+    if (!childViews) { return parentEl; }
+    for (i = 0, l = childViews.length; i < l; i++) {
+      childView = childViews[i];
+      childView.render(range);
+    }
+    return parentEl;
+  },
+
   createChildView: function(ViewClass, template, context) {
     ViewClass = ViewClass || View;
-    var childView = new ViewClass(template, this, context);
-    this.childViews.push(childView); // FIXME: this should be done by appendChild
+    var childViews = this.childViews,
+        childView = new ViewClass(template, this, context);
+    if (!childViews) {
+      childViews = this.childViews = [childView];
+    } else {
+      this.childViews.push(childView); // FIXME: this should be done by appendChild
+    }
     return childView;
   },
 
@@ -120,8 +136,9 @@ View.prototype = {
   },
 
   streamFor: function(path) {
-    var streams = this.streams,
-        stream = streams[path];
+    var streams = this.streams;
+    if (!streams) { streams = this.streams = {}; }
+    var stream = streams[path];
     if (stream) { return stream; }
     stream = streams[path] = new ViewManagedStream();
 
@@ -155,6 +172,7 @@ View.prototype = {
 
     // Notifying children manually avoids chains, which saves us a lot of upfront work
     var childViews = this.childViews;
+    if (!childViews) { return; }
     for (var i = 0, l = childViews.length; i < l; i++) {
       childViews[i].parentViewContextDidChange(context);
     }
@@ -227,6 +245,7 @@ Ember.merge(EachView.prototype, {
         childViews = this.childViews,
         childView;
 
+    if (!childViews) { return; }
     for (var i = 0, l = childViews.length; i < l; i++) {
       childView = childViews[i];
       childView.render(el);
@@ -253,14 +272,17 @@ Ember.merge(EachView.prototype, {
 
   arrayDidChange: function(content, start, removed, added) {
     // teardown old views
-    var childViews = this.childViews, childView;
-    for (var idx = start; idx < start+removed; idx++) {
-      childView = childViews[idx];
-      childView.element.clear();
-      childView.destroy();
+    var childViews = this.childViews, childView, idx;
+
+    if (childViews) {
+      for (idx = start; idx < start+removed; idx++) {
+        childView = childViews[idx];
+        childView.element.clear();
+        childView.destroy();
+      }
     }
 
-    var spliceArgs = [start, removed];
+    var spliceArgs = childViews ? [start, removed] : new Array(added);
 
     for (idx = start; idx < start+added; idx++) {
       var item = content[idx];
@@ -269,7 +291,11 @@ Ember.merge(EachView.prototype, {
       childView.render(this.element);
     }
 
-    childViews.splice.apply(childViews, spliceArgs);
+    if (childViews) {
+      childViews.splice.apply(childViews, spliceArgs);
+    } else {
+      this.childViews = spliceArgs;
+    }
   }
 });
 

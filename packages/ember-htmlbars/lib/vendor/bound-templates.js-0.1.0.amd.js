@@ -10,21 +10,7 @@ define("bound-templates",
     var merge = __dependency4__.merge;
 
     function compile(string, options) {
-      options = options || {};
-      options.helpers = options.helpers || {};
-
-      options.helpers.RESOLVE = RESOLVE;
-      options.helpers.RESOLVE_IN_ATTR = RESOLVE_IN_ATTR;
-      options.helpers.ATTRIBUTE = ATTRIBUTE;
-
-      var template = htmlbarsCompile(string);
-
-      return function(context, templateOptions) {
-        var templateOptions = templateOptions || {};
-        templateOptions.helpers = templateOptions.helpers || {};
-        merge(templateOptions.helpers, options.helpers);
-        return template(context, merge(templateOptions, options));
-      }
+      return htmlbarsCompile(string, options);
     }
 
     __exports__.compile = compile;__exports__.Stream = Stream;
