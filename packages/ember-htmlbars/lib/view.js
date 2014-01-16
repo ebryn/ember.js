@@ -122,7 +122,7 @@ View.prototype = {
     if (!childViews) {
       childViews = this.childViews = [childView];
     } else {
-      this.childViews.push(childView); // FIXME: this should be done by appendChild
+      childViews.push(childView); // FIXME: this should be done by appendChild
     }
     return childView;
   },
@@ -299,17 +299,22 @@ Ember.merge(EachView.prototype, {
   }
 });
 
-function ViewManagedStream() {
-  this.subscribers = [];
-}
+function ViewManagedStream() {}
 
 ViewManagedStream.prototype = {
   subscribers: null,
   lastValue: null,
 
   subscribe: function(next, error, complete) {
-    var subscriber = { next: next, error: error, complete: complete };
-    this.subscribers.push(subscriber);
+    var subscribers = this.subscribers,
+        subscriber = { next: next, error: error, complete: complete };
+
+    if (!subscribers) {
+      subscribers = this.subscribers = [subscriber];
+    } else {
+      subscribers.push(subscriber);
+    }
+
     next(this.lastValue);
   },
 
@@ -317,6 +322,8 @@ ViewManagedStream.prototype = {
     var subscribers = this.subscribers,
         sub;
     this.lastValue = value;
+    if (!subscribers) { return; }
+
     for (var i = 0, l = subscribers.length; i < l; i++) {
       sub = subscribers[i];
       if (sub.next) { sub.next(value); }
