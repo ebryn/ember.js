@@ -47,17 +47,17 @@ var FIRST_KEY = /^([^\.\*]+)/;
 */
 get = function get(obj, keyName) {
   // Helpers that operate with 'this' within an #each
-  if (keyName === '') {
-    return obj;
-  }
+  // if (keyName === '') {
+  //   return obj;
+  // }
 
-  if (!keyName && 'string'===typeof obj) {
-    keyName = obj;
-    obj = null;
-  }
+  // if (!keyName && 'string'===typeof obj) {
+  //   keyName = obj;
+  //   obj = null;
+  // }
 
-  Ember.assert("Cannot call get with "+ keyName +" key.", !!keyName);
-  Ember.assert("Cannot call get with '"+ keyName +"' on an undefined object.", obj !== undefined);
+  // Ember.assert("Cannot call get with "+ keyName +" key.", !!keyName);
+  // Ember.assert("Cannot call get with '"+ keyName +"' on an undefined object.", obj !== undefined);
 
   if (obj === null || keyName.indexOf('.') !== -1) {
     return getPath(obj, keyName);
@@ -67,11 +67,11 @@ get = function get(obj, keyName) {
   if (desc) {
     return desc.get(obj, keyName);
   } else {
-    if (MANDATORY_SETTER && meta && meta.watching[keyName] > 0) {
-      ret = meta.values[keyName];
-    } else {
+    // if (MANDATORY_SETTER && meta && meta.watching[keyName] > 0) {
+    //   ret = meta.values[keyName];
+    // } else {
       ret = obj[keyName];
-    }
+    // }
 
     if (ret === undefined &&
         'object' === typeof obj && !(keyName in obj) && 'function' === typeof obj.unknownProperty) {

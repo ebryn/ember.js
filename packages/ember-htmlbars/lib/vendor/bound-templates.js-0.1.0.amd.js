@@ -1,4 +1,4 @@
-define("bound-templates", 
+define("bound-templates",
   ["htmlbars/compiler","bound-templates/stream","bound-templates/runtime","htmlbars/utils","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -16,7 +16,7 @@ define("bound-templates",
     __exports__.compile = compile;__exports__.Stream = Stream;
   });
 
-define("bound-templates/compiler", 
+define("bound-templates/compiler",
   ["htmlbars/runtime","htmlbars/utils","bound-templates/stream","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -65,7 +65,7 @@ define("bound-templates/compiler",
     __exports__.hydrate = hydrate;
   });
 
-define("bound-templates/runtime", 
+define("bound-templates/runtime",
   ["bound-templates/stream","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -75,18 +75,21 @@ define("bound-templates/runtime",
       var helpers = options.helpers;
 
       // Convert ID params to streams
-      for (var i = 0, l = params.length; i < l; i++) {
-        if (options.types[i] === 'id') {
-          params[i] = helpers.STREAM_FOR(context, params[i]);
+      if (params)
+        for (var i = 0, l = params.length; i < l; i++) {
+          if (options.types[i] === 'id') {
+            params[i] = helpers.STREAM_FOR(context, params[i]);
+          }
         }
-      }
 
       // Convert hash ID values to streams
       var hash = options.hash,
           hashTypes = options.hashTypes;
-      for (var key in hash) {
-        if (hashTypes[key] === 'id') {
-          hash[key] = helpers.STREAM_FOR(context, hash[key]);
+      if (hash) {
+        for (var key in hash) {
+          if (hashTypes[key] === 'id') {
+            hash[key] = helpers.STREAM_FOR(context, hash[key]);
+          }
         }
       }
     }
@@ -203,7 +206,7 @@ define("bound-templates/runtime",
     __exports__.RESOLVE_IN_ATTR = RESOLVE_IN_ATTR;
   });
 
-define("bound-templates/stream", 
+define("bound-templates/stream",
   ["exports"],
   function(__exports__) {
     "use strict";

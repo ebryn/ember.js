@@ -637,11 +637,11 @@ define("htmlbars/compiler/hydration",
     };
 
     prototype.ambiguous = function(str, escaped, parentPath, startIndex, endIndex) {
-      this.pushMustacheRange(string(str), '[]', ['escaped:'+escaped], parentPath, startIndex, endIndex);
+      this.pushMustacheRange(string(str), 'null', ['escaped:'+escaped], parentPath, startIndex, endIndex);
     };
 
     prototype.ambiguousAttr = function(str, escaped) {
-      this.stack.push('['+string(str)+', [], {escaped:'+escaped+'}]');
+      this.stack.push('['+string(str)+', null, {escaped:'+escaped+'}]');
     };
 
     prototype.helperAttr = function(name, size, escaped, elementPath) {
@@ -782,11 +782,11 @@ define("htmlbars/compiler/hydration2",
     };
 
     prototype.ambiguous = function(str, escaped, parentPath, startIndex, endIndex) {
-      this.pushMustacheRange(string(str), '[]', ['escaped:'+escaped], parentPath, startIndex, endIndex);
+      this.pushMustacheRange(string(str), 'null', ['escaped:'+escaped], parentPath, startIndex, endIndex);
     };
 
     prototype.ambiguousAttr = function(str, escaped) {
-      pushStack(this.stack, '['+string(str)+', [], {escaped:'+escaped+'}]');
+      pushStack(this.stack, '['+string(str)+', null, {escaped:'+escaped+'}]');
     };
 
     prototype.helperAttr = function(name, size, escaped, elementPath) {
@@ -1496,6 +1496,7 @@ define("htmlbars/compiler/quoting",
     __exports__.string = string;
 
     function array(a) {
+      if (a.length === 0) { return "null"; }
       return "[" + a + "]";
     }
 
@@ -1506,6 +1507,7 @@ define("htmlbars/compiler/quoting",
     }
 
     __exports__.quotedArray = quotedArray;function hash(pairs) {
+      if (pairs.length === 0) { return "null"; }
       return "{" + pairs.join(",") + "}";
     }
 
@@ -2124,10 +2126,11 @@ define("htmlbars/runtime/range",
         }
       },
       appendText: function (str) {
-        if (this.parent.nodeType === 11) this.checkParent();
+        this.start.nodeValue = str;
+        // if (this.parent.nodeType === 11) this.checkParent();
 
-        var parent = this.parent;
-        parent.insertBefore(parent.ownerDocument.createTextNode(str), this.end);
+        // var parent = this.parent;
+        // parent.insertBefore(parent.ownerDocument.createTextNode(str), this.end);
       },
       appendHTML: function (html) {
         if (this.parent.nodeType === 11) this.checkParent();
