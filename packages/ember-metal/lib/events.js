@@ -40,8 +40,8 @@ function indexOf(array, target, method) {
   return index;
 }
 
-function actionsFor(obj, eventName) {
-  var meta = Utils.meta(obj),
+function actionsFor(obj, eventName, m) {
+  var meta = m || Utils.meta(obj),
       actions;
 
   if (!meta.listeners) { meta.listeners = {}; }
@@ -120,7 +120,8 @@ function addListener(obj, eventName, target, method, once) {
     target = null;
   }
 
-  var actions = actionsFor(obj, eventName),
+  var meta = Utils.meta(obj),
+      actions = actionsFor(obj, eventName, meta),
       // actionIndex = indexOf(actions, target, method),
       flags = 0;
 
@@ -133,6 +134,8 @@ function addListener(obj, eventName, target, method, once) {
   if ('function' === typeof obj.didAddListener) {
     obj.didAddListener(eventName, target, method);
   }
+
+  return meta;
 }
 
 /**

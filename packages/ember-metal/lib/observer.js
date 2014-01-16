@@ -27,8 +27,8 @@ function beforeEvent(keyName) {
   @param {Function|String} [method]
 */
 Ember.addObserver = function(obj, _path, target, method) {
-  Ember.addListener(obj, changeEvent(_path), target, method);
-  Ember.watch(obj, _path);
+  var meta = Ember.addListener(obj, changeEvent(_path), target, method);
+  Ember.watch(obj, _path, meta);
 
   return this;
 };
