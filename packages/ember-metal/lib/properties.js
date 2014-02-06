@@ -94,28 +94,28 @@ Ember.defineProperty = function(obj, keyName, desc, data, meta) {
   var descs, existingDesc, watching, value;
 
   if (!meta) meta = metaFor(obj);
-  descs = meta.descs;
-  existingDesc = meta.descs[keyName];
+  // descs = meta.descs;
+  existingDesc = obj[keyName];
   watching = meta.watching[keyName] > 0;
 
-  if (existingDesc instanceof Ember.Descriptor) {
+  if (existingDesc && existingDesc.isComputedProperty) {
     existingDesc.teardown(obj, keyName);
   }
 
-  if (desc instanceof Ember.Descriptor) {
+  if (desc && desc.isComputedProperty) {
     value = desc;
 
-    descs[keyName] = desc;
-    if (MANDATORY_SETTER && watching) {
-      objectDefineProperty(obj, keyName, {
-        configurable: true,
-        enumerable: true,
-        writable: true,
-        value: undefined // make enumerable
-      });
-    } else {
-      obj[keyName] = undefined; // make enumerable
-    }
+    obj[keyName] = desc;
+    // if (MANDATORY_SETTER && watching) {
+    //   objectDefineProperty(obj, keyName, {
+    //     configurable: true,
+    //     enumerable: true,
+    //     writable: true,
+    //     value: undefined // make enumerable
+    //   });
+    // } else {
+    //   obj[keyName] = undefined; // make enumerable
+    // }
 
     if (Ember.FEATURES.isEnabled('composable-computed-properties')) {
       if (desc.func && desc._dependentCPs) {
@@ -123,21 +123,21 @@ Ember.defineProperty = function(obj, keyName, desc, data, meta) {
       }
     }
   } else {
-    descs[keyName] = undefined; // shadow descriptor in proto
+    // descs[keyName] = undefined; // shadow descriptor in proto
     if (desc == null) {
       value = data;
 
-      if (MANDATORY_SETTER && watching) {
-        meta.values[keyName] = data;
-        objectDefineProperty(obj, keyName, {
-          configurable: true,
-          enumerable: true,
-          set: MANDATORY_SETTER_FUNCTION,
-          get: DEFAULT_GETTER_FUNCTION(keyName)
-        });
-      } else {
+      // if (MANDATORY_SETTER && watching) {
+      //   meta.values[keyName] = data;
+      //   objectDefineProperty(obj, keyName, {
+      //     configurable: true,
+      //     enumerable: true,
+      //     set: MANDATORY_SETTER_FUNCTION,
+      //     get: DEFAULT_GETTER_FUNCTION(keyName)
+      //   });
+      // } else {
         obj[keyName] = data;
-      }
+      // }
     } else {
       value = desc;
 

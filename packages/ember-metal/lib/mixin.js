@@ -110,15 +110,14 @@ function giveDescriptorSuper(meta, key, property, values, descs) {
   // it on the original object.
   superProperty = superProperty || meta.descs[key];
 
-  if (!superProperty || !(superProperty instanceof Ember.ComputedProperty)) {
+  if (!superProperty || !superProperty.isComputedProperty) {
     return property;
   }
 
   // Since multiple mixins may inherit from the same parent, we need
   // to clone the computed property so that other mixins do not receive
   // the wrapped version.
-  property = o_create(property);
-  property.func = Ember.wrap(property.func, superProperty.func);
+  property = property.wrappedCopy(superProperty); // Ember.wrap(property, superProperty);
 
   return property;
 }
@@ -187,13 +186,17 @@ function applyMergedProperties(obj, key, value, values) {
 }
 
 function addNormalizedProperty(base, key, value, meta, descs, values, concats, mergings) {
-  if (value instanceof Ember.Descriptor) {
+  if (value instanceof Ember.Descriptor || value && value.isComputedProperty) {
     if (value === REQUIRED && descs[key]) { return CONTINUE; }
 
     // Wrap descriptor function to implement
     // __nextSuper() if needed
-    if (value.func) {
-      value = giveDescriptorSuper(meta, key, value, values, descs);
+    if (value.isComputedProperty) {
+      var superProperty = descs[key] || base[key];
+      if (superProperty && superProperty.isComputedProperty) {
+        value = value.wrappedCopy(superProperty);
+      }
+      // value = giveDescriptorSuper(meta, key, value, values, descs);
     }
 
     descs[key]  = value;

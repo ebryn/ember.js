@@ -14,6 +14,7 @@ require('ember-metal/property_events');
 
 Ember.warn("The CP_DEFAULT_CACHEABLE flag has been removed and computed properties are always cached by default. Use `volatile` if you don't want caching.", Ember.ENV.CP_DEFAULT_CACHEABLE !== false);
 
+Ember.NIL = function NIL(){};
 
 var get = Ember.get,
     set = Ember.set,
@@ -444,7 +445,7 @@ ComputedPropertyPrototype.get = function(obj, keyName) {
 */
 ComputedPropertyPrototype.set = function(obj, keyName, value) {
   var cacheable = this._cacheable,
-      func = this.func,
+      func = this,
       meta = metaFor(obj, cacheable),
       watched = meta.watching[keyName],
       oldSuspended = this._suspended,
@@ -519,6 +520,62 @@ ComputedPropertyPrototype.teardown = function(obj, keyName) {
   return null; // no value to restore
 };
 
+function finishCP(obj, keyName) {
+  var meta = metaFor(obj);
+  var chainNodes = meta && meta.chainWatchers && meta.chainWatchers[keyName];
+  if (chainNodes) { finishChains(chainNodes); }
+  addDependentKeys(this, obj, keyName, meta);
+}
+
+function dupeCP(superFn) {
+  var fn = Ember.wrap(this, superFn);
+
+  fn.isComputedProperty = true;
+  fn._dependentKeys = this._dependentKeys;
+  fn._cacheable = this._cacheable;
+  fn._readOnly = this._readOnly;
+
+  fn.property = ComputedPropertyPrototype.property;
+  fn.volatile = ComputedPropertyPrototype.volatile;
+  fn.cacheable = ComputedPropertyPrototype.cacheable;
+  fn.meta = ComputedPropertyPrototype.meta;
+  fn.readOnly = ComputedPropertyPrototype.readOnly;
+  fn.teardown = ComputedPropertyPrototype.teardown;
+  fn.finish = finishCP;
+  fn.set = ComputedPropertyPrototype.set;
+  fn.willChange = ComputedPropertyPrototype.willChange;
+  fn.didChange = ComputedPropertyPrototype.didChange;
+  fn.wrappedCopy = dupeCP;
+
+  return fn;
+}
+
+var makeCP = Ember.generateComputedProperty = function makeCP(fn, opts) {
+  if (Ember.FEATURES.isEnabled('composable-computed-properties')) {
+    setDependentKeys(fn, opts && opts.dependentKeys);
+  } else {
+    fn._dependentKeys = opts && opts.dependentKeys;
+  }
+
+  fn.isComputedProperty = true;
+
+  fn._cacheable = (opts && opts.cacheable !== undefined) ? opts.cacheable : true;
+  fn._readOnly = opts && (opts.readOnly !== undefined || !!opts.readOnly);
+
+  fn.property = ComputedPropertyPrototype.property;
+  fn.volatile = ComputedPropertyPrototype.volatile;
+  fn.cacheable = ComputedPropertyPrototype.cacheable;
+  fn.meta = ComputedPropertyPrototype.meta;
+  fn.readOnly = ComputedPropertyPrototype.readOnly;
+  fn.teardown = ComputedPropertyPrototype.teardown;
+  fn.finish = finishCP;
+  fn.set = ComputedPropertyPrototype.set;
+  fn.willChange = ComputedPropertyPrototype.willChange;
+  fn.didChange = ComputedPropertyPrototype.didChange;
+  fn.wrappedCopy = dupeCP;
+
+  return fn;
+}
 
 /**
   This helper returns a new property descriptor that wraps the passed
@@ -546,7 +603,7 @@ Ember.computed = function(func) {
     throw new Ember.Error("Computed Property declared without a property function");
   }
 
-  var cp = new ComputedProperty(func);
+  var cp = makeCP(func);
 
   if (args) {
     cp.property.apply(cp, args);

@@ -533,10 +533,12 @@ function ReduceComputedProperty(options) {
 
     return cp._instanceMeta(this, propertyName).getValue();
   };
+
+  return
 }
 
 Ember.ReduceComputedProperty = ReduceComputedProperty;
-ReduceComputedProperty.prototype = o_create(ComputedProperty.prototype);
+// ReduceComputedProperty.prototype = o_create(ComputedProperty.prototype);
 
 function defaultCallback(computedValue) {
   return computedValue;

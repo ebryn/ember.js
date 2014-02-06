@@ -37,9 +37,10 @@ var set = function set(obj, keyName, value, tolerant) {
   Ember.assert("You need to provide an object and key to `set`.", !!obj && keyName !== undefined);
   Ember.assert('calling set on destroyed object', !obj.isDestroyed);
 
-  var meta = obj[META_KEY], desc = meta && meta.descs[keyName],
-      isUnknown, currentValue;
-  if (desc) {
+  var meta = obj[META_KEY], desc;
+  var currentValue = obj[keyName], isUnknown;
+  if (typeof currentValue === 'function' && currentValue.isComputedProperty) {
+    desc = currentValue;
     desc.set(obj, keyName, value);
   } else {
     isUnknown = 'object' === typeof obj && !(keyName in obj);

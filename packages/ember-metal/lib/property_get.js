@@ -6,7 +6,7 @@ require('ember-metal/utils');
 @module ember-metal
 */
 
-var META_KEY = Ember.META_KEY, get;
+var META_KEY = Ember.META_KEY, metaFor = Ember.meta, get;
 
 var MANDATORY_SETTER = Ember.ENV.MANDATORY_SETTER;
 
@@ -63,15 +63,26 @@ get = function get(obj, keyName) {
     return getPath(obj, keyName);
   }
 
-  var meta = obj[META_KEY], desc = meta && meta.descs[keyName], ret;
-  if (desc) {
-    return desc.get(obj, keyName);
-  } else {
-    if (MANDATORY_SETTER && meta && meta.watching[keyName] > 0) {
-      ret = meta.values[keyName];
+  var meta, desc, cache, ret = obj[keyName];
+  if (typeof ret === 'function' && ret.isComputedProperty) {
+    desc = ret;
+    if (desc._cacheable) {
+      meta = metaFor(obj);
+      cache = meta.cache;
+      if (keyName in cache) { return cache[keyName]; }
+      ret = cache[keyName] = obj[keyName](keyName);
+      desc.finish(obj, keyName);
     } else {
-      ret = obj[keyName];
+      ret = obj[keyName](keyName);
     }
+
+    return ret;
+  } else {
+    // if (MANDATORY_SETTER && meta && meta.watching[keyName] > 0) {
+    //   ret = meta.values[keyName];
+    // } else {
+    //   ret = obj[keyName];
+    // }
 
     if (ret === undefined &&
         'object' === typeof obj && !(keyName in obj) && 'function' === typeof obj.unknownProperty) {

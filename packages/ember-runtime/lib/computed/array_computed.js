@@ -1,4 +1,4 @@
-require('ember-metal/computed');
+  require('ember-metal/computed');
 require('ember-runtime/mixins/array');
 require('ember-runtime/computed/reduce_computed');
 
@@ -12,7 +12,7 @@ function ArrayComputedProperty() {
 
   ReduceComputedProperty.apply(this, arguments);
 
-  this.func = (function(reduceFunc) {
+  var fn = (function(reduceFunc) {
     return function (propertyName) {
       if (!cp._hasInstanceMeta(this, propertyName)) {
         // When we recompute an array computed property, we need already
@@ -27,9 +27,9 @@ function ArrayComputedProperty() {
 
       return reduceFunc.apply(this, arguments);
     };
-  })(this.func);
+  })(fn);
 
-  return this;
+  return Ember.generateComputedProperty()
 }
 Ember.ArrayComputedProperty = ArrayComputedProperty;
 ArrayComputedProperty.prototype = o_create(ReduceComputedProperty.prototype);

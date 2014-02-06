@@ -7,7 +7,7 @@ var obj, count;
 module('Ember.computed');
 
 test('computed property should be an instance of descriptor', function() {
-  ok(Ember.computed(function() {}) instanceof Ember.Descriptor);
+  ok(Ember.computed(function() {}).isComputedProperty);
 });
 
 test('defining computed property should invoke property on get', function() {
@@ -701,8 +701,7 @@ module('Ember.computed - readOnly');
 test('is chainable', function() {
   var computed = Ember.computed(function() {}).readOnly();
 
-  ok(computed instanceof Ember.Descriptor);
-  ok(computed instanceof Ember.ComputedProperty);
+  ok(computed.isComputedProperty);
 });
 
 testBoth('protects against setting', function(get, set) {

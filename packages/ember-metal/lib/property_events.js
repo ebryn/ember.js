@@ -36,7 +36,7 @@ function propertyWillChange(obj, keyName) {
   var m = obj[META_KEY],
       watching = (m && m.watching[keyName] > 0) || keyName === 'length',
       proto = m && m.proto,
-      desc = m && m.descs[keyName];
+      desc = obj[keyName];
 
   if (!watching) { return; }
   if (proto === obj) { return; }
@@ -66,7 +66,7 @@ function propertyDidChange(obj, keyName) {
   var m = obj[META_KEY],
       watching = (m && m.watching[keyName] > 0) || keyName === 'length',
       proto = m && m.proto,
-      desc = m && m.descs[keyName];
+      desc = obj[keyName];
 
   if (proto === obj) { return; }
 
@@ -112,7 +112,7 @@ function iterDeps(method, obj, depKey, seen, meta) {
   deps = deps && deps[depKey];
   if (deps) {
     for(var key in deps) {
-      var desc = meta.descs[key];
+      var desc = obj[key];
       if (desc && desc._suspended === obj) continue;
       method(obj, key);
     }

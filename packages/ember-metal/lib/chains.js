@@ -109,7 +109,7 @@ function lazyGet(obj, key) {
   if (key === "@each") return get(obj, key);
 
   // if a CP only return cached value
-  var desc = meta && meta.descs[key];
+  var desc = obj[key];
   if (desc && desc._cacheable) {
     if (key in meta.cache) {
       return meta.cache[key];
