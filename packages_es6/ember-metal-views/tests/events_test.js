@@ -1,23 +1,53 @@
 import { testsFor, View, $, equalHTML, triggerEvent } from "ember-metal-views/tests/test_helpers";
+import { events } from "ember-metal-views";
 
 testsFor("ember-metal-views - events");
 
-test("click", function() {
-  var clicks = 0;
+var EVENTS = Object.keys(events);
+
+EVENTS.forEach(function(EVENT) {
+  test(EVENT, function() {
+    expect(3);
+
+    var calls = 0;
+    var view = {
+      isView: true,
+      innerHTML: '<div><input type="text"></div>'
+    };
+    view[events[EVENT]] = function(e) {
+      calls++;
+    };
+
+    View.appendTo(view, '#qunit-fixture');
+    equalHTML('#qunit-fixture', '<div><div><input type="text"></div></div>');
+
+    triggerEvent(view.element, EVENT);
+    equal(calls, 1, EVENT + " event handler was called");
+    triggerEvent(view.element.querySelector('input'), EVENT);
+    equal(calls, 2, EVENT + " event handler was called twice");
+  });
+});
+
+test("keyUp", function() {
+  expect(5);
+
+  var keyUpCalls = 0;
+
   var view = {
     isView: true,
-    innerHTML: '<div><span>click me too</span></div>',
+    innerHTML: '<div><input type="text"></div>',
 
-    click: function() {
-      clicks++;
+    keyUp: function(e) {
+      keyUpCalls++;
+      equal(e.keyCode, 38, "Key code was correct");
     }
   };
 
   View.appendTo(view, '#qunit-fixture');
-  equalHTML('#qunit-fixture', '<div><div><span>click me too</span></div></div>');
+  equalHTML('#qunit-fixture', '<div><div><input type="text"></div></div>');
 
-  triggerEvent(view.element, 'click');
-  equal(clicks, 1, "Click handler was called");
-  triggerEvent(view.element.querySelector('span'), 'click');
-  equal(clicks, 2, "Click handler was called twice");
+  triggerEvent(view.element, 'keyup', {keyCode: 38});
+  equal(keyUpCalls, 1, "Event handler was called");
+  triggerEvent(view.element.querySelector('input'), 'keyup', {keyCode: 38});
+  equal(keyUpCalls, 2, "Event handler was called twice");
 });

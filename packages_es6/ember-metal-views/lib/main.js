@@ -34,20 +34,59 @@ function findContainingView(el) {
   return view;
 }
 
-function eventHandler(event) {
-  var view;
+function tryToDispatchEvent(view, type, event) {
   try {
-    view = findContainingView(event.target);
-    view[event.type](event);
-  } catch(ex) {
-    console.log(ex);
+    view[type](event);
+  } catch(e) {
+
   }
 }
+
+function eventHandler(event) {
+  var view = findContainingView(event.target);
+  if (view) { tryToDispatchEvent(view, events[event.type], event); }
+}
+
+var events = {
+  touchstart  : 'touchStart',
+  touchmove   : 'touchMove',
+  touchend    : 'touchEnd',
+  touchcancel : 'touchCancel',
+  keydown     : 'keyDown',
+  keyup       : 'keyUp',
+  keypress    : 'keyPress',
+  mousedown   : 'mouseDown',
+  mouseup     : 'mouseUp',
+  contextmenu : 'contextMenu',
+  click       : 'click',
+  dblclick    : 'doubleClick',
+  mousemove   : 'mouseMove',
+  focusin     : 'focusIn',
+  focusout    : 'focusOut',
+  mouseenter  : 'mouseEnter',
+  mouseleave  : 'mouseLeave',
+  submit      : 'submit',
+  input       : 'input',
+  change      : 'change',
+  dragstart   : 'dragStart',
+  drag        : 'drag',
+  dragenter   : 'dragEnter',
+  dragleave   : 'dragLeave',
+  dragover    : 'dragOver',
+  drop        : 'drop',
+  dragend     : 'dragEnd'
+};
+
+export { events };
+
+var eventNames = Object.keys(events);
 
 var eventDispatcherActive = false;
 function setupEventDispatcher() {
   if (!eventDispatcherActive) {
-    document.addEventListener('click', eventHandler, false);
+    for (var i = 0, l = eventNames.length; i < l; i++) {
+      document.addEventListener(eventNames[i], eventHandler, false);
+    }
     eventDispatcherActive = true;
   }
 }
@@ -56,7 +95,9 @@ export function reset() {
   guid = 0;
   views = {};
   eventDispatcherActive = false;
-  document.removeEventListener('click', eventHandler);
+  for (var i = 0, l = eventNames.length; i < l; i++) {
+    document.removeEventListener(eventNames[i], eventHandler);
+  }
 }
 
 function setAttribute(key) {
@@ -74,7 +115,7 @@ function setupAttribute(view, attributeKey) {
 
 var STRING_DECAMELIZE_REGEXP = (/([a-z\d])([A-Z])/g);
 function decamelize(str) {
-  return str.replace(STRING_DECAMELIZE_REGEXP, '$1_$2').toLowerCase()
+  return str.replace(STRING_DECAMELIZE_REGEXP, '$1_$2').toLowerCase();
 }
 
 var STRING_DASHERIZE_REGEXP = (/[ _]/g);
@@ -149,7 +190,8 @@ function render(view, parent) {
       attribute,
       childViews = view.childViews,
       template = view.template,
-      templateOptions = {}; // TODO
+      templateOptions = {}, // TODO
+      i, l;
 
   if (typeof classNames === 'string') {
     el.setAttribute('class', classNames);
@@ -162,14 +204,14 @@ function render(view, parent) {
   }
 
   if (classNameBindings && classNameBindings.length > 0) {
-    for (var i = 0, l = classNameBindings.length; i < l; i++) {
+    for (i = 0, l = classNameBindings.length; i < l; i++) {
       className = classNameBindings[i]; // TODO: support className aliases
       setupClassNameBinding(view, className); // FIXME: teardown
     }
   }
 
   if (attributeBindings && attributeBindings.length > 0) {
-    for (var i = 0, l = attributeBindings.length; i < l; i++) {
+    for (i = 0, l = attributeBindings.length; i < l; i++) {
       attribute = attributeBindings[i]; // TODO: support attribute aliases
       setupAttribute(view, attribute); // FIXME: teardown
     }
@@ -184,7 +226,7 @@ function render(view, parent) {
   }
 
   if (childViews && childViews.length > 0) {
-    for (var i = 0, l = childViews.length; i < l; i++) {
+    for (i = 0, l = childViews.length; i < l; i++) {
       render(childViews[i], view);
     }
   }
