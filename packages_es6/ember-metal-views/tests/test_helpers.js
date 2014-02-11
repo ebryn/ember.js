@@ -29,10 +29,18 @@ export function set(obj, key, value) {
   Ember.run(Ember, Ember.set, obj, key, value);
 }
 
-export function triggerEvent(el, name) {
+export function triggerEvent(el, name, data) {
   // var event = new Event(name);
   // el.dispatchEvent(event);
-  var event = document.createEvent('Event');
+  var isKeyboardEvent = /key/.test(name);
+  var event = document.createEvent('Event'); // (isKeyboardEvent ? 'KeyboardEvent' : 'Event');
   event.initEvent(name, true, true);
+  if (isKeyboardEvent && data) { event.keyCode = event.which = data.keyCode; }
+  // TODO: figure this out
+  // if (isKeyboardEvent) {
+  //   event.initKeyboardEvent(name, true, true, null, data.keyCode, DOM_KEY_LOCATION_STANDARD);
+  // } else {
+  //   event.initEvent(name, true, true);
+  // }
   el.dispatchEvent(event);
 }
