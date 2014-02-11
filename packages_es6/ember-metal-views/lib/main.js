@@ -26,9 +26,19 @@ export function appendTo(view, selector) {
   if (view.didInsertElement) { view.didInsertElement(el); }
 }
 
+function findContainingView(el) {
+  var view;
+  while (el && !(view = views[el.id])) { // TODO: use a class and querySelector instead?
+    el = el.parentElement;
+  }
+  return view;
+}
+
 function eventHandler(event) {
+  var view;
   try {
-    views[event.target.id][event.type](event);
+    view = findContainingView(event.target);
+    view[event.type](event);
   } catch(ex) {
     console.log(ex);
   }
