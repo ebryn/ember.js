@@ -2,19 +2,22 @@ import { testsFor, View, $, equalHTML, triggerEvent } from "ember-metal-views/te
 
 testsFor("ember-metal-views - events");
 
-test("simple click handler", function() {
-  expect(2);
-
+test("click", function() {
+  var clicks = 0;
   var view = {
     isView: true,
+    innerHTML: '<div><span>click me too</span></div>',
 
     click: function() {
-      ok(true, "Click handler was called");
+      clicks++;
     }
   };
 
   View.appendTo(view, '#qunit-fixture');
-  equalHTML('#qunit-fixture', '<div></div>');
+  equalHTML('#qunit-fixture', '<div><div><span>click me too</span></div></div>');
 
   triggerEvent(view.element, 'click');
+  equal(clicks, 1, "Click handler was called");
+  triggerEvent(view.element.querySelector('span'), 'click');
+  equal(clicks, 2, "Click handler was called twice");
 });
