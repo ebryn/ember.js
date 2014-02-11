@@ -1,12 +1,6 @@
-var View = requireModule('ember-metal-views'),
-    $ = function(selector) { return document.querySelector(selector); },
-    equalHTML = function(selector, expectedHTML) { equal($(selector).innerHTML, expectedHTML, "HTML matches"); };
+import { testsFor, View, $, equalHTML } from "ember-metal-views/tests/test_helpers";
 
-module("ember-metal-views - template support", {
-  setup: function() {
-    $('#qunit-fixture').innerHTML = '';
-  }
-});
+testsFor("ember-metal-views - template support");
 
 test("a view can have a template", function() {
   var view = {

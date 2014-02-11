@@ -1,15 +1,8 @@
 /*globals HTMLElement */
 
-var View = requireModule('ember-metal-views'),
-    $ = function(selector) { return document.querySelector(selector); },
-    equalHTML = function(selector, expectedHTML, message) { equal($(selector).innerHTML, expectedHTML, message || "HTML matches"); },
-    set = function(obj, key, value) { Ember.run(Ember, Ember.set, obj, key, value); };
+import { testsFor, View, $, equalHTML, set } from "ember-metal-views/tests/test_helpers";
 
-module("ember-metal-views", {
-  setup: function() {
-    $('#qunit-fixture').innerHTML = '';
-  }
-});
+testsFor("ember-metal-views");
 
 test("by default, view renders as a div", function() {
   var view = {isView: true};

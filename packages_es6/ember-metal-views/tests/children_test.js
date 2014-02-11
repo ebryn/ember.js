@@ -1,12 +1,6 @@
-var View = requireModule('ember-metal-views'),
-    $ = function(selector) { return document.querySelector(selector); },
-    equalHTML = function(selector, expectedHTML) { equal($(selector).innerHTML, expectedHTML, "HTML matches"); };
+import { testsFor, View, $, equalHTML } from "ember-metal-views/tests/test_helpers";
 
-module("ember-metal-views - children", {
-  setup: function() {
-    $('#qunit-fixture').innerHTML = '';
-  }
-});
+testsFor("ember-metal-views - children");
 
 test("a view can have child views", function() {
   var view = {
@@ -32,7 +26,7 @@ test("didInsertElement fires after children are rendered", function() {
     ],
 
     didInsertElement: function(el) {
-      equal(el.outerHTML, "<ul><li>ohai</li></ul>", "Children are rendered");
+      equalHTML(el.parentElement, "<ul><li>ohai</li></ul>", "Children are rendered");
     }
   };
 
