@@ -1,5 +1,7 @@
 require("ember-metal");
 
+var guid = 0;
+
 if (window.Ember) {
   // FIXME: avoid render/afterRender getting defined twice
   var queues = Ember.run.queues,
@@ -24,6 +26,28 @@ export function appendTo(view, selector) {
   if (view.didInsertElement) { view.didInsertElement(el); }
 }
 
+function eventHandler(event) {
+  try {
+    views[event.target.id][event.type](event);
+  } catch(ex) {
+    console.log(ex);
+  }
+}
+
+var eventDispatcherActive = false;
+function setupEventDispatcher() {
+  if (!eventDispatcherActive) {
+    document.addEventListener('click', eventHandler, false);
+    eventDispatcherActive = true;
+  }
+}
+
+export function reset() {
+  guid = 0;
+  views = {};
+  eventDispatcherActive = false;
+  document.removeEventListener('click', eventHandler);
+}
 
 function setAttribute(key) {
   this.element.setAttribute(key, this[key]);
@@ -90,6 +114,9 @@ function transclude(oldEl, newTagName) {
   return newEl;
 }
 
+// Hash lookup by view ID for event delegation
+var views = {};
+
 // TODO: make non-recursive
 function render(view, parent) {
   var tagName = view.tagName || 'div';
@@ -98,6 +125,10 @@ function render(view, parent) {
   if (view.tagName && el.tagName !== view.tagName) {
     el = view.element = transclude(el, view.tagName);
   }
+
+  var elementId = view.elementId || guid++; // FIXME: guid should be prefixed
+  el.setAttribute('id', elementId);
+  views[elementId] = view;
 
   if (parent) { parent.element.appendChild(el); }
 
@@ -147,6 +178,8 @@ function render(view, parent) {
       render(childViews[i], view);
     }
   }
+
+  setupEventDispatcher();
 
   return el;
 }
