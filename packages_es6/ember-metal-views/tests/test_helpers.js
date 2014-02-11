@@ -12,7 +12,7 @@ export function testsFor(name) {
     teardown: function() {
       View.reset();
     }
-  })
+  });
 }
 
 export function $(selector) {
@@ -23,11 +23,11 @@ export function $(selector) {
 export function equalHTML(selector, expectedHTML, message) {
   var actualHTML = $(selector).innerHTML.replace(/ id="[^"]+"/gmi, '');
   equal(actualHTML, expectedHTML, message || "HTML matches");
-};
+}
 
 export function set(obj, key, value) {
   Ember.run(Ember, Ember.set, obj, key, value);
-};
+}
 
 export function triggerEvent(el, name) {
   // var event = new Event(name);
@@ -35,4 +35,4 @@ export function triggerEvent(el, name) {
   var event = document.createEvent('Event');
   event.initEvent(name, true, true);
   el.dispatchEvent(event);
-};
+}
