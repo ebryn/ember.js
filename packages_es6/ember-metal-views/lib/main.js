@@ -219,9 +219,9 @@ function render(view, parent) {
 
   if (template) {
     el.appendChild(template(view, templateOptions));
-  } else if (view.textContent) {
+  } else if (view.textContent) { // TODO: bind?
     el.textContent = view.textContent;
-  } else if (view.innerHTML) {
+  } else if (view.innerHTML) { // TODO: bind?
     el.innerHTML = view.innerHTML;
   }
 
