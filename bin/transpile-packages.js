@@ -137,6 +137,7 @@ var packages = {
   'container': [],
   'ember-metal': [],
   'ember-metal-views': ['ember-metal'],
+  'ember-metal-htmlbars': ['ember-metal-views'],
   'ember-debug': [],
   'ember-runtime': ['container', 'rsvp', 'ember-metal', 'ember-metal/~tests/ember-metal'],
   'ember-views': ['ember-runtime'],
@@ -147,5 +148,5 @@ var packages = {
 
 Object.keys(packages).forEach(function (packageName) {
   pkg = new ES6Package(packageName, packages[packageName]);
-  pkg.process();
+    pkg.process();
 });
