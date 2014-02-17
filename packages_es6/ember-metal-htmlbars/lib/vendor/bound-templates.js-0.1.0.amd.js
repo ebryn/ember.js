@@ -139,6 +139,7 @@ define("bound-templates/runtime",
       var helper = helpers.LOOKUP_HELPER(path);
       if (helper) {
         streamifyArgs(context, params, options, helpers);
+        options.helpers = helpers; // FIXME: hacked in
         options.placeholder = placeholder; // FIXME: this kinda sucks
         var fragmentLazyValue = helper(params, options);
         if (fragmentLazyValue) {

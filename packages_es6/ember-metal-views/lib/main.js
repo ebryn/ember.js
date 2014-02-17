@@ -20,7 +20,7 @@ var dom = {
 };
 
 export function appendTo(view, selector) {
-  var el = render(view);
+  var el = _render(view);
   if (view.willInsertElement) { view.willInsertElement(el); }
   dom.querySelector(selector).appendChild(el);
   if (view.didInsertElement) { view.didInsertElement(el); }
@@ -169,13 +169,15 @@ function transclude(oldEl, newTagName) {
 var views = {};
 
 // TODO: make non-recursive
-function render(view, parent) {
+function _render(view, parent) {
   var tagName = view.tagName || 'div';
   var el = view.element = view.element || dom.createElement(tagName);
 
   if (view.tagName && el.tagName !== view.tagName) {
     el = view.element = transclude(el, view.tagName);
   }
+
+  if (parent && !view.context) { view.context = parent.context; }
 
   var elementId = view.elementId || guid++; // FIXME: guid should be prefixed
   el.setAttribute('id', elementId);
@@ -188,7 +190,6 @@ function render(view, parent) {
       className,
       attributeBindings = view.attributeBindings,
       attribute,
-      childViews = view.childViews,
       template = view.template,
       templateOptions = {}, // TODO
       i, l;
@@ -218,16 +219,20 @@ function render(view, parent) {
   }
 
   if (template) {
-    el.appendChild(template(view, templateOptions));
+    view.templateOptions.data.view = view;
+    el.appendChild(template(view, view.templateOptions));
+    view.templateOptions.data.view = null;
   } else if (view.textContent) { // TODO: bind?
     el.textContent = view.textContent;
   } else if (view.innerHTML) { // TODO: bind?
     el.innerHTML = view.innerHTML;
   }
 
+  var childViews = view.childViews;
+
   if (childViews && childViews.length > 0) {
     for (i = 0, l = childViews.length; i < l; i++) {
-      render(childViews[i], view);
+      _render(childViews[i], view);
     }
   }
 
@@ -236,11 +241,58 @@ function render(view, parent) {
   return el;
 }
 
-function publicRender(view, parent) {
+export function render(view, parent) {
   var el = view.element;
   if (el && view.willInsertElement) { view.willInsertElement(el); }
-  render(view, parent);
+  _render(view, parent);
   if (el && view.didInsertElement) { view.didInsertElement(el); }
+  return el || view.element;
 }
 
-export { publicRender as render };
+export function createChildView(view, childView, attrs) {
+  var childView;
+
+  if (typeof childView === 'function') {
+    attrs = attrs || {};
+    // attrs.template = attemplate;
+    // attrs._context = context;
+    attrs._parentView = view;
+    // attrs._placeholder = placeholder;
+    // container
+    // template data?
+
+    childView = childView.create(attrs);
+  } else if (typeof childView === 'string') {
+    var fullName = 'view:' + childView;
+    var View = view.container.lookupFactory(fullName);
+
+    // Ember.assert("Could not find view: '" + fullName + "'", !!View);
+    // attrs.templateData = get(this, 'templateData');
+    childView = View.create(attrs);
+  } else if (typeof childView === 'object') {
+    if (childView.isView && childView._parentView === view && childView.container === view.container) { return view; }
+    // Ember.assert('You must pass instance or subclass of View', view.isView);
+    // attrs.container = this.container;
+    // if (!get(view, 'templateData')) {
+    //   attrs.templateData = get(this, 'templateData');
+    // }
+    // view.template = template;
+    // view._context = context;
+    childView._parentView = view;
+    // view._placeholder = placeholder;
+    // Ember.setProperties(view, attrs);
+  }
+
+  return childView;
+}
+
+export function appendChild(view, childView, attrs) {
+  childView = createChildView(view, childView, attrs);
+  var childViews = view.childViews;
+  if (!childViews) {
+    childViews = view.childViews = [childView];
+  } else {
+    childViews.push(childView);
+  }
+  return childView;
+}
