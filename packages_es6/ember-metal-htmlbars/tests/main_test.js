@@ -1,5 +1,75 @@
+import { View, $, equalHTML, set } from "ember-metal-htmlbars/tests/test_helpers";
+
+import { compile } from "ember-metal-htmlbars";
+import { merge } from "htmlbars/utils";
+module runtime from "bound-templates/runtime";
+import { STREAM_FOR } from "ember-metal-htmlbars/helpers/STREAM_FOR";
+import { view } from "ember-metal-htmlbars/helpers/view";
+
 module("ember-metal-htmlbars");
 
+var defaultOptions = {
+  data: {view: null},
+
+  helpers: merge({
+    STREAM_FOR: STREAM_FOR,
+    view: view
+  }, runtime)
+};
+
+function template(str) {
+  return compile(str);
+}
+
 test("it works", function() {
-  ok(true);
+  var template = compile("ohai");
+  equalHTML(template(), "ohai");
+});
+
+test("basic binding", function() {
+  var template = compile(" {{foo}}"),
+      obj = {foo: "foo is here"},
+      fragment = template(obj, defaultOptions);
+
+  equalHTML(fragment, " foo is here");
+
+  Ember.set(obj, 'foo', 'foo is still here');
+  equalHTML(fragment, " foo is still here");
+});
+
+test("View", function() {
+  var view = {isView: true, classNames: 'ember-view', template: template("ohai"), templateOptions: defaultOptions},
+      el = View.render(view);
+
+  equalHTML(el, '<div class="ember-view">ohai</div>');
+});
+
+test("View with a binding inside", function() {
+  var view = {isView: true, classNames: 'ember-view', template: template(" {{foo}} {{bar.baz}}"), templateOptions: defaultOptions};
+
+  Ember.set(view, 'context', {foo: 'foo is here', bar: {baz: 'baz!'}});
+
+  var el = View.render(view);
+  equalHTML(el, '<div class="ember-view"> foo is here baz!</div>');
+
+  Ember.set(view, 'context.foo', 'i pity the foo');
+  equalHTML(el, '<div class="ember-view"> i pity the foo baz!</div>');
+});
+
+test("View creation performance - 60,000 views", function() {
+  var t = template("{{#view}}{{foo}}{{/view}}{{#view}}{{foo}}{{/view}}{{#view}}{{foo}}{{/view}}{{#view}}{{foo}}{{/view}}{{#view}}{{foo}}{{/view}}");
+
+  var start = Date.now();
+  console.profile();
+  for (var i = 0, l = 10000; i < l; i++) {
+    var context = {foo: 'foo is here'};
+    var view = {isView: true, template: t, templateOptions: defaultOptions, context: context};
+    View.appendTo(view, 'body');
+  }
+  console.profileEnd();
+
+  var elapsed = Date.now() - start;
+  console.log(elapsed);
+
+  ok(elapsed < 2000, "Actual time: " + elapsed + "ms. Target is less than 2000ms.");
 });

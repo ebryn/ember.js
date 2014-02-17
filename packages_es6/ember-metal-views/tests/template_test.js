@@ -10,6 +10,8 @@ test("a view can have a template", function() {
       return document.createTextNode(context.prop);
     },
 
+    templateOptions: {data: {}},
+
     prop: "WAT"
   };
 

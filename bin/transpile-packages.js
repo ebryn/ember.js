@@ -69,7 +69,7 @@ ES6Package.prototype = {
 
   processLib: function(){
     this.compileDirectory(path.join(this.inputPath, 'lib'), function(results){
-      var output = results['compiled'];
+      var output = results.compiled;
 
       this.dependencies.forEach(function(dependency) {
         if (!dependency.match(/~tests/)) {
