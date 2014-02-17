@@ -1,8 +1,10 @@
 /*globals Node, DocumentFragment */
 
-var View = requireModule('ember-metal-views');
+import { compile } from "ember-metal-htmlbars";
+export { compile };
 
-export { View }
+module View from "ember-metal-views";
+export { View };
 
 export function testsFor(name) {
   module(name, {
@@ -59,3 +61,22 @@ export function triggerEvent(el, name, data) {
   // }
   el.dispatchEvent(event);
 }
+
+
+import { merge } from "htmlbars/utils";
+module runtime from "bound-templates/runtime";
+import { STREAM_FOR } from "ember-metal-htmlbars/helpers/STREAM_FOR";
+import { view } from "ember-metal-htmlbars/helpers/view";
+import { each } from "ember-metal-htmlbars/helpers/each";
+
+var defaultOptions = {
+  data: {view: null},
+
+  helpers: merge({
+    STREAM_FOR: STREAM_FOR,
+    view: view,
+    each: each
+  }, runtime)
+};
+
+export { defaultOptions };

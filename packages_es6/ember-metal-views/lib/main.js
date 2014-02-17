@@ -24,6 +24,7 @@ export function appendTo(view, selector) {
   if (view.willInsertElement) { view.willInsertElement(el); }
   dom.querySelector(selector).appendChild(el);
   if (view.didInsertElement) { view.didInsertElement(el); }
+  return el;
 }
 
 function findContainingView(el) {
@@ -170,20 +171,23 @@ var views = {};
 
 // TODO: make non-recursive
 function _render(view, parent) {
-  var tagName = view.tagName || 'div';
-  var el = view.element = view.element || dom.createElement(tagName);
-
-  if (view.tagName && el.tagName !== view.tagName) {
-    el = view.element = transclude(el, view.tagName);
-  }
-
   if (parent && !view.context) { view.context = parent.context; }
 
-  var elementId = view.elementId || guid++; // FIXME: guid should be prefixed
-  el.setAttribute('id', elementId);
-  views[elementId] = view;
+  var tagName, el;
+  if (!view.isVirtual) {
+    tagName = view.tagName || 'div';
+    el = view.element = view.element || dom.createElement(tagName);
+  
+    if (view.tagName && el.tagName !== view.tagName) {
+      el = view.element = transclude(el, view.tagName);
+    }
 
-  if (parent) { parent.element.appendChild(el); }
+    var elementId = view.elementId || guid++; // FIXME: guid should be prefixed
+    el.setAttribute('id', elementId);
+    views[elementId] = view;
+
+    if (parent) { parent.element.appendChild(el); }
+  }
 
   var classNames = view.classNames,
       classNameBindings = view.classNameBindings,
@@ -220,7 +224,12 @@ function _render(view, parent) {
 
   if (template) {
     view.templateOptions.data.view = view;
-    el.appendChild(template(view, view.templateOptions));
+    var templateFragment = template(view, view.templateOptions);
+    if (!view.isVirtual) {
+      el.appendChild(templateFragment);
+    } else {
+      el = templateFragment;
+    }
     view.templateOptions.data.view = null;
   } else if (view.textContent) { // TODO: bind?
     el.textContent = view.textContent;
@@ -244,7 +253,7 @@ function _render(view, parent) {
 export function render(view, parent) {
   var el = view.element;
   if (el && view.willInsertElement) { view.willInsertElement(el); }
-  _render(view, parent);
+  el = _render(view, parent);
   if (el && view.didInsertElement) { view.didInsertElement(el); }
   return el || view.element;
 }
@@ -270,7 +279,7 @@ export function createChildView(view, childView, attrs) {
     // attrs.templateData = get(this, 'templateData');
     childView = View.create(attrs);
   } else if (typeof childView === 'object') {
-    if (childView.isView && childView._parentView === view && childView.container === view.container) { return view; }
+    if (childView.isView && childView._parentView === view && childView.container === view.container) { return childView; }
     // Ember.assert('You must pass instance or subclass of View', view.isView);
     // attrs.container = this.container;
     // if (!get(view, 'templateData')) {
@@ -295,4 +304,12 @@ export function appendChild(view, childView, attrs) {
     childViews.push(childView);
   }
   return childView;
+}
+
+export function remove(view) {
+  var el = view.element,
+      placeholder = view._placeholder;
+
+  if (el) { el.parentNode.removeChild(el); }
+  if (placeholder) { placeholder.clear(); } // TODO: Implement Placeholder.destroy
 }
