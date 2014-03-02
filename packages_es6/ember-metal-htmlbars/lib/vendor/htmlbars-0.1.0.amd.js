@@ -3432,9 +3432,10 @@ define("htmlbars/runtime/placeholder",
         throw new Error('a fragment parent must have boundary nodes in order to handle insertion');
       }
 
+      var childNodes = parent.childNodes;
       this._parent = parent;
-      this.start = startIndex === -1 ? null : parent.childNodes[startIndex];
-      this.end = endIndex === -1 ? null : parent.childNodes[endIndex];
+      this.start = startIndex === -1 ? null : childNodes[startIndex];
+      this.end = endIndex === -1 ? null : childNodes[endIndex];
     }
 
     __exports__.Placeholder = Placeholder;Placeholder.prototype = {
