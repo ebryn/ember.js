@@ -1,17 +1,15 @@
 define("backburner",
-  ["backburner/utils","backburner/deferred_action_queues","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["backburner/deferred_action_queues","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
-    var Utils = __dependency1__["default"];
-    var DeferredActionQueues = __dependency2__.DeferredActionQueues;
+    var DeferredActionQueues = __dependency1__.DeferredActionQueues;
 
     var slice = [].slice,
         pop = [].pop,
-        each = Utils.each,
-        isString = Utils.isString,
-        isFunction = Utils.isFunction,
-        isNumber = Utils.isNumber,
+        throttlers = [],
+        debouncees = [],
         timers = [],
+        autorun, laterTimer, laterTimerExpiresAt,
         global = this,
         NUMBER = /\d+/;
 
@@ -25,7 +23,7 @@ define("backburner",
     })();
 
     function isCoercableNumber(number) {
-      return isNumber(number) || NUMBER.test(number);
+      return typeof number === 'number' || NUMBER.test(number);
     }
 
     function Backburner(queueNames, options) {
@@ -35,8 +33,6 @@ define("backburner",
         this.options.defaultQueue = queueNames[0];
       }
       this.instanceStack = [];
-      this._debouncees = [];
-      this._throttlers = [];
     }
 
     Backburner.prototype = {
@@ -90,7 +86,8 @@ define("backburner",
       },
 
       run: function(target, method /*, args */) {
-        var onError = getOnError(this.options);
+        var options = this.options,
+            ret, length = arguments.length;
 
         this.begin();
 
@@ -99,10 +96,11 @@ define("backburner",
           target = null;
         }
 
-        if (isString(method)) {
+        if (typeof method === 'string') {
           method = target[method];
         }
 
+        var onError = options.onError || (options.onErrorTarget && options.onErrorTarget[options.onErrorMethod]);
         var args = slice.call(arguments, 2);
 
         // guard against Safari 6's double-finally bug
@@ -137,7 +135,7 @@ define("backburner",
           target = null;
         }
 
-        if (isString(method)) {
+        if (typeof method === 'string') {
           method = target[method];
         }
 
@@ -153,7 +151,7 @@ define("backburner",
           target = null;
         }
 
-        if (isString(method)) {
+        if (typeof method === 'string') {
           method = target[method];
         }
 
@@ -164,10 +162,12 @@ define("backburner",
       },
 
       setTimeout: function() {
-        var args = slice.call(arguments),
-            length = args.length,
-            method, wait, target,
-            methodOrTarget, methodOrWait, methodOrArgs;
+        var args = slice.call(arguments);
+        var length = args.length;
+        var method, wait, target;
+        var self = this;
+        var methodOrTarget, methodOrWait, methodOrArgs;
+        var options = this.options;
 
         if (length === 0) {
           return;
@@ -178,7 +178,7 @@ define("backburner",
           methodOrTarget = args[0];
           methodOrWait = args[1];
 
-          if (isFunction(methodOrWait) || isFunction(methodOrTarget[methodOrWait])) {
+          if (typeof methodOrWait === 'function' || typeof  methodOrTarget[methodOrWait] === 'function') {
             target = args.shift();
             method = args.shift();
             wait = 0;
@@ -201,9 +201,9 @@ define("backburner",
           methodOrTarget = args[0];
           methodOrArgs = args[1];
 
-          if (isFunction(methodOrArgs) || (isString(methodOrArgs) &&
-                                          methodOrTarget !== null &&
-                                          methodOrArgs in methodOrTarget)) {
+          if (typeof methodOrArgs === 'function' || (typeof methodOrArgs === 'string' &&
+                                                     methodOrTarget !== null &&
+                                                     methodOrArgs in methodOrTarget)) {
             target = args.shift();
             method = args.shift();
           } else {
@@ -213,11 +213,11 @@ define("backburner",
 
         var executeAt = (+new Date()) + parseInt(wait, 10);
 
-        if (isString(method)) {
+        if (typeof method === 'string') {
           method = target[method];
         }
 
-        var onError = getOnError(this.options);
+        var onError = options.onError || (options.onErrorTarget && options.onErrorTarget[options.onErrorMethod]);
 
         function fn() {
           if (onError) {
@@ -236,7 +236,7 @@ define("backburner",
 
         timers.splice(i, 0, executeAt, fn);
 
-        updateLaterTimer(this, executeAt, wait);
+        updateLaterTimer(self, executeAt, wait);
 
         return fn;
       },
@@ -250,7 +250,7 @@ define("backburner",
             index,
             timer;
 
-        if (isNumber(immediate) || isString(immediate)) {
+        if (typeof immediate === "number" || typeof immediate === "string") {
           wait = immediate;
           immediate = true;
         } else {
@@ -259,17 +259,15 @@ define("backburner",
 
         wait = parseInt(wait, 10);
 
-        index = findThrottler(target, method, this._throttlers);
-        if (index > -1) { return this._throttlers[index]; } // throttled
+        index = findThrottler(target, method);
+        if (index > -1) { return throttlers[index]; } // throttled
 
         timer = global.setTimeout(function() {
           if (!immediate) {
             self.run.apply(self, args);
           }
-          var index = findThrottler(target, method, self._throttlers);
-          if (index > -1) {
-            self._throttlers.splice(index, 1);
-          }
+          var index = findThrottler(target, method);
+          if (index > -1) { throttlers.splice(index, 1); }
         }, wait);
 
         if (immediate) {
@@ -278,7 +276,7 @@ define("backburner",
 
         throttler = [target, method, timer];
 
-        this._throttlers.push(throttler);
+        throttlers.push(throttler);
 
         return throttler;
       },
@@ -292,7 +290,7 @@ define("backburner",
             debouncee,
             timer;
 
-        if (isNumber(immediate) || isString(immediate)) {
+        if (typeof immediate === "number" || typeof immediate === "string") {
           wait = immediate;
           immediate = false;
         } else {
@@ -301,11 +299,11 @@ define("backburner",
 
         wait = parseInt(wait, 10);
         // Remove debouncee
-        index = findDebouncee(target, method, this._debouncees);
+        index = findDebouncee(target, method);
 
         if (index > -1) {
-          debouncee = this._debouncees[index];
-          this._debouncees.splice(index, 1);
+          debouncee = debouncees[index];
+          debouncees.splice(index, 1);
           clearTimeout(debouncee[2]);
         }
 
@@ -313,9 +311,9 @@ define("backburner",
           if (!immediate) {
             self.run.apply(self, args);
           }
-          var index = findDebouncee(target, method, self._debouncees);
+          var index = findDebouncee(target, method);
           if (index > -1) {
-            self._debouncees.splice(index, 1);
+            debouncees.splice(index, 1);
           }
         }, wait);
 
@@ -325,36 +323,38 @@ define("backburner",
 
         debouncee = [target, method, timer];
 
-        self._debouncees.push(debouncee);
+        debouncees.push(debouncee);
 
         return debouncee;
       },
 
       cancelTimers: function() {
-        var clearItems = function(item) {
-          clearTimeout(item[2]);
-        };
+        var i, len;
 
-        each(this._throttlers, clearItems);
-        this._throttlers = [];
+        for (i = 0, len = throttlers.length; i < len; i++) {
+          clearTimeout(throttlers[i][2]);
+        }
+        throttlers = [];
 
-        each(this._debouncees, clearItems);
-        this._debouncees = [];
+        for (i = 0, len = debouncees.length; i < len; i++) {
+          clearTimeout(debouncees[i][2]);
+        }
+        debouncees = [];
 
-        if (this._laterTimer) {
-          clearTimeout(this._laterTimer);
-          this._laterTimer = null;
+        if (laterTimer) {
+          clearTimeout(laterTimer);
+          laterTimer = null;
         }
         timers = [];
 
-        if (this._autorun) {
-          clearTimeout(this._autorun);
-          this._autorun = null;
+        if (autorun) {
+          clearTimeout(autorun);
+          autorun = null;
         }
       },
 
       hasTimers: function() {
-        return !!timers.length || !!this._debouncees.length || !!this._throttlers.length || this._autorun;
+        return !!timers.length || !!debouncees.length || !!throttlers.length || autorun;
       },
 
       cancel: function(timer) {
@@ -370,8 +370,8 @@ define("backburner",
             }
           }
         } else if (Object.prototype.toString.call(timer) === "[object Array]"){ // we're cancelling a throttle or debounce
-          return this._cancelItem(findThrottler, this._throttlers, timer) ||
-                   this._cancelItem(findDebouncee, this._debouncees, timer);
+          return this._cancelItem(findThrottler, throttlers, timer) ||
+                   this._cancelItem(findDebouncee, debouncees, timer);
         } else {
           return; // timer was null or not a timer
         }
@@ -383,7 +383,7 @@ define("backburner",
 
         if (timer.length < 3) { return false; }
 
-        index = findMethod(timer[0], timer[1], array);
+        index = findMethod(timer[0], timer[1]);
 
         if(index > -1) {
 
@@ -406,43 +406,44 @@ define("backburner",
 
     if (needsIETryCatchFix) {
       var originalRun = Backburner.prototype.run;
-      Backburner.prototype.run = wrapInTryCatch(originalRun);
+      Backburner.prototype.run = function() {
+        try {
+          originalRun.apply(this, arguments);
+        } catch (e) {
+          throw e;
+        }
+      };
 
       var originalEnd = Backburner.prototype.end;
-      Backburner.prototype.end = wrapInTryCatch(originalEnd);
-    }
-
-    function wrapInTryCatch(func) {
-      return function () {
+      Backburner.prototype.end = function() {
         try {
-          return func.apply(this, arguments);
+          originalEnd.apply(this, arguments);
         } catch (e) {
           throw e;
         }
       };
     }
 
-    function getOnError(options) {
-      return options.onError || (options.onErrorTarget && options.onErrorTarget[options.onErrorMethod]);
-    }
-
 
     function createAutorun(backburner) {
       backburner.begin();
-      backburner._autorun = global.setTimeout(function() {
-        backburner._autorun = null;
+      autorun = global.setTimeout(function() {
+        autorun = null;
         backburner.end();
       });
     }
 
     function updateLaterTimer(self, executeAt, wait) {
-      if (!self._laterTimer || executeAt < self._laterTimerExpiresAt) {
-        self._laterTimer = global.setTimeout(function() {
-          self._laterTimer = null;
-          self._laterTimerExpiresAt = null;
+      if (!laterTimer || executeAt < laterTimerExpiresAt) {
+        if (laterTimer) {
+          clearTimeout(laterTimer);
+        }
+        laterTimer = global.setTimeout(function() {
+          laterTimer = null;
+          laterTimerExpiresAt = null;
           executeTimers(self);
         }, wait);
-        self._laterTimerExpiresAt = executeAt;
+        laterTimerExpiresAt = executeAt;
       }
     }
 
@@ -465,21 +466,28 @@ define("backburner",
       }
     }
 
-    function findDebouncee(target, method, debouncees) {
-      return findItem(target, method, debouncees);
-    }
-
-    function findThrottler(target, method, throttlers) {
-      return findItem(target, method, throttlers);
-    }
-
-    function findItem(target, method, collection) {
-      var item,
+    function findDebouncee(target, method) {
+      var debouncee,
           index = -1;
 
-      for (var i = 0, l = collection.length; i < l; i++) {
-        item = collection[i];
-        if (item[0] === target && item[1] === method) {
+      for (var i = 0, l = debouncees.length; i < l; i++) {
+        debouncee = debouncees[i];
+        if (debouncee[0] === target && debouncee[1] === method) {
+          index = i;
+          break;
+        }
+      }
+
+      return index;
+    }
+
+    function findThrottler(target, method) {
+      var throttler,
+          index = -1;
+
+      for (var i = 0, l = throttlers.length; i < l; i++) {
+        throttler = throttlers[i];
+        if (throttler[0] === target && throttler[1] === method) {
           index = i;
           break;
         }
@@ -515,14 +523,10 @@ define("backburner",
     __exports__.Backburner = Backburner;
   });
 define("backburner/deferred_action_queues",
-  ["backburner/utils","backburner/queue","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["backburner/queue","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
-    var Utils = __dependency1__["default"];
-    var Queue = __dependency2__.Queue;
-
-    var each = Utils.each,
-        isString = Utils.isString;
+    var Queue = __dependency1__.Queue;
 
     function DeferredActionQueues(queueNames, options) {
       var queues = this.queues = {};
@@ -530,9 +534,11 @@ define("backburner/deferred_action_queues",
 
       this.options = options;
 
-      each(queueNames, function(queueName) {
-        queues[queueName] = new Queue(this, queueName, options);
-      });
+      var queueName;
+      for (var i = 0, l = queueNames.length; i < l; i++) {
+        queueName = queueNames[i];
+        queues[queueName] = new Queue(this, queueName, this.options);
+      }
     }
 
     DeferredActionQueues.prototype = {
@@ -603,7 +609,7 @@ define("backburner/deferred_action_queues",
             args   = queueItems[queueIndex+2];
             stack  = queueItems[queueIndex+3]; // Debugging assistance
 
-            if (isString(method)) { method = target[method]; }
+            if (typeof method === 'string') { method = target[method]; }
 
             // method could have been nullified / canceled during flush
             if (method) {
@@ -679,7 +685,7 @@ define("backburner/queue",
           }
         }
 
-        queue.push(target, method, args, stack);
+        this._queue.push(target, method, args, stack);
         return {queue: this, target: target, method: method};
       },
 
@@ -768,28 +774,4 @@ define("backburner/queue",
     };
 
     __exports__.Queue = Queue;
-  });
-define("backburner/utils",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-    __exports__["default"] = {
-      each: function(collection, callback) {
-        for (var i = 0; i < collection.length; i++) {
-          callback(collection[i]);
-        }
-      },
-
-      isString: function(suspect) {
-        return typeof suspect === 'string';
-      },
-
-      isFunction: function(suspect) {
-        return typeof suspect === 'function';
-      },
-
-      isNumber: function(suspect) {
-        return typeof suspect === 'number';
-      }
-    };
   });
