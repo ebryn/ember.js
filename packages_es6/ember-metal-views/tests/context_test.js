@@ -44,6 +44,37 @@ test("the shared observer for views' context doesn't leak", function() {
   set(view1, 'context', newContext);
   equal(view1.context, newContext, "The new context was set properly");
   equal(view2.context, context2, "The new context didn't leak over to the other view");
-
-
 });
+
+test("explicitly set child view contexts aren't clobbered by parent context changes", function() {
+  var parentContext = {},
+      childContext = {},
+      childView = {isView: true, context: childContext},
+      view = {
+        isView: true, 
+        context: parentContext,
+        childViews: [childView]
+      };
+
+  View.render(view);
+
+  parentContext = {};
+  set(view, 'context', parentContext);
+  equal(view.context, parentContext, "parent context changed");
+  equal(childView.context, childContext, "child context hasn't changed");
+
+  childContext = {};
+  set(childView, 'context', childContext);
+  equal(childView.context, childContext, "child context changed");
+  equal(view.context, parentContext, "parent context hasn't changed");
+
+  parentContext = {};
+  set(view, 'context', parentContext);
+  equal(view.context, parentContext, "parent context changed");
+  equal(childView.context, childContext, "child context hasn't changed");
+});
+
+
+
+
+
