@@ -57,7 +57,9 @@ function _render(_view, _parent) {
     view = views[idx];
     view[META_KEY] = SHARED_META;
 
-    if (!view.context && view._parentView) {
+    if (view.context) { // if the view has a context explicitly set, set _context so we know it
+      view._context = view.context;
+    } else if (view._parentView) { // the view didn't have a context explicitly set, so propagate the parent's context
       view.context = view._parentView.context;
     }
 
@@ -221,10 +223,19 @@ function contextDidChange() {
   if (childViews) {
     for (i = 0, l = childViews.length; i < l; i++) {
       childView = childViews[i];
+
+      // if context was explicitly set on this child, don't propagate the context change to it and it's children
+      if (childView._context) { continue; }
+
       set(childView, 'context', newContext);
       contextDidChange.call(childView);
     }
   }
 }
+
+// function setContext(view, newContext) {
+//   view._context = newContext; // we're setting _context to signify that this view had context explictly set
+//   set(view, 'context', newContext);
+// }
 
 export { reset, events, appendTo, render, createChildView, appendChild, remove }
