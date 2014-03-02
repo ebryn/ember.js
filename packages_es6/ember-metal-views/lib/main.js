@@ -11,6 +11,9 @@ import { querySelector, createElement } from "ember-metal-views/dom";
 import { lookupView, setupView, setupEventDispatcher, reset, events } from "ember-metal-views/events";
 import { setupClassNames, setupClassNameBindings, setupAttributeBindings } from "ember-metal-views/attributes";
 
+var addObserver = Ember.addObserver || function() { console.log('TODO: implement addObserver'); },
+    set = Ember.set || function() { console.log('TODO: implement set'); };
+
 function appendTo(view, selector) {
   var el = _render(view);
   if (view.willInsertElement) { view.willInsertElement(el); }
@@ -34,31 +37,68 @@ function transclude(oldEl, newTagName) {
   return newEl;
 }
 
-// TODO: make non-recursive
-function _render(view, parent) {
-  if (parent && !view.context) { view.context = parent.context; }
+function _render(_view, _parent) {
+  var views = [_view],
+      idx = 0,
+      view, ret, tagName, el;
 
-  var tagName, el;
-  if (!view.isVirtual) {
-    tagName = view.tagName || 'div';
-    el = view.element = view.element || createElement(tagName);
-  
-    if (view.tagName && el.tagName !== view.tagName) {
-      el = view.element = transclude(el, view.tagName);
+  if (_parent) { // FIXME: should be able to trash this
+    _view._parentView = _parent;
+  }
+
+  while (idx < views.length) {
+    view = views[idx];
+
+    if (!view.context && view._parentView) {
+      view.context = view._parentView.context;
+    }
+    addObserver(view, 'context', null, contextDidChange);
+
+    if (!view.isVirtual) {
+      tagName = view.tagName || 'div';
+      el = view.element = view.element || createElement(tagName);
+    
+      if (view.tagName && el.tagName !== view.tagName.toUpperCase()) {
+        el = view.element = transclude(el, view.tagName);
+      }
+
+      setupView(view);
+
+      if (view._parentView) {
+        view._parentView.element.appendChild(el);
+      }
+
+      el.setAttribute('id', view.elementId);
+      setupClassNames(view);
+      setupClassNameBindings(view);
+      setupAttributeBindings(view);
     }
 
-    setupView(view);
+    if (ret) {
+      _renderContents(view, el);
+    } else { // only capture the root view's element
+      ret = _renderContents(view, el);
+    }
 
-    if (parent) { parent.element.appendChild(el); }
+    var childViews = view.childViews,
+        childView;
+
+    if (childViews) {
+      for (var i = 0, l = childViews.length; i < l; i++) {
+        childView = childViews[i];
+        childView._parentView = view;
+        views.push(childView);
+      }
+    }
+
+    idx++;
   }
 
-  if (!view.isVirtual) {
-    el.setAttribute('id', view.elementId);
-    setupClassNames(view);
-    setupClassNameBindings(view);
-    setupAttributeBindings(view);
-  }
+  setupEventDispatcher();
+  return ret;
+}
 
+function _renderContents(view, el) {
   var template = view.template,
       templateOptions = {}, // TODO
       i, l;
@@ -77,10 +117,6 @@ function _render(view, parent) {
   } else if (view.innerHTML) { // TODO: bind?
     el.innerHTML = view.innerHTML;
   }
-
-  _renderChildren(view);
-
-  setupEventDispatcher();
 
   return el;
 }
@@ -157,6 +193,31 @@ function remove(view) {
 
   if (el) { el.parentNode.removeChild(el); }
   if (placeholder) { placeholder.clear(); } // TODO: Implement Placeholder.destroy
+}
+
+function contextDidChange() {
+  var view = this,
+      newContext = view.context,
+      streams = view.streams,
+      streamKeys = streams && Object.keys(streams), // TODO: should we just for in, or is this actually faster?
+      stream, i, l;
+
+  if (streamKeys) {
+    for (i = 0, l = streamKeys.length; i < l; i++) {
+      stream = streams[streamKeys[i]];
+      stream.updateObject(newContext);
+    }
+  }
+
+  var childViews = view.childViews,
+      childView;
+  if (childViews) {
+    for (i = 0, l = childViews.length; i < l; i++) {
+      childView = childViews[i];
+      set(childView, 'context', newContext);
+      contextDidChange.call(childView);
+    }
+  }
 }
 
 export { reset, events, appendTo, render, createChildView, appendChild, remove }
