@@ -17,7 +17,7 @@ var addObserver = Ember.addObserver || function() { console.log('TODO: implement
 var FAKE_PROTO = {},
     META_KEY = Ember.META_KEY;
 
-addObserver(FAKE_PROTO, 'context', null, contextDidChange);
+addObserver(FAKE_PROTO, 'context', Ember.NO_TARGET, contextDidChange);
 
 var SHARED_META = Ember.meta(FAKE_PROTO);
 
@@ -204,9 +204,8 @@ function remove(view) {
   if (placeholder) { placeholder.clear(); } // TODO: Implement Placeholder.destroy
 }
 
-function contextDidChange() {
-  var view = this,
-      newContext = view.context,
+function contextDidChange(view) {
+  var newContext = view.context,
       streams = view.streams,
       streamKeys = streams && Object.keys(streams), // TODO: should we just for in, or is this actually faster?
       stream, i, l;
@@ -228,7 +227,7 @@ function contextDidChange() {
       if (childView._context) { continue; }
 
       set(childView, 'context', newContext);
-      contextDidChange.call(childView);
+      contextDidChange(childView); // TODO: don't call contextDidChange recursively
     }
   }
 }
