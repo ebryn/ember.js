@@ -96,7 +96,7 @@ test("didInsertElement hook", function() {
   };
 
 
-  View.appendTo(view, '#qunit-fixture');
+  Ember.run(function() { View.appendTo(view, '#qunit-fixture'); });
 
   equalHTML('#qunit-fixture', "<div>you gone and done inserted that element</div>");
 });

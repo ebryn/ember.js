@@ -42,11 +42,13 @@ test("View creation performance - 60,000 views", function() {
 
   var start = Date.now();
   console.profile();
-  for (var i = 0, l = 10000; i < l; i++) {
-    var context = {foo: 'foo is here'};
-    var view = {isView: true, template: t, templateOptions: defaultOptions, context: context};
-    View.appendTo(view, 'body');
-  }
+  Ember.run(function() {
+    for (var i = 0, l = 10000; i < l; i++) {
+      var context = {foo: 'foo is here'};
+      var view = {isView: true, template: t, templateOptions: defaultOptions, context: context};
+      View.appendTo(view, 'body');
+    }
+  });
   console.profileEnd();
 
   var elapsed = Date.now() - start;
