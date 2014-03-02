@@ -14,6 +14,13 @@ import { setupClassNames, setupClassNameBindings, setupAttributeBindings } from 
 var addObserver = Ember.addObserver || function() { console.log('TODO: implement addObserver'); },
     set = Ember.set || function() { console.log('TODO: implement set'); };
 
+var FAKE_PROTO = {},
+    META_KEY = Ember.META_KEY;
+
+addObserver(FAKE_PROTO, 'context', null, contextDidChange);
+
+var SHARED_META = Ember.meta(FAKE_PROTO);
+
 function appendTo(view, selector) {
   var el = _render(view);
   if (view.willInsertElement) { view.willInsertElement(el); }
@@ -48,11 +55,11 @@ function _render(_view, _parent) {
 
   while (idx < views.length) {
     view = views[idx];
+    view[META_KEY] = SHARED_META;
 
     if (!view.context && view._parentView) {
       view.context = view._parentView.context;
     }
-    addObserver(view, 'context', null, contextDidChange);
 
     if (!view.isVirtual) {
       tagName = view.tagName || 'div';
