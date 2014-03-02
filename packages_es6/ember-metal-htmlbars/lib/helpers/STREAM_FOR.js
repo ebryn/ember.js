@@ -6,12 +6,17 @@ function streamFor(view, path) {
   var stream = streams[path];
   if (stream) { return stream; }
 
-  // handle {{this}} - comes through as empty string
-  var context = path === '' ? view : view.context;
-  path = path === '' ? 'context' : path;
+  // Ideally:
+  // Ember.addObserver(view, 'context.' + path, this, 'streamPropertyDidChange');
 
-  // Ember.addObserver(context, path, this, 'streamPropertyDidChange');
-  stream = streams[path] = new EmberObserverLazyValue(context, path);
+  if (path === '') { // handle {{this}}
+    // TODO: possible optimization: reuse the context observer that already exists.
+    //       this would require us to return some other type of stream object.
+    stream = streams[path] = new EmberObserverLazyValue(view, 'context');
+  } else {
+    stream = streams[path] = new EmberObserverLazyValue(view.context, path);
+  }
+  
   return stream;
 }
 
