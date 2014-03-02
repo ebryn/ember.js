@@ -25,7 +25,6 @@ function appendTo(view, selector) {
   var el = _render(view);
   if (view.willInsertElement) { view.willInsertElement(el); }
   querySelector(selector).appendChild(el);
-  if (view.didInsertElement) { view.didInsertElement(el); }
   return el;
 }
 
@@ -84,9 +83,12 @@ function _render(_view, _parent) {
     }
 
     if (ret) {
-      _renderContents(view, el);
+      Ember.run.schedule('render', null, _renderContents, view, el);
     } else { // only capture the root view's element
       ret = _renderContents(view, el);
+      if (view.didInsertElement) {
+        Ember.run.scheduleOnce('afterRender', view, 'didInsertElement', el);
+      }
     }
 
     var childViews = view.childViews,
@@ -144,7 +146,6 @@ function render(view, parent) {
   var el = view.element;
   if (el && view.willInsertElement) { view.willInsertElement(el); }
   el = _render(view, parent);
-  if (el && view.didInsertElement) { view.didInsertElement(el); }
   return el || view.element;
 }
 

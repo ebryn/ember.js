@@ -13,7 +13,9 @@ test("basics", function() {
   var context = {foo: 'foo is here'};
   set(view, 'context', context);
 
-  View.render(view);
+  Ember.run(function() {
+    View.render(view);
+  });
   var childView = view.childViews[0];
   equal(context, childView.context, "The parent view's context was set on the child");
 
@@ -29,8 +31,10 @@ test("the shared observer for views' context doesn't leak", function() {
   var view1 = {isView: true, context: {}};
   var view2 = {isView: true, context: context2};
 
-  View.render(view1);
-  View.render(view2);
+  Ember.run(function() {
+    View.render(view1);
+    View.render(view2);
+  });
 
   Ember.addObserver(view1, 'context', null, function() {
     ok(true, "Observer fires for view1");
@@ -56,7 +60,9 @@ test("explicitly set child view contexts aren't clobbered by parent context chan
         childViews: [childView]
       };
 
-  View.render(view);
+  Ember.run(function() {
+    View.render(view);
+  });
 
   parentContext = {};
   set(view, 'context', parentContext);

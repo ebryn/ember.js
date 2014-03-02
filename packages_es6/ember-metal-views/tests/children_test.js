@@ -11,7 +11,9 @@ test("a view can have child views", function() {
     ]
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  Ember.run(function() {
+    View.appendTo(view, '#qunit-fixture');
+  });
   equalHTML('#qunit-fixture', "<ul><li>ohai</li></ul>");
 });
 
@@ -30,6 +32,8 @@ test("didInsertElement fires after children are rendered", function() {
     }
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  Ember.run(function() {
+    View.appendTo(view, '#qunit-fixture');
+  });
   equalHTML('#qunit-fixture', "<ul><li>ohai</li></ul>");
 });

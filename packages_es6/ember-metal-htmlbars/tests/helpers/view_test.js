@@ -13,7 +13,7 @@ test("it works", function() {
   var context = {foo: 'foo is here'};
   Ember.set(view, 'context', context);
 
-  var el = View.render(view);
+  var el = Ember.run(View, View.render, view);
   equalHTML(el, '<div class="ember-view"><div class="ember-view"> foo is here</div></div>');
 
   Ember.set(context, 'foo', 'i pity the foo');
