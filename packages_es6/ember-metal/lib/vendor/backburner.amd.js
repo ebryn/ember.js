@@ -55,7 +55,14 @@ define("backburner/queue",
           stack  = queue[i+3]; // Debugging assistance
 
           // TODO: error handling
-          if (args && args.length > 0) {
+          if (!target && args.length > 0) {
+            switch (args.length) {
+              case 1: method(args[0]); break;
+              case 2: method(args[0], args[1]); break;
+              case 3: method(args[0], args[1], args[2]); break;
+              default: method.apply(target, args);
+            }
+          } else if (args && args.length > 0) {
             method.apply(target, args);
           } else {
             method.call(target);
