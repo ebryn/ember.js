@@ -1,4 +1,5 @@
-import { compile, View, $, equalHTML, set, defaultOptions } from "ember-metal-htmlbars/tests/test_helpers";
+import { compile, View, $, equalHTML, set, defaultOptions, appendTo } from "ember-metal-htmlbars/tests/test_helpers";
+import run from "ember-metal/run_loop";
 
 module("ember-metal-htmlbars/helpers/each");
 
@@ -12,12 +13,12 @@ test("it works", function() {
     context: context
   };
 
-  var el = Ember.run(View, View.appendTo, view, 'body');
+  var el = appendTo(view, '#qunit-fixture');
   equalHTML(el, '<div class="ember-view"><ul><li> one</li><li> two</li><li> three</li></ul></div>');
 
   var start = Date.now();
   console.profile();
-  Ember.run(function() {
+  run(function() {
     for (var i = 0, l = 10000; i < l; i++) {
       context.rows.pushObject("mic check " + i);
     }
@@ -27,7 +28,7 @@ test("it works", function() {
   console.log(elapsed);
   console.log($('li', view.element).length);
 
-  Ember.run(Ember, Ember.set, context, 'rows', ['just lonely ol me']);
+  run(null, set, context, 'rows', ['just lonely ol me']);
 
   equalHTML(el, '<div class="ember-view"><ul><li> just lonely ol me</li></ul></div>');
 });

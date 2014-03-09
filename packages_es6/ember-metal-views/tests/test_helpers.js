@@ -1,16 +1,19 @@
 /*globals Node */
 
-var View = requireModule('ember-metal-views');
+import run from "ember-metal/run_loop";
 
+module View from "ember-metal-views";
 export { View }
 
-export function testsFor(name) {
+export function testsFor(name, options) {
   module(name, {
     setup: function() {
       $('#qunit-fixture').innerHTML = '';
+      if (options && options.setup) { options.setup(); }
     },
     teardown: function() {
       View.reset();
+      if (options && options.teardown) { options.teardown(); }
     }
   });
 }
@@ -25,8 +28,9 @@ export function equalHTML(selector, expectedHTML, message) {
   equal(actualHTML, expectedHTML, message || "HTML matches");
 }
 
+var Ember_set = requireModule('ember-metal/property_set').set;
 export function set(obj, key, value) {
-  Ember.run(Ember, Ember.set, obj, key, value);
+  run(null, Ember_set, obj, key, value);
 }
 
 export function triggerEvent(el, name, data) {
@@ -43,4 +47,8 @@ export function triggerEvent(el, name, data) {
   //   event.initEvent(name, true, true);
   // }
   el.dispatchEvent(event);
+}
+
+export function appendTo(view, sel) {
+  return run(View, View.appendTo, view, sel);
 }

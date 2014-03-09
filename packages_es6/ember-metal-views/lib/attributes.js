@@ -1,3 +1,5 @@
+import { addObserver } from "ember-metal/observer";
+import run from "ember-metal/run_loop";
 
 function setAttribute(key) {
   this.element.setAttribute(key, this[key]);
@@ -7,8 +9,8 @@ function setAttribute(key) {
 function setupAttribute(view, attributeKey) {
   view.element.setAttribute(attributeKey, view[attributeKey]);
 
-  Ember.addObserver(view, attributeKey, null, function(obj, key) {
-    Ember.run.scheduleOnce('render', this, setAttribute, key);
+  addObserver(view, attributeKey, null, function(obj, key) {
+    run.scheduleOnce('render', this, setAttribute, key);
   });
 }
 
@@ -44,8 +46,8 @@ function setupClassNameBinding(view, key) {
     view.element.classList.remove(className);
   }
 
-  Ember.addObserver(view, key, null, function(obj, key) {
-    Ember.run.scheduleOnce('render', this, changeClass, key);
+  addObserver(view, key, null, function(obj, key) {
+    run.scheduleOnce('render', this, changeClass, key);
   });
 }
 

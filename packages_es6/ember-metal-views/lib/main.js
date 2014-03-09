@@ -1,25 +1,28 @@
-require("ember-metal");
-
-if (window.Ember) {
-  // FIXME: avoid render/afterRender getting defined twice
-  var queues = Ember.run.queues,
-      indexOf = Ember.ArrayPolyfills.indexOf;
-  queues.splice(indexOf.call(queues, 'actions')+1, 0, 'render', 'afterRender');
-}
-
+import run from "ember-metal/run_loop";
+import { indexOf } from "ember-metal/array";
+import { meta, META_KEY } from "ember-metal/utils";
 import { querySelector, createElement } from "ember-metal-views/dom";
+import { addObserver } from "ember-metal/observer";
+import { set } from "ember-metal/property_set";
 import { lookupView, setupView, setupEventDispatcher, reset, events } from "ember-metal-views/events";
 import { setupClassNames, setupClassNameBindings, setupAttributeBindings } from "ember-metal-views/attributes";
 
-var addObserver = Ember.addObserver || function() { console.log('TODO: implement addObserver'); },
-    set = Ember.set || function() { console.log('TODO: implement set'); };
 
-var FAKE_PROTO = {},
-    META_KEY = Ember.META_KEY;
+// FIXME: don't have a hard dependency on the ember run loop
+// FIXME: avoid render/afterRender getting defined twice
+var queues = run.queues;
+queues.splice(indexOf.call(queues, 'actions')+1, 0, 'render', 'afterRender');
+
+/*
+var addObserver = Ember_addObserver || function() { console.log('TODO: implement addObserver'); },
+    set = Ember_set || function() { console.log('TODO: implement set'); };
+*/
+
+var FAKE_PROTO = {};
 
 addObserver(FAKE_PROTO, 'context', Ember.NO_TARGET, contextDidChange);
 
-var SHARED_META = Ember.meta(FAKE_PROTO);
+var SHARED_META = meta(FAKE_PROTO);
 
 function appendTo(view, selector) {
   var el = _render(view);
@@ -83,11 +86,11 @@ function _render(_view, _parent) {
     }
 
     if (ret) {
-      Ember.run.schedule('render', null, _renderContents, view, el);
+      run.schedule('render', null, _renderContents, view, el);
     } else { // only capture the root view's element
       ret = _renderContents(view, el);
       if (view.didInsertElement) {
-        Ember.run.scheduleOnce('afterRender', view, 'didInsertElement', el);
+        run.scheduleOnce('afterRender', view, 'didInsertElement', el);
       }
     }
 
@@ -150,8 +153,6 @@ function render(view, parent) {
 }
 
 function createChildView(view, childView, attrs) {
-  var childView;
-
   if (typeof childView === 'function') {
     attrs = attrs || {};
     // attrs.template = attemplate;
@@ -238,4 +239,4 @@ function contextDidChange(view) {
 //   set(view, 'context', newContext);
 // }
 
-export { reset, events, appendTo, render, createChildView, appendChild, remove }
+export { reset, events, appendTo, render, createChildView, appendChild, remove };

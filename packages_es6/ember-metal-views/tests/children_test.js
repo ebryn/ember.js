@@ -1,4 +1,4 @@
-import { testsFor, View, $, equalHTML } from "ember-metal-views/tests/test_helpers";
+import { testsFor, View, $, equalHTML, appendTo } from "ember-metal-views/tests/test_helpers";
 
 testsFor("ember-metal-views - children");
 
@@ -11,9 +11,7 @@ test("a view can have child views", function() {
     ]
   };
 
-  Ember.run(function() {
-    View.appendTo(view, '#qunit-fixture');
-  });
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', "<ul><li>ohai</li></ul>");
 });
 
@@ -32,8 +30,6 @@ test("didInsertElement fires after children are rendered", function() {
     }
   };
 
-  Ember.run(function() {
-    View.appendTo(view, '#qunit-fixture');
-  });
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', "<ul><li>ohai</li></ul>");
 });

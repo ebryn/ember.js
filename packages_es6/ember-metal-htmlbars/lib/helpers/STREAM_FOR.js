@@ -1,4 +1,5 @@
 import { EmberObserverLazyValue } from "ember-metal-htmlbars/utils";
+import { get } from "ember-metal/property_get";
 
 function streamFor(view, path) {
   var streams = view.streams;
@@ -24,7 +25,7 @@ var CONST_REGEX = /^[A-Z][^.]*\./;
 
 export function STREAM_FOR(context, path) {
   if (CONST_REGEX.test(path)) {
-    return Ember.get(null, path);
+    return get(null, path);
   } else if (context.isView) {
     return streamFor(context, path);
   } else {

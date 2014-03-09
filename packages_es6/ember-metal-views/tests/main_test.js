@@ -1,6 +1,7 @@
 /*globals HTMLElement */
 
-import { testsFor, View, $, equalHTML, set } from "ember-metal-views/tests/test_helpers";
+import { testsFor, View, $, equalHTML, set, appendTo } from "ember-metal-views/tests/test_helpers";
+import run from "ember-metal/run_loop";
 
 testsFor("ember-metal-views");
 
@@ -88,8 +89,7 @@ test("didInsertElement hook", function() {
     }
   };
 
-
-  Ember.run(function() { View.appendTo(view, '#qunit-fixture'); });
+  appendTo(view, '#qunit-fixture');
 
   equalHTML('#qunit-fixture', "<div>you gone and done inserted that element</div>");
 });
@@ -101,7 +101,7 @@ test("classNames - array", function() {
     textContent: 'ohai'
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', '<div class="foo bar">ohai</div>');
 });
 
@@ -112,7 +112,7 @@ test("classNames - string", function() {
     textContent: 'ohai'
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', '<div class="foo bar">ohai</div>');
 });
 
@@ -125,10 +125,10 @@ test("attributeBindings", function() {
     textContent: 'ohai'
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', '<a href="/foo">ohai</a>', "Attribute was set on initial render");
 
-  set(view, 'href', '/bar');
+  run(null, set, view, 'href', '/bar');
   equalHTML('#qunit-fixture', '<a href="/bar">ohai</a>', "Attribute updated when set");
 });
 
@@ -142,7 +142,7 @@ test("transclusion", function() {
     element: originalElement
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', '<div>derp</div>', "The passed in element is replaced, content is maintained");
 
 });
@@ -154,7 +154,7 @@ test("classNameBindings", function() {
     isEnabled: true
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', '<div class="is-enabled"></div>');
 
   set(view, 'isEnabled', false);

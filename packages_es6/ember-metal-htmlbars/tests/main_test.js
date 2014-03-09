@@ -1,4 +1,5 @@
 import { compile, View, $, equalHTML, set, defaultOptions } from "ember-metal-htmlbars/tests/test_helpers";
+import run from "ember-metal/run_loop";
 
 module("ember-metal-htmlbars");
 
@@ -14,7 +15,7 @@ test("basic binding", function() {
 
   equalHTML(fragment, " foo is here");
 
-  Ember.set(obj, 'foo', 'foo is still here');
+  set(obj, 'foo', 'foo is still here');
   equalHTML(fragment, " foo is still here");
 });
 
@@ -28,12 +29,12 @@ test("View", function() {
 test("View with a binding inside", function() {
   var view = {isView: true, classNames: 'ember-view', template: compile(" {{foo}} {{bar.baz}}"), templateOptions: defaultOptions};
 
-  Ember.set(view, 'context', {foo: 'foo is here', bar: {baz: 'baz!'}});
+  set(view, 'context', {foo: 'foo is here', bar: {baz: 'baz!'}});
 
   var el = View.render(view);
   equalHTML(el, '<div class="ember-view"> foo is here baz!</div>');
 
-  Ember.set(view, 'context.foo', 'i pity the foo');
+  set(view, 'context.foo', 'i pity the foo');
   equalHTML(el, '<div class="ember-view"> i pity the foo baz!</div>');
 });
 
@@ -42,7 +43,7 @@ test("View creation performance - 60,000 views", function() {
 
   var start = Date.now();
   console.profile();
-  Ember.run(function() {
+  run(function() {
     for (var i = 0, l = 10000; i < l; i++) {
       var context = {foo: 'foo is here'};
       var view = {isView: true, template: t, templateOptions: defaultOptions, context: context};
