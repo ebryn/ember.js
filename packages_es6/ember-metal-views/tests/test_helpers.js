@@ -1,46 +1,30 @@
-/*globals Node, DocumentFragment */
-
-import { compile } from "ember-metal-htmlbars";
-export { compile };
-
-module View from "ember-metal-views";
-export { View };
+/*globals Node */
 
 import run from "ember-metal/run_loop";
 
-export function testsFor(name) {
+module View from "ember-metal-views";
+export { View }
+
+export function testsFor(name, options) {
   module(name, {
     setup: function() {
       $('#qunit-fixture').innerHTML = '';
+      if (options && options.setup) { options.setup(); }
     },
     teardown: function() {
       View.reset();
+      if (options && options.teardown) { options.teardown(); }
     }
   });
 }
 
 export function $(selector) {
-  if (selector instanceof Node || selector instanceof DocumentFragment) { return selector; }
+  if (selector instanceof Node) { return selector; }
   return document.querySelector(selector);
 }
 
-function innerHTMLForFragment(frag) {
-  var html = '', node;
-  for (var i = 0, l = frag.childNodes.length; i < l; i++) {
-    node = frag.childNodes[i];
-    html += node.outerHTML || node.nodeValue;
-  }
-  return html;
-}
-
 export function equalHTML(selector, expectedHTML, message) {
-  var actualHTML;
-  if (selector instanceof DocumentFragment) {
-    actualHTML = innerHTMLForFragment(selector);
-  } else {
-    actualHTML = $(selector).outerHTML;
-  }
-  actualHTML = actualHTML.replace(/ id="[^"]+"/gmi, '');
+  var actualHTML = $(selector).innerHTML.replace(/ id="[^"]+"/gmi, '');
   equal(actualHTML, expectedHTML, message || "HTML matches");
 }
 
@@ -68,6 +52,3 @@ export function triggerEvent(el, name, data) {
 export function appendTo(view, sel) {
   return run(View, View.appendTo, view, sel);
 }
-
-import { defaultOptions } from "ember-metal-htmlbars";
-export { defaultOptions }

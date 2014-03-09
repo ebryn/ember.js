@@ -1,4 +1,5 @@
 import { appendChild } from "ember-metal-views";
+import { computed } from "ember-metal/computed";
 
 export function view(params, options) {
   var hash = options.hash;
@@ -11,7 +12,7 @@ export function view(params, options) {
     if (val && val.isLazyValue) {
       stream = val;
       // generate CP wrapper
-      hash[key] = Ember.computed(function(key, value) {
+      hash[key] = computed(function(key, value) {
         if (arguments.length > 1) {
           if (stream.setValue) {
             return stream.setValue(value);
@@ -26,11 +27,12 @@ export function view(params, options) {
   hash._placeholder = options.placeholder;
   hash.templateOptions = {data: options.data, helpers: options.helpers};
 
-  var viewClassOrName = params[0];
+  var viewClassOrName = params[0],
+      childView;
   if (!viewClassOrName) {
     hash.isView = true;
-    var childView = appendChild(options.data.view, hash);
+    childView = appendChild(options.data.view, hash);
   } else {
-    var childView = appendChild(options.data.view, viewClassOrName, hash);
+    childView = appendChild(options.data.view, viewClassOrName, hash);
   }
 };

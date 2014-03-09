@@ -1,6 +1,4 @@
-var View = requireModule('ember-metal-views'),
-    $ = function(selector) { return document.querySelector(selector); },
-    equalHTML = function(selector, expectedHTML) { equal($(selector).innerHTML, expectedHTML, "HTML matches"); };
+import { testsFor, View, $, equalHTML, appendTo } from "ember-metal-views/tests/test_helpers";
 
 module("ember-metal-views - children", {
   setup: function() {
@@ -17,9 +15,7 @@ test("a view can have child views", function() {
     ]
   };
 
-  Ember.run(function() {
-    View.appendTo(view, '#qunit-fixture');
-  });
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', "<ul><li>ohai</li></ul>");
 });
 
@@ -38,8 +34,6 @@ test("didInsertElement fires after children are rendered", function() {
     }
   };
 
-  Ember.run(function() {
-    View.appendTo(view, '#qunit-fixture');
-  });
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', "<ul><li>ohai</li></ul>");
 });

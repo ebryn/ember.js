@@ -1,3 +1,7 @@
+import { Mixin } from "ember-metal/mixin";
+import EnumerableUtils from "ember-metal/enumerable_utils";
+import run from "ember-metal/run_loop";
+import { sendEvent, addListener, removeListener } from "ember-metal/events";
 import { appendChild, createChildView, render, remove } from "ember-metal-views";
 import { PlaceholderList } from "htmlbars/runtime/placeholder_list";
 
@@ -13,7 +17,7 @@ export function each(params, options) {
   eachView.context = A(params[0].value());
   eachView.arrayStream = new ArrayObserverStream();
   eachView.arrayStream.subscribe(function(value) {
-    Ember.run.schedule('render', eachView, 'arrayDidChange', value.obj, value.start, value.removed, value.added);
+    run.schedule('render', eachView, 'arrayDidChange', value.obj, value.start, value.removed, value.added);
   });
   eachView.contextDidChange();
 
@@ -74,7 +78,7 @@ var eachViewPrototype = {
 };
 
 // SimpleObservableArrayMixin: the insanely faster way of observing arrays
-var SimpleObservableArrayMixin = Ember.Mixin.create({
+var SimpleObservableArrayMixin = Mixin.create({
   pushObject: function(obj) {
     this.replace(this.length, 0, [obj]);
   },
@@ -87,7 +91,7 @@ var SimpleObservableArrayMixin = Ember.Mixin.create({
     if (len === 0) {
       this.splice(idx, amt);
     } else {
-      Ember.EnumerableUtils._replace(this, idx, amt, objects);
+      EnumerableUtils._replace(this, idx, amt, objects);
     }
     this.arrayContentDidChange(idx, amt, len);
     return this;
@@ -103,7 +107,7 @@ var SimpleObservableArrayMixin = Ember.Mixin.create({
       if (addAmt    === undefined) addAmt =- 1;
     }
 
-    Ember.sendEvent(this, '@array:change', [this, startIdx, removeAmt, addAmt]);
+    sendEvent(this, '@array:change', [this, startIdx, removeAmt, addAmt]);
 
     // var length      = get(this, 'length'),
     //     cachedFirst = cacheFor(this, 'firstObject'),
@@ -121,12 +125,12 @@ var SimpleObservableArrayMixin = Ember.Mixin.create({
   },
 
   addArrayObserver: function(target) {
-    Ember.addListener(this, '@array:change', target, 'arrayDidChange');
+    addListener(this, '@array:change', target, 'arrayDidChange');
     return this;
   },
 
   removeArrayObserver: function(target) {
-    Ember.removeListener(this, '@array:change', target, 'arrayDidChange');
+    removeListener(this, '@array:change', target, 'arrayDidChange');
     return this;
   }
 });
@@ -134,11 +138,11 @@ var SimpleObservableArrayMixin = Ember.Mixin.create({
 function A(arr) {
   if (typeof arr === 'undefined') { arr = []; }
   return SimpleObservableArrayMixin.detect(arr) ? arr : SimpleObservableArrayMixin.apply(arr);
-};
+}
 
 function ArrayObserverStream(obj) {
   if (obj) { this.updateObj(obj); }
-};
+}
 
 ArrayObserverStream.prototype = {
   obj: null,

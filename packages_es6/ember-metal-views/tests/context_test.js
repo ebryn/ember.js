@@ -1,4 +1,5 @@
-import { View, $, set } from "ember-metal-views/tests/test_helpers";
+import { View, $, set, appendTo } from "ember-metal-views/tests/test_helpers";
+import { addObserver } from "ember-metal/observer";
 
 module("ember-metal-views - context-related tests");
 
@@ -13,9 +14,7 @@ test("basics", function() {
   var context = {foo: 'foo is here'};
   set(view, 'context', context);
 
-  Ember.run(function() {
-    View.render(view);
-  });
+  appendTo(view, '#qunit-fixture');
   var childView = view.childViews[0];
   equal(context, childView.context, "The parent view's context was set on the child");
 
@@ -31,16 +30,14 @@ test("the shared observer for views' context doesn't leak", function() {
   var view1 = {isView: true, context: {}};
   var view2 = {isView: true, context: context2};
 
-  Ember.run(function() {
-    View.render(view1);
-    View.render(view2);
-  });
+  appendTo(view1, '#qunit-fixture');
+  appendTo(view2, '#qunit-fixture');
 
-  Ember.addObserver(view1, 'context', null, function() {
+  addObserver(view1, 'context', null, function() {
     ok(true, "Observer fires for view1");
   });
 
-  Ember.addObserver(view2, 'context', null, function() {
+  addObserver(view2, 'context', null, function() {
     ok(false, "Observer doesn't fire for view2");
   });
 
@@ -60,9 +57,7 @@ test("explicitly set child view contexts aren't clobbered by parent context chan
         childViews: [childView]
       };
 
-  Ember.run(function() {
-    View.render(view);
-  });
+  appendTo(view, '#qunit-fixture');
 
   parentContext = {};
   set(view, 'context', parentContext);

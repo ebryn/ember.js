@@ -1,9 +1,7 @@
 import { merge } from "htmlbars/utils";
-import { default as LazyValue } from "bound-templates/lazy-value";
-
-var get = Ember.get,
-    addObserver = Ember.addObserver,
-    removeObserver = Ember.removeObserver;
+import LazyValue from "bound-templates/lazy-value";
+import { get } from "ember-metal/property_get";
+import { addObserver, removeObserver } from "ember-metal/observer";
 
 export function EmberObserverLazyValue(obj, path) {
   this.obj = obj;
@@ -13,7 +11,7 @@ export function EmberObserverLazyValue(obj, path) {
   // because valueFn is defined in our prototype
 
   addObserver(obj, path, this, 'notify');
-};
+}
 
 EmberObserverLazyValue.prototype = Object.create(LazyValue.prototype); // TODO: polyfill
 
