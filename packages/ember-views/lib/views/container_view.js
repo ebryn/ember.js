@@ -31,6 +31,8 @@ import {
 } from "ember-metal/mixin";
 import { A as emberA } from "ember-runtime/system/native_array";
 
+var MetalView = requireModule('ember-metal-views');
+
 /**
 @module ember
 @submodule ember-views
@@ -260,9 +262,9 @@ var ContainerView = View.extend(MutableArray, {
     @param {Ember.RenderBuffer} buffer the buffer to render to
   */
   render: function(buffer) {
-    this.forEachChildView(function(view) {
-      view.renderToBuffer(buffer);
-    });
+    // this.forEachChildView(function(view) {
+    //   view.renderToBuffer(buffer);
+    // });
   },
 
   instrumentName: 'container',
@@ -386,23 +388,26 @@ merge(states.hasElement, {
     for (i = 0, len = childViews.length; i < len; i++) {
       childView = childViews[i];
 
-      if (!buffer) { buffer = renderBuffer(); buffer._hasElement = false; }
+      var el = MetalView.render(childView);
+      previous = el;
 
-      if (childView.renderToBufferIfNeeded(buffer)) {
-        viewCollection.push(childView);
-      } else if (viewCollection.length) {
-        insertViewCollection(view, viewCollection, previous, buffer);
-        buffer = null;
-        previous = childView;
-        viewCollection.clear();
-      } else {
-        previous = childView;
-      }
+      // if (!buffer) { buffer = renderBuffer(); buffer._hasElement = false; }
+
+      // if (childView.renderToBufferIfNeeded(buffer)) {
+      //   viewCollection.push(childView);
+      // } else if (viewCollection.length) {
+      //   insertViewCollection(view, viewCollection, previous, buffer);
+      //   buffer = null;
+      //   previous = childView;
+      //   viewCollection.clear();
+      // } else {
+      //   previous = childView;
+      // }
     }
 
-    if (viewCollection.length) {
-      insertViewCollection(view, viewCollection, previous, buffer);
-    }
+    // if (viewCollection.length) {
+    //   insertViewCollection(view, viewCollection, previous, buffer);
+    // }
   }
 });
 

@@ -1,12 +1,14 @@
-import { View, $, set, appendTo } from "ember-metal-views/tests/test_helpers";
+import { testsFor, View, $, set, appendTo } from "ember-metal-views/tests/test_helpers";
 import { addObserver } from "ember-metal/observer";
 
-module("ember-metal-views - context-related tests");
+var view;
+
+testsFor("ember-metal-views - context-related tests");
 
 test("basics", function() {
   var view = {
     isView: true,
-    childViews: [
+    _childViews: [
       {isView: true}
     ]
   };
@@ -15,12 +17,14 @@ test("basics", function() {
   set(view, 'context', context);
 
   appendTo(view, '#qunit-fixture');
-  var childView = view.childViews[0];
+  var childView = view._childViews[0];
   equal(context, childView.context, "The parent view's context was set on the child");
 
   context = {foo: 'no need to pity me sucka'};
   set(view, 'context', context);
   equal(context, childView.context, "Changing a parent view's context propagates it to the child");
+
+  View.destroy(view);
 });
 
 test("the shared observer for views' context doesn't leak", function() {
@@ -45,6 +49,9 @@ test("the shared observer for views' context doesn't leak", function() {
   set(view1, 'context', newContext);
   equal(view1.context, newContext, "The new context was set properly");
   equal(view2.context, context2, "The new context didn't leak over to the other view");
+
+  View.destroy(view1);
+  View.destroy(view2);
 });
 
 test("explicitly set child view contexts aren't clobbered by parent context changes", function() {
@@ -54,7 +61,7 @@ test("explicitly set child view contexts aren't clobbered by parent context chan
       view = {
         isView: true, 
         context: parentContext,
-        childViews: [childView]
+        _childViews: [childView]
       };
 
   appendTo(view, '#qunit-fixture');
@@ -73,6 +80,8 @@ test("explicitly set child view contexts aren't clobbered by parent context chan
   set(view, 'context', parentContext);
   equal(view.context, parentContext, "parent context changed");
   equal(childView.context, childContext, "child context hasn't changed");
+
+  View.destroy(view);
 });
 
 

@@ -28,7 +28,7 @@ QUnit.module("EmberView#isVisible", {
         becameHidden: function() { childBecameHidden++; },
 
         grandchild: EmberView.extend({
-          template: function() { return "seems weird bro"; },
+          template: function() { return document.createTextNode("seems weird bro"); },
           becameVisible: function() { grandchildBecameVisible++; },
           becameHidden: function() { grandchildBecameHidden++; }
         })

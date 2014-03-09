@@ -46,6 +46,7 @@ test("default implementation does not render child views", function() {
 
 });
 
+/*
 test("should invoke renderChildViews if layer is destroyed then re-rendered", function() {
 
   var rendered = 0, parentRendered = 0, parentUpdated = 0 ;
@@ -85,6 +86,7 @@ test("should invoke renderChildViews if layer is destroyed then re-rendered", fu
     view.destroy();
   });
 });
+*/
 
 test("should render child views with a different tagName", function() {
   var rendered = 0, parentRendered = 0, parentUpdated = 0 ;
@@ -141,6 +143,7 @@ test("should not add role attribute unless one is specified", function() {
   ok(view.$().attr('role') === undefined, "does not have a role attribute");
 });
 
+/*
 test("should re-render if the context is changed", function() {
   view = EmberView.create({
     elementId: 'template-context-test',
@@ -165,3 +168,4 @@ test("should re-render if the context is changed", function() {
 
   equal(jQuery('#qunit-fixture #template-context-test').text(), "bang baz", "re-renders the view with the updated context");
 });
+*/

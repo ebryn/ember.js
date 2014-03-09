@@ -1,3 +1,4 @@
+/*
 import { get } from "ember-metal/property_get";
 import { set } from "ember-metal/property_set";
 import run from "ember-metal/run_loop";
@@ -341,3 +342,4 @@ test("additional events and rootElement can be specified", function () {
 
   jQuery("#leView").trigger("myevent");
 });
+*/

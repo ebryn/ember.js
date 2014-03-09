@@ -156,7 +156,7 @@ test("classNameBindings should work when the binding property is updated and the
     view.remove();
   });
 
-  view.set('priority', 'low');
+  run(function() { view.set('priority', 'low'); });
 
   run(function() {
     view.append();

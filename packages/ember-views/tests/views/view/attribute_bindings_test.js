@@ -43,7 +43,7 @@ test("should render attribute bindings", function() {
   });
 
   run(function() {
-    view.createElement();
+    view.append();
   });
 
   equal(view.$().attr('type'), 'submit', "updates type attribute");

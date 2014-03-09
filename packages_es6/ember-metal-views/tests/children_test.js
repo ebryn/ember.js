@@ -10,7 +10,7 @@ test("a view can have child views", function() {
   var view = {
     isView: true,
     tagName: 'ul',
-    childViews: [
+    _childViews: [
       {isView: true, tagName: 'li', textContent: 'ohai'}
     ]
   };
@@ -25,7 +25,7 @@ test("didInsertElement fires after children are rendered", function() {
   var view = {
     isView: true,
     tagName: 'ul',
-    childViews: [
+    _childViews: [
       {isView: true, tagName: 'li', textContent: 'ohai'}
     ],
 
@@ -36,4 +36,6 @@ test("didInsertElement fires after children are rendered", function() {
 
   appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', "<ul><li>ohai</li></ul>");
+
+  View.destroy(view);
 });

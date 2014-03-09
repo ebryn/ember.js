@@ -1,3 +1,4 @@
+/*
 import { set } from "ember-metal/property_set";
 import { get } from "ember-metal/property_get";
 import jQuery from "ember-views/system/jquery";
@@ -159,3 +160,4 @@ test("properly handles old IE's zero-scope bug", function() {
   ok(jQuery(element).html().match(/script/i), "should have script tag");
   ok(!jQuery(element).html().match(/&shy;/), "should not have &shy;");
 });
+*/

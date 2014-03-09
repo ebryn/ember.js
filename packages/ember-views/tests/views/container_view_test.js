@@ -23,7 +23,9 @@ test("should be able to insert views after the DOM representation is created", f
   container = ContainerView.create({
     classNameBindings: ['name'],
     name: 'foo',
-    container: {}
+    container: {
+      lookup: function() {}
+    }
   });
 
   run(function() {
@@ -32,7 +34,7 @@ test("should be able to insert views after the DOM representation is created", f
 
   view = View.create({
     template: function() {
-      return "This is my moment";
+      return document.createTextNode("This is my moment");
     }
   });
 
@@ -187,13 +189,13 @@ test("should be able to push initial views onto the ContainerView and have it be
       this.pushObject(View.create({
         name: 'A',
         template: function () {
-          return 'A';
+          return document.createTextNode('A');
         }
       }));
       this.pushObject(View.create({
         name: 'B',
         template: function () {
-          return 'B';
+          return document.createTextNode('B');
         }
       }));
     },
@@ -220,7 +222,7 @@ test("should be able to push initial views onto the ContainerView and have it be
     container.pushObject(View.create({
       name: 'C',
       template: function () {
-        return 'C';
+        return document.createTextNode('C');
       }
     }));
   });
@@ -281,7 +283,7 @@ test("if a ContainerView starts with a currentView, it is rendered as a child vi
     template: function(ctx, opts) {
       context = ctx;
       templateData = opts.data;
-      return "This is the main view.";
+      return document.createTextNode("This is the main view.");
     }
   });
 
@@ -307,7 +309,7 @@ test("if a ContainerView is created with a currentView, it is rendered as a chil
     template: function(ctx, opts) {
       context = ctx;
       templateData = opts.data;
-      return "This is the main view.";
+      return document.createTextNode("This is the main view.");
     }
   });
 
@@ -338,7 +340,7 @@ test("if a ContainerView starts with no currentView and then one is set, the Con
     template: function(ctx, opts) {
       context = ctx;
       templateData = opts.data;
-      return "This is the main view.";
+      return document.createTextNode("This is the main view.");
     }
   });
 
@@ -375,7 +377,7 @@ test("if a ContainerView starts with a currentView and then is set to null, the 
     template: function(ctx, opts) {
       context = ctx;
       templateData = opts.data;
-      return "This is the main view.";
+      return document.createTextNode("This is the main view.");
     }
   });
 
@@ -414,7 +416,7 @@ test("if a ContainerView starts with a currentView and then is set to null, the 
     template: function(ctx, opts) {
       context = ctx;
       templateData = opts.data;
-      return "This is the main view.";
+      return document.createTextNode("This is the main view.");
     }
   });
 
@@ -452,19 +454,19 @@ test("if a ContainerView starts with a currentView and then a different currentV
   container = ContainerView.create();
   var mainView = View.create({
     template: function() {
-      return "This is the main view.";
+      return document.createTextNode("This is the main view.");
     }
   });
 
   var secondaryView = View.create({
     template: function() {
-      return "This is the secondary view.";
+      return document.createTextNode("This is the secondary view.");
     }
   });
 
   var tertiaryView = View.create({
     template: function() {
-      return "This is the tertiary view.";
+      return document.createTextNode("This is the tertiary view.");
     }
   });
 
@@ -510,19 +512,19 @@ test("should be able to modify childViews many times during an run loop", functi
 
   var one = View.create({
     template: function() {
-      return 'one';
+      return document.createTextNode('one');
     }
   });
 
   var two = View.create({
     template: function() {
-      return 'two';
+      return document.createTextNode('two');
     }
   });
 
   var three = View.create({
     template: function() {
-      return 'three';
+      return document.createTextNode('three');
     }
   });
 
@@ -546,8 +548,9 @@ test("should be able to modify childViews then remove the ContainerView in same 
   });
 
   var count = 0;
+
   var child = View.create({
-    template: function () { count++; return 'child'; }
+    template: function () { count++; return document.createTextNode('child'); }
   });
 
   run(function() {
@@ -567,7 +570,7 @@ test("should be able to modify childViews then destroy the ContainerView in same
 
   var count = 0;
   var child = View.create({
-    template: function () { count++; return 'child'; }
+    template: function () { count++; return document.createTextNode('child'); }
   });
 
   run(function() {
@@ -587,8 +590,9 @@ test("should be able to modify childViews then rerender the ContainerView in sam
   });
 
   var count = 0;
+
   var child = View.create({
-    template: function () { count++; return 'child'; }
+    template: function () { count++; return document.createTextNode('child'); }
   });
 
   run(function() {

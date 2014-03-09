@@ -638,6 +638,7 @@ test("should lookup against the container if itemViewClass is given as a string"
   });
 
   var container = {
+    lookup: function() {},
     lookupFactory: lookupFactory
   };
 
@@ -669,6 +670,7 @@ test("should lookup against the container and render the emptyView if emptyView 
   });
 
   var container = {
+    lookup: function() {},
     lookupFactory: lookupFactory
   };
 

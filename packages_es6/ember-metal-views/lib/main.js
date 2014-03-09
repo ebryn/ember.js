@@ -4,7 +4,7 @@ import { meta, META_KEY } from "ember-metal/utils";
 import { querySelector, createElement } from "ember-metal-views/dom";
 import { addObserver } from "ember-metal/observer";
 import { set } from "ember-metal/property_set";
-import { lookupView, setupView, setupEventDispatcher, reset, events } from "ember-metal-views/events";
+import { lookupView, setupView, teardownView, setupEventDispatcher, reset, events } from "ember-metal-views/events";
 import { setupClassNames, setupClassNameBindings, setupAttributeBindings } from "ember-metal-views/attributes";
 
 
@@ -21,13 +21,31 @@ var addObserver = Ember_addObserver || function() { console.log('TODO: implement
 var FAKE_PROTO = {};
 
 addObserver(FAKE_PROTO, 'context', Ember.NO_TARGET, contextDidChange);
+addObserver(FAKE_PROTO, '_parentView', Ember.NO_TARGET, contextDidChange);
 
 var SHARED_META = meta(FAKE_PROTO);
 
+
+
+function _insertElementLater(view, fn) {
+  view._scheduledInsert = run.scheduleOnce('render', view, _insertElement, fn);
+}
+
+function _insertElement(fn) {
+  var view = this;
+  view._scheduledInsert = null;
+  var el = _createElementForView(view);
+  fn(view);
+}
+
 function appendTo(view, selector) {
-  var el = _render(view);
-  if (view.willInsertElement) { view.willInsertElement(el); }
-  querySelector(selector).appendChild(el);
+  _insertElementLater(view, function() {
+    target.appendChild(view.element);
+  });
+
+  var el = _render(view),
+      target = typeof selector === 'string' ? querySelector(selector) : selector;
+
   return el;
 }
 
@@ -46,6 +64,21 @@ function transclude(oldEl, newTagName) {
   return newEl;
 }
 
+function _createElementForView(view) {
+  var el, tagName;
+
+  if (!view.isVirtual) {
+    tagName = view.tagName || 'div';
+    el = view.element = view.element || createElement(tagName);
+  
+    if (view.tagName && el.tagName !== view.tagName.toUpperCase()) {
+      el = view.element = transclude(el, view.tagName);
+    }
+  }
+
+  return el;
+}
+
 function _render(_view, _parent) {
   var views = [_view],
       idx = 0,
@@ -57,7 +90,7 @@ function _render(_view, _parent) {
 
   while (idx < views.length) {
     view = views[idx];
-    view[META_KEY] = SHARED_META;
+    if (!view[META_KEY]) { view[META_KEY] = SHARED_META; }
 
     if (view.context) { // if the view has a context explicitly set, set _context so we know it
       view._context = view.context;
@@ -66,12 +99,7 @@ function _render(_view, _parent) {
     }
 
     if (!view.isVirtual) {
-      tagName = view.tagName || 'div';
-      el = view.element = view.element || createElement(tagName);
-    
-      if (view.tagName && el.tagName !== view.tagName.toUpperCase()) {
-        el = view.element = transclude(el, view.tagName);
-      }
+      el = _createElementForView(view);
 
       setupView(view);
 
@@ -80,6 +108,7 @@ function _render(_view, _parent) {
       }
 
       el.setAttribute('id', view.elementId);
+      if (view.isVisible === false) { el.style.display = 'none'; }
       setupClassNames(view);
       setupClassNameBindings(view);
       setupAttributeBindings(view);
@@ -89,12 +118,9 @@ function _render(_view, _parent) {
       run.schedule('render', null, _renderContents, view, el);
     } else { // only capture the root view's element
       ret = _renderContents(view, el);
-      if (view.didInsertElement) {
-        run.scheduleOnce('afterRender', view, 'didInsertElement', el);
-      }
     }
 
-    var childViews = view.childViews,
+    var childViews = view._childViews, // FIXME
         childView;
 
     if (childViews) {
@@ -108,20 +134,54 @@ function _render(_view, _parent) {
     idx++;
   }
 
+  _triggerRecursively(_view, 'willInsertElement');
+
+
+  if (_view.transitionTo) {
+    _view.transitionTo('hasElement');
+  }
+
+  run.schedule('render', function() {
+    if (document.body.contains(_view.element)) {
+      _triggerRecursively(_view, 'didInsertElement');
+    }
+  });
+
   setupEventDispatcher();
   return ret;
 }
 
+function _findTemplate(view) {
+  var template = view.template;
+
+  if (view.container && !template) {
+    template = view.container.lookup('template:' + view.templateName);
+  }
+
+  if (!template) { template = view.defaultTemplate; }
+
+  return template;
+}
+
 function _renderContents(view, el) {
-  var template = view.template,
+  var template = _findTemplate(view),
       templateOptions = {}, // TODO
       i, l;
 
   if (template) {
+    if (!view.templateOptions) {
+      console.log('templateOptions not specified on ', view);
+      view.templateOptions = {data: {keywords: {controller: view.controller}}};
+    }
     view.templateOptions.data.view = view;
+    if (view.beforeTemplate) { view.beforeTemplate(); }
     var templateFragment = template(view, view.templateOptions);
     if (!view.isVirtual) {
-      el.appendChild(templateFragment);
+      if (templateFragment) {
+        if (typeof templateFragment === 'string') { templateFragment = document.createTextNode(templateFragment); }
+
+        el.appendChild(templateFragment);
+      }
     } else {
       el = templateFragment;
     }
@@ -130,26 +190,46 @@ function _renderContents(view, el) {
     el.textContent = view.textContent;
   } else if (view.innerHTML) { // TODO: bind?
     el.innerHTML = view.innerHTML;
+  } else if (view.render) {
+    view.render(fakeBufferFor(el));
   }
 
   return el;
 }
 
-function _renderChildren(view) {
-  var childViews = view.childViews;
-
-  if (!childViews || childViews.length === 0) { return; }
-
-  for (var i = 0, l = childViews.length; i < l; i++) {
-    _render(childViews[i], view);
+function fakeBufferFor(el) {
+  return {
+    push: function(str) {
+      el.innerHTML += str;
+    }
   }
 }
 
 function render(view, parent) {
   var el = view.element;
-  if (el && view.willInsertElement) { view.willInsertElement(el); }
   el = _render(view, parent);
   return el || view.element;
+}
+
+function _triggerRecursively(view, functionOrEventName, skipParent) {
+  var childViews = view._childViews, // FIXME
+      len = childViews && childViews.length;
+
+  if (childViews && len > 0) {
+    for (var i = 0; i < len; i++) {
+      _triggerRecursively(childViews[i], functionOrEventName);
+    }
+  }
+
+  if (skipParent !== true) {
+    if (typeof functionOrEventName === 'string') {
+      if (view[functionOrEventName]) {
+        view[functionOrEventName](view.element);
+      }
+    } else {
+      functionOrEventName(view);
+    }
+  }
 }
 
 function createChildView(view, childView, attrs) {
@@ -189,9 +269,9 @@ function createChildView(view, childView, attrs) {
 
 function appendChild(view, childView, attrs) {
   childView = createChildView(view, childView, attrs);
-  var childViews = view.childViews;
+  var childViews = view._childViews;
   if (!childViews) {
-    childViews = view.childViews = [childView];
+    childViews = view._childViews = [childView];
   } else {
     childViews.push(childView);
   }
@@ -202,8 +282,13 @@ function remove(view) {
   var el = view.element,
       placeholder = view._placeholder;
 
-  if (el) { el.parentNode.removeChild(el); }
+  if (el && view.willDestroyElement) { view.willDestroyElement(); }
+  view.element = null;
+  if (el && el.parentNode) { el.parentNode.removeChild(el); }
   if (placeholder) { placeholder.clear(); } // TODO: Implement Placeholder.destroy
+  teardownView(view);
+
+  _triggerRecursively(view, remove, true);
 }
 
 function contextDidChange(view) {
@@ -219,7 +304,7 @@ function contextDidChange(view) {
     }
   }
 
-  var childViews = view.childViews,
+  var childViews = view._childViews,
       childView;
   if (childViews) {
     for (i = 0, l = childViews.length; i < l; i++) {
@@ -239,4 +324,7 @@ function contextDidChange(view) {
 //   set(view, 'context', newContext);
 // }
 
-export { reset, events, appendTo, render, createChildView, appendChild, remove };
+var destroy = remove;
+var createElementForView = _createElementForView;
+
+export { reset, events, appendTo, render, createChildView, appendChild, remove, destroy, createElementForView }

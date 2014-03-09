@@ -1,6 +1,4 @@
-var View = requireModule('ember-metal-views'),
-    $ = function(selector) { return document.querySelector(selector); },
-    equalHTML = function(selector, expectedHTML) { equal($(selector).innerHTML, expectedHTML, "HTML matches"); };
+import { testsFor, View, $, equalHTML, appendTo } from "ember-metal-views/tests/test_helpers";
 
 module("ember-metal-views - template support", {
   setup: function() {
@@ -21,6 +19,6 @@ test("a view can have a template", function() {
     prop: "WAT"
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', "<div>WAT</div>");
 });

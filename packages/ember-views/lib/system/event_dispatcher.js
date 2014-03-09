@@ -30,8 +30,9 @@ var ActionHelper;
   @private
   @extends Ember.Object
 */
-export default EmberObject.extend({
+export default EmberObject.extend();
 
+var Derp = EmberObject.extend({
   /**
     The set of events names (and associated handler function names) to be setup
     and dispatched by the `EventDispatcher`. Custom events can added to this list at setup

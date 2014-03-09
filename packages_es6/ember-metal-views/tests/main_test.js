@@ -3,55 +3,62 @@
 import { testsFor, View, $, equalHTML, set, appendTo } from "ember-metal-views/tests/test_helpers";
 import run from "ember-metal/run_loop";
 
-testsFor("ember-metal-views");
+var view;
+
+testsFor("ember-metal-views", {
+  teardown: function() {
+    if (view) { View.destroy(view); }
+    view = null;
+  }
+});
 
 test("by default, view renders as a div", function() {
-  var view = {isView: true};
+  view = {isView: true};
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
   equalHTML('#qunit-fixture', "<div></div>");
 });
 
 test("tagName can be specified", function() {
-  var view = {
+  view = {
     isView: true,
     tagName: 'span'
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
 
   equalHTML('#qunit-fixture', "<span></span>");
 });
 
 test("textContent can be specified", function() {
-  var view = {
+  view = {
     isView: true,
     textContent: 'ohai <a>derp</a>'
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
 
   equalHTML('#qunit-fixture', "<div>ohai &lt;a&gt;derp&lt;/a&gt;</div>");
 });
 
 test("innerHTML can be specified", function() {
-  var view = {
+  view = {
     isView: true,
     innerHTML: 'ohai <a>derp</a>'
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
 
   equalHTML('#qunit-fixture', "<div>ohai <a>derp</a></div>");
 });
 
 test("element can be specified", function() {
-  var view = {
+  view = {
     isView: true,
     element: document.createElement('i')
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
 
   equalHTML('#qunit-fixture', "<i></i>");
 });
@@ -59,7 +66,7 @@ test("element can be specified", function() {
 test("willInsertElement hook", function() {
   expect(4);
 
-  var view = {
+  view = {
     isView: true,
 
     willInsertElement: function(el) {
@@ -70,7 +77,7 @@ test("willInsertElement hook", function() {
     }
   };
 
-  View.appendTo(view, '#qunit-fixture');
+  appendTo(view, '#qunit-fixture');
 
   equalHTML('#qunit-fixture', "<div>you gone and done inserted that element</div>");
 });
@@ -78,7 +85,7 @@ test("willInsertElement hook", function() {
 test("didInsertElement hook", function() {
   expect(4);
 
-  var view = {
+  view = {
     isView: true,
 
     didInsertElement: function(el) {
@@ -95,7 +102,7 @@ test("didInsertElement hook", function() {
 });
 
 test("classNames - array", function() {
-  var view = {
+  view = {
     isView: true,
     classNames: ['foo', 'bar'],
     textContent: 'ohai'
@@ -106,7 +113,7 @@ test("classNames - array", function() {
 });
 
 test("classNames - string", function() {
-  var view = {
+  view = {
     isView: true,
     classNames: 'foo bar',
     textContent: 'ohai'
@@ -117,7 +124,7 @@ test("classNames - string", function() {
 });
 
 test("attributeBindings", function() {
-  var view = {
+  view = {
     isView: true,
     tagName: 'a',
     attributeBindings: ['href'],
@@ -136,7 +143,7 @@ test("transclusion", function() {
   var originalElement = document.createElement('foo-component');
   originalElement.textContent = 'derp';
 
-  var view = {
+  view = {
     isView: true,
     tagName: 'div',
     element: originalElement
@@ -148,7 +155,7 @@ test("transclusion", function() {
 });
 
 test("classNameBindings", function() {
-  var view = {
+  view = {
     isView: true,
     classNameBindings: ['isEnabled'],
     isEnabled: true

@@ -2,6 +2,7 @@ import { addEventListener, removeEventListener } from "ember-metal-views/dom";
 
 // Hash lookup by view ID for event delegation
 var views = {},
+    _views = views,
     guid = 0;
 
 function findContainingView(el) {
@@ -70,7 +71,11 @@ function setupEventDispatcher() {
 
 function reset() {
   guid = 0;
-  views = {};
+  // views = {}; // FIXME: setting Ember.View.views is a hack
+  // FIXME: hack to keep object reference the same
+  for (var key in views) {
+    delete views[key];
+  }
   eventDispatcherActive = false;
   for (var i = 0, l = eventNames.length; i < l; i++) {
     removeEventListener(document, eventNames[i], eventHandler);
@@ -86,4 +91,8 @@ function setupView(view) {
   views[elementId] = view;
 }
 
-export { lookupView, setupView, events, setupEventDispatcher, reset };
+function teardownView(view) {
+  delete views[view.elementId];
+}
+
+export { lookupView, setupView, teardownView, events, setupEventDispatcher, reset, _views };

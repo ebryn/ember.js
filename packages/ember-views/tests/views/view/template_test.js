@@ -20,7 +20,10 @@ QUnit.module("EmberView - Template Functionality", {
 
 test("should call the function of the associated template", function() {
   container.register('template:testTemplate', function() {
-    return "<h1 id='twas-called'>template was called</h1>";
+    var el = document.createElement('h1');
+    el.setAttribute('id', 'twas-called');
+    el.innerText = 'template was called';
+    return el;
   });
 
   view = EmberView.create({
@@ -36,8 +39,11 @@ test("should call the function of the associated template", function() {
 });
 
 test("should call the function of the associated template with itself as the context", function() {
-  container.register('template:testTemplate', function(dataSource) {
-    return "<h1 id='twas-called'>template was called for " + get(dataSource, 'personName') + "</h1>";
+  container.register('template:testTemplate', function(view) {
+    var el = document.createElement('h1');
+    el.setAttribute('id', 'twas-called');
+    el.innerText = "template was called for " + get(view.context, 'personName');
+    return el;
   });
 
   view = EmberView.create({
@@ -60,7 +66,12 @@ test("should fall back to defaultTemplate if neither template nor templateName a
   var View;
 
   View = EmberView.extend({
-    defaultTemplate: function(dataSource) { return "<h1 id='twas-called'>template was called for " + get(dataSource, 'personName') + "</h1>"; }
+    defaultTemplate: function(view) {
+      var el = document.createElement('h1');
+      el.setAttribute('id', 'twas-called');
+      el.innerText = "template was called for " + get(view.context, 'personName');
+      return el;
+    }
   });
 
   view = View.create({
@@ -80,8 +91,13 @@ test("should not use defaultTemplate if template is provided", function() {
   var View;
 
   View = EmberView.extend({
-    template:  function() { return "foo"; },
-    defaultTemplate: function(dataSource) { return "<h1 id='twas-called'>template was called for " + get(dataSource, 'personName') + "</h1>"; }
+    template:  function() { return document.createTextNode("foo"); },
+    defaultTemplate: function(dataSource) {
+      var el = document.createElement('h1');
+      el.setAttribute('id', 'twas-called');
+      el.innerText = "template was called for " + get(dataSource, 'personName');
+      return el;
+    }
   });
 
   view = View.create();
@@ -95,12 +111,17 @@ test("should not use defaultTemplate if template is provided", function() {
 test("should not use defaultTemplate if template is provided", function() {
   var View;
 
-  container.register('template:foobar', function() { return 'foo'; });
+  container.register('template:foobar', function() { return document.createTextNode("foo"); });
 
   View = EmberView.extend({
     container: container,
     templateName: 'foobar',
-    defaultTemplate: function(dataSource) { return "<h1 id='twas-called'>template was called for " + get(dataSource, 'personName') + "</h1>"; }
+    defaultTemplate: function(dataSource) {
+      var el = document.createElement('h1');
+      el.setAttribute('id', 'twas-called');
+      el.innerText = "template was called for " + get(dataSource, 'personName');
+      return el;
+    }
   });
 
   view = View.create();
@@ -141,7 +162,7 @@ test("should provide a controller to the template if a controller is specified o
   view = EmberView.create({
     controller: controller1,
 
-    template: function(buffer, options) {
+    template: function(view, options) {
       optionsDataKeywordsControllerForView = options.data.keywords.controller;
     }
   });
