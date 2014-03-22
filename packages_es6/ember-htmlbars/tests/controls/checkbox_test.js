@@ -12,7 +12,7 @@ var set = function(obj, key, value) {
 
 var checkboxView, dispatcher, controller;
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var compile = EmberHandlebars.compile;
 
 function destroy(view) {

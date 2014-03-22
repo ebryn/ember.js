@@ -3,7 +3,7 @@ var loc = EmberStringUtils.loc;
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
 // ES6TODO:

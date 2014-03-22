@@ -1,13 +1,13 @@
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 import Ember from "ember-metal/core"; // Ember.assert;, Ember.K
 // var emberAssert = Ember.assert,
 var K = Ember.K;
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var helpers = EmberHandlebars.helpers;
 
 import EmberStringUtils from "ember-runtime/system/string";
@@ -15,7 +15,7 @@ var fmt = EmberStringUtils.fmt;
 
 import {get} from "ember-metal/property_get";
 import {set} from "ember-metal/property_set";
-import {_Metamorph, _MetamorphView} from "ember-handlebars/views/metamorph_view";
+import {_Metamorph, _MetamorphView} from "ember-htmlbars/views/metamorph_view";
 import CollectionView from "ember-views/views/collection_view";
 import {Binding} from "ember-metal/binding";
 import {ControllerMixin} from "ember-runtime/controllers/controller";
@@ -26,7 +26,7 @@ import run from "ember-metal/run_loop";
 import {addObserver, removeObserver, addBeforeObserver, removeBeforeObserver} from "ember-metal/observer";
 import {on} from "ember-metal/events";
 
-import {handlebarsGet} from "ember-handlebars/ext";
+import {handlebarsGet} from "ember-htmlbars/ext";
 
 var EachView = CollectionView.extend(_Metamorph, {
   init: function() {

@@ -7,7 +7,7 @@ import EnumerableUtils from "ember-metal/enumerable_utils";
 import run from "ember-metal/run_loop";
 import Namespace from "ember-runtime/system/namespace";
 import {View as EmberView} from "ember-views/views/view";
-import EmberHandlebars from "ember-handlebars";
+import EmberHandlebars from "ember-htmlbars";
 import EmberObject from "ember-runtime/system/object";
 import ObjectController from "ember-runtime/controllers/object_controller";
 import {A} from "ember-runtime/system/native_array";
@@ -19,7 +19,7 @@ import CollectionView from "ember-views/views/collection_view";
 import ContainerView from "ember-views/views/container_view";
 import {Binding} from "ember-metal/binding";
 import {observersFor} from "ember-metal/observer";
-import TextField from "ember-handlebars/controls/text_field";
+import TextField from "ember-htmlbars/controls/text_field";
 import Container from "ember-runtime/system/container";
 import Logger from "ember-metal/logger";
 

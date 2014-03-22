@@ -11,7 +11,7 @@ import ArrayProxy from "ember-runtime/system/array_proxy";
 import CollectionView from "ember-views/views/collection_view";
 import {A} from "ember-runtime/system/native_array";
 import Container from "ember-runtime/system/container";
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 
 var trim = jQuery.trim;
 
@@ -28,7 +28,7 @@ var firstChild = nthChild;
 
 var originalLookup = Ember.lookup, lookup, TemplateTests, view;
 
-module("ember-handlebars/tests/views/collection_view_test", {
+module("ember-htmlbars/tests/views/collection_view_test", {
   setup: function() {
     Ember.lookup = lookup = { Ember: Ember };
     lookup.TemplateTests = TemplateTests = Namespace.create();

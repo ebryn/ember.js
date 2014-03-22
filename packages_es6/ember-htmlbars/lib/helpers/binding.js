@@ -1,12 +1,12 @@
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
 import Ember from "ember-metal/core"; // Ember.assert, Ember.warn, uuid
 // var emberAssert = Ember.assert, Ember.warn = Ember.warn;
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var helpers = EmberHandlebars.helpers;
 var SafeString = EmberHandlebars.SafeString;
 
@@ -19,15 +19,15 @@ import EnumerableUtils from "ember-metal/enumerable_utils";
 import {forEach} from "ember-metal/array";
 import {View} from "ember-views/views/view";
 import run from "ember-metal/run_loop";
-import {_HandlebarsBoundView, SimpleHandlebarsView} from "ember-handlebars/views/handlebars_bound_view";
+import {_HandlebarsBoundView, SimpleHandlebarsView} from "ember-htmlbars/views/handlebars_bound_view";
 import {removeObserver} from "ember-metal/observer";
 import {isGlobalPath} from "ember-metal/binding";
 import {bind as emberBind} from "ember-metal/binding";
 import {guidFor, typeOf} from "ember-metal/utils";
 import jQuery from "ember-views/system/jquery";
 import {isArray} from "ember-metal/utils";
-import {normalizePath, handlebarsGet, getEscaped} from "ember-handlebars/ext";
-import {getEscaped as handlebarsGetEscaped} from "ember-handlebars/ext";
+import {normalizePath, handlebarsGet, getEscaped} from "ember-htmlbars/ext";
+import {getEscaped as handlebarsGetEscaped} from "ember-htmlbars/ext";
 
 import keys from "ember-runtime/keys";
 

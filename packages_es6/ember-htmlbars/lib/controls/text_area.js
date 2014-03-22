@@ -1,11 +1,11 @@
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 import {get} from "ember-metal/property_get";
 import Component from "ember-views/views/component";
-import TextSupport from "ember-handlebars/controls/text_support";
+import TextSupport from "ember-htmlbars/controls/text_support";
 import {observer} from "ember-metal/mixin";
 
 /**

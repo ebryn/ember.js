@@ -6,7 +6,7 @@ import Ember from "ember-metal/core";
 import {get} from "ember-metal/property_get";
 import {set} from "ember-metal/property_set";
 import run from "ember-metal/run_loop";
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 import EmberError from "ember-metal/error";
 
 var appendView = function(view) {

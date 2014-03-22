@@ -2,12 +2,12 @@ import Ember from "ember-metal/core"; // Ember.assert
 // var emberAssert = Ember.assert;
 
 import {isNone} from 'ember-metal/is_none';
-import {handlebarsGet} from "ember-handlebars/ext";
-import {bind} from "ember-handlebars/helpers/binding";
+import {handlebarsGet} from "ember-htmlbars/ext";
+import {bind} from "ember-htmlbars/helpers/binding";
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
 /**

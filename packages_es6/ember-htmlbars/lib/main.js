@@ -1,50 +1,50 @@
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 import Ember from "ember-metal/core"; // to add to globals
 
 import {runLoadHooks} from "ember-runtime/system/lazy_load";
-import bootstrap from "ember-handlebars/loader";
+import bootstrap from "ember-htmlbars/loader";
 
 import {normalizePath, template, makeBoundHelper, registerBoundHelper,
     resolveHash, resolveParams, getEscaped, handlebarsGet, evaluateUnboundHelper,
     helperMissingHelper, blockHelperMissingHelper
-} from "ember-handlebars/ext";
+} from "ember-htmlbars/ext";
 
 
-import "ember-handlebars/string"; // side effect of extending StringUtils
+import "ember-htmlbars/string"; // side effect of extending StringUtils
 
-import resolvePaths from "ember-handlebars/helpers/shared";
-import {bind, _triageMustacheHelper, resolveHelper, bindHelper, boundIfHelper, unboundIfHelper, withHelper, ifHelper, unlessHelper, bindAttrHelper, bindAttrHelperDeprecated, bindClasses} from "ember-handlebars/helpers/binding";
+import resolvePaths from "ember-htmlbars/helpers/shared";
+import {bind, _triageMustacheHelper, resolveHelper, bindHelper, boundIfHelper, unboundIfHelper, withHelper, ifHelper, unlessHelper, bindAttrHelper, bindAttrHelperDeprecated, bindClasses} from "ember-htmlbars/helpers/binding";
 
-import collectionHelper from "ember-handlebars/helpers/collection";
-import {ViewHelper, viewHelper} from "ember-handlebars/helpers/view";
-import unboundHelper from "ember-handlebars/helpers/unbound";
-import {logHelper, debuggerHelper} from "ember-handlebars/helpers/debug";
-import {EachView, GroupedEach, eachHelper} from "ember-handlebars/helpers/each";
+import collectionHelper from "ember-htmlbars/helpers/collection";
+import {ViewHelper, viewHelper} from "ember-htmlbars/helpers/view";
+import unboundHelper from "ember-htmlbars/helpers/unbound";
+import {logHelper, debuggerHelper} from "ember-htmlbars/helpers/debug";
+import {EachView, GroupedEach, eachHelper} from "ember-htmlbars/helpers/each";
 
-import templateHelper from "ember-handlebars/helpers/template";
-import partialHelper from "ember-handlebars/helpers/partial";
-import yieldHelper from "ember-handlebars/helpers/yield";
-import locHelper from "ember-handlebars/helpers/loc";
-
-
-import Checkbox from "ember-handlebars/controls/checkbox";
-import {Select, SelectOption, SelectOptgroup} from "ember-handlebars/controls/select";
-import TextArea from "ember-handlebars/controls/text_area";
-import TextField from "ember-handlebars/controls/text_field";
-import TextSupport from "ember-handlebars/controls/text_support";
-import TextSupport from "ember-handlebars/controls/text_support";
-import {inputHelper, textareaHelper} from "ember-handlebars/controls"
+import templateHelper from "ember-htmlbars/helpers/template";
+import partialHelper from "ember-htmlbars/helpers/partial";
+import yieldHelper from "ember-htmlbars/helpers/yield";
+import locHelper from "ember-htmlbars/helpers/loc";
 
 
-import ComponentLookup from "ember-handlebars/component_lookup";
-import {_HandlebarsBoundView, SimpleHandlebarsView} from "ember-handlebars/views/handlebars_bound_view";
-import {_SimpleMetamorphView, _MetamorphView, _Metamorph} from "ember-handlebars/views/metamorph_view";
+import Checkbox from "ember-htmlbars/controls/checkbox";
+import {Select, SelectOption, SelectOptgroup} from "ember-htmlbars/controls/select";
+import TextArea from "ember-htmlbars/controls/text_area";
+import TextField from "ember-htmlbars/controls/text_field";
+import TextSupport from "ember-htmlbars/controls/text_support";
+import TextSupport from "ember-htmlbars/controls/text_support";
+import {inputHelper, textareaHelper} from "ember-htmlbars/controls"
+
+
+import ComponentLookup from "ember-htmlbars/component_lookup";
+import {_HandlebarsBoundView, SimpleHandlebarsView} from "ember-htmlbars/views/handlebars_bound_view";
+import {_SimpleMetamorphView, _MetamorphView, _Metamorph} from "ember-htmlbars/views/metamorph_view";
 
 /**
 Ember Handlebars
 
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 @requires ember-views
 */
 

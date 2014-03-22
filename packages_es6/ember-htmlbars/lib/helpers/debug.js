@@ -2,14 +2,14 @@
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 import Ember from "ember-metal/core"; // Ember.FEATURES,
 import {inspect} from "ember-metal/utils";
 import Logger from "ember-metal/logger";
 
 import {get} from "ember-metal/property_get";
-import {normalizePath, handlebarsGet} from "ember-handlebars/ext";
+import {normalizePath, handlebarsGet} from "ember-htmlbars/ext";
 
 var a_slice = [].slice;
 
@@ -32,7 +32,7 @@ function logHelper() {
       values = [],
       allowPrimitives = false;
 
-  if (Ember.FEATURES.isEnabled("ember-handlebars-log-primitives")) {
+  if (Ember.FEATURES.isEnabled("ember-htmlbars-log-primitives")) {
     allowPrimitives = true;
   }
 

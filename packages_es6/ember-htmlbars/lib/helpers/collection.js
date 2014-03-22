@@ -1,6 +1,6 @@
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
 import Ember from "ember-metal/core"; // Ember.assert, Ember.deprecate
@@ -9,15 +9,15 @@ import {inspect} from "ember-metal/utils";
 // var emberAssert = Ember.assert;
     // emberDeprecate = Ember.deprecate;
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var helpers = EmberHandlebars.helpers;
 
 import EmberStringUtils from "ember-runtime/system/string";
 var fmt = EmberStringUtils.fmt;
 
 import {get} from "ember-metal/property_get";
-import {handlebarsGet} from "ember-handlebars/ext";
-import {ViewHelper} from "ember-handlebars/helpers/view";
+import {handlebarsGet} from "ember-htmlbars/ext";
+import {ViewHelper} from "ember-htmlbars/helpers/view";
 import {computed} from "ember-metal/computed";
 import CollectionView from "ember-views/views/collection_view";
 

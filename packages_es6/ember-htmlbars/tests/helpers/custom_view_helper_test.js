@@ -3,7 +3,7 @@ import {View as EmberView} from "ember-views/views/view";
 import run from "ember-metal/run_loop";
 import EmberObject from "ember-runtime/system/object";
 import Namespace from "ember-runtime/system/namespace";
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 
 import {get} from "ember-metal/property_get";
 import {set} from "ember-metal/property_set";

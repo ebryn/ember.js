@@ -2,8 +2,8 @@ import Ember from "ember-metal/core"; // Ember.lookup
 import EmberLogger from "ember-metal/logger";
 import run from "ember-metal/run_loop";
 import {View as EmberView} from "ember-views/views/view";
-import EmberHandlebars from "ember-handlebars-compiler";
-import {logHelper} from "ember-handlebars/helpers/debug";
+import EmberHandlebars from "ember-htmlbars-compiler";
+import {logHelper} from "ember-htmlbars/helpers/debug";
 
 var originalLookup = Ember.lookup, lookup;
 var originalLog, logCalls;
@@ -59,7 +59,7 @@ test("should be able to log multiple properties", function() {
   equal(logCalls[1], 'two');
 });
 
-if (Ember.FEATURES.isEnabled("ember-handlebars-log-primitives")) {
+if (Ember.FEATURES.isEnabled("ember-htmlbars-log-primitives")) {
   test("should be able to log primitives", function() {
     var context = {
       value: 'one',

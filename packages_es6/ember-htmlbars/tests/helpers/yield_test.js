@@ -4,7 +4,7 @@ import {View as EmberView} from "ember-views/views/view";
 import {computed} from "ember-metal/computed";
 import Namespace from "ember-runtime/system/namespace";
 import Container from "ember-runtime/system/container";
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 import {get} from "ember-metal/property_get";
 import {set} from "ember-metal/property_set";
 import {A} from "ember-runtime/system/native_array";

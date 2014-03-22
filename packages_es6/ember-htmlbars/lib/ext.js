@@ -4,7 +4,7 @@ import Ember from "ember-metal/core"; // Ember.FEATURES, Ember.assert, Ember.Han
 import EmberStringUtils from "ember-runtime/system/string";
 var fmt = EmberStringUtils.fmt;
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var helpers = EmberHandlebars.helpers;
 
 import {get} from "ember-metal/property_get";
@@ -78,7 +78,7 @@ function handlebarsGet(root, path, options) {
       normalizedPath = normalizePath(root, path, data),
       value;
 
-  if (Ember.FEATURES.isEnabled("ember-handlebars-caps-lookup")) {
+  if (Ember.FEATURES.isEnabled("ember-htmlbars-caps-lookup")) {
 
     // If the path starts with a capital letter, look it up on Ember.lookup,
     // which defaults to the `window` object in browsers.
@@ -183,7 +183,7 @@ function resolveHash(context, hash, options) {
   @param {Hash} options
 */
 function helperMissingHelper(path) {
-  if (!resolveHelper) { resolveHelper = requireModule('ember-handlebars/helpers/binding')['resolveHelper']; } // ES6TODO: stupid circular dep
+  if (!resolveHelper) { resolveHelper = requireModule('ember-htmlbars/helpers/binding')['resolveHelper']; } // ES6TODO: stupid circular dep
 
   var error, view = "";
 
@@ -217,7 +217,7 @@ function helperMissingHelper(path) {
   @param {Hash} options
 */
 function blockHelperMissingHelper(path) {
-  if (!resolveHelper) { resolveHelper = requireModule('ember-handlebars/helpers/binding')['resolveHelper']; } // ES6TODO: stupid circular dep
+  if (!resolveHelper) { resolveHelper = requireModule('ember-htmlbars/helpers/binding')['resolveHelper']; } // ES6TODO: stupid circular dep
 
   var options = arguments[arguments.length - 1];
 
@@ -225,7 +225,7 @@ function blockHelperMissingHelper(path) {
                "is most likely due to a mismatch between the version of " +
                "Ember.js you're running now and the one used to precompile your " +
                "templates. Please make sure the version of " +
-               "`ember-handlebars-compiler` you're using is up to date.", path);
+               "`ember-htmlbars-compiler` you're using is up to date.", path);
 
   var helper = resolveHelper(options.data.view.container, path);
 
@@ -377,7 +377,7 @@ function registerBoundHelper(name, fn) {
   @param {String} dependentKeys*
 */
 function makeBoundHelper(fn) {
-  if (!SimpleHandlebarsView) { SimpleHandlebarsView = requireModule('ember-handlebars/views/handlebars_bound_view')['SimpleHandlebarsView']; } // ES6TODO: stupid circular dep
+  if (!SimpleHandlebarsView) { SimpleHandlebarsView = requireModule('ember-htmlbars/views/handlebars_bound_view')['SimpleHandlebarsView']; } // ES6TODO: stupid circular dep
 
   var dependentKeys = slice.call(arguments, 1);
 

@@ -1,4 +1,4 @@
-import {handlebarsGet} from "ember-handlebars/ext";
+import {handlebarsGet} from "ember-htmlbars/ext";
 
 function resolvePaths(options) {
   var ret = [],

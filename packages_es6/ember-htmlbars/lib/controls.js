@@ -1,15 +1,15 @@
-import Checkbox from "ember-handlebars/controls/checkbox";
-import TextField from "ember-handlebars/controls/text_field";
-import TextArea from "ember-handlebars/controls/text_area";
+import Checkbox from "ember-htmlbars/controls/checkbox";
+import TextField from "ember-htmlbars/controls/text_field";
+import TextArea from "ember-htmlbars/controls/text_area";
 
 import Ember from "ember-metal/core"; // Ember.assert
 // var emberAssert = Ember.assert;
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var helpers = EmberHandlebars.helpers;
 /**
 @module ember
-@submodule ember-handlebars-compiler
+@submodule ember-htmlbars-compiler
 */
 
 /**

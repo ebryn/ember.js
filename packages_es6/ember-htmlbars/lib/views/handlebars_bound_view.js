@@ -4,16 +4,16 @@
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
-import EmberHandlebars from "ember-handlebars-compiler"; // EmberHandlebars.SafeString;
+import EmberHandlebars from "ember-htmlbars-compiler"; // EmberHandlebars.SafeString;
 var SafeString = EmberHandlebars.SafeString;
 
 import Ember from "ember-metal/core"; // Ember.K
 var K = Ember.K
 
-var Metamorph = requireModule('metamorph');
+function Metamorph() {}
 
 import EmberError from "ember-metal/error";
 import {get} from "ember-metal/property_get";
@@ -24,8 +24,8 @@ import {View} from "ember-views/views/view";
 import {cloneStates, states} from "ember-views/views/states";
 var viewStates = states;
 
-import {_MetamorphView} from "ember-handlebars/views/metamorph_view";
-import {handlebarsGet} from "ember-handlebars/ext";
+import {_MetamorphView} from "ember-htmlbars/views/metamorph_view";
+import {handlebarsGet} from "ember-htmlbars/ext";
 
 function SimpleHandlebarsView(path, pathRoot, isEscaped, templateData) {
   this.path = path;

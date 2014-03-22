@@ -11,10 +11,11 @@ import run from "ember-metal/run_loop";
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
-var Metamorph = requireModule('metamorph');
+// var Metamorph = requireModule('metamorph');
+function Metamorph() {};
 
 function notifyMutationListeners() {
   run.once(View, 'notifyMutationListeners');

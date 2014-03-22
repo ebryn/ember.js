@@ -2,7 +2,7 @@
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
 import Ember from "ember-metal/core"; // Ember.warn, Ember.assert
@@ -15,7 +15,7 @@ import {IS_BINDING} from "ember-metal/mixin";
 import jQuery from "ember-views/system/jquery";
 import {View} from "ember-views/views/view";
 import {isGlobalPath} from "ember-metal/binding";
-import {normalizePath, handlebarsGet} from "ember-handlebars/ext";
+import {normalizePath, handlebarsGet} from "ember-htmlbars/ext";
 import EmberString from "ember-runtime/system/string";
 
 

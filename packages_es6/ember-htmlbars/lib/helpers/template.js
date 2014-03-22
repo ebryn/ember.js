@@ -1,11 +1,11 @@
 import Ember from "ember-metal/core";
 // var emberDeprecate = Ember.deprecate;
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var helpers = EmberHandlebars.helpers;
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
 /**

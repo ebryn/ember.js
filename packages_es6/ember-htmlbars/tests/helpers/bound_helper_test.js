@@ -11,7 +11,7 @@ import {A} from "ember-runtime/system/native_array";
 import {get} from "ember-metal/property_get";
 import {set} from "ember-metal/property_set";
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var compile = EmberHandlebars.compile;
 
 var view;

@@ -4,7 +4,7 @@ import {View as EmberView} from "ember-views/views/view";
 import jQuery from "ember-views/system/jquery";
 var trim = jQuery.trim;
 import Container from "ember-runtime/system/container";
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var compile = EmberHandlebars.compile;
 
 var MyApp;

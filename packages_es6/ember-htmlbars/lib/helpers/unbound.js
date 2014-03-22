@@ -2,13 +2,13 @@
 
 /**
 @module ember
-@submodule ember-handlebars
+@submodule ember-htmlbars
 */
 
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 var helpers = EmberHandlebars.helpers;
 
-import {handlebarsGet} from "ember-handlebars/ext";
+import {handlebarsGet} from "ember-htmlbars/ext";
 
 var slice = [].slice;
 

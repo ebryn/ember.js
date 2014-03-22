@@ -5,7 +5,7 @@ import run from "ember-metal/run_loop";
 import {View as EmberView} from "ember-views/views/view";
 import {computed} from "ember-metal/computed";
 import ArrayController from "ember-runtime/controllers/array_controller";
-import EmberHandlebars from "ember-handlebars-compiler";
+import EmberHandlebars from "ember-htmlbars-compiler";
 // import {expectAssertion} from "ember-metal/tests/debug_helpers";
 import {A} from "ember-runtime/system/native_array";
 import {Controller as EmberController} from "ember-runtime/controllers/controller";
