@@ -6,7 +6,7 @@ import { addObserver } from "ember-metal/observer";
 import { set } from "ember-metal/property_set";
 import { lookupView, setupView, teardownView, setupEventDispatcher, reset, events } from "ember-metal-views/events";
 import { setupClassNames, setupClassNameBindings, setupAttributeBindings } from "ember-metal-views/attributes";
-
+import { Placeholder } from "placeholder";
 
 // FIXME: don't have a hard dependency on the ember run loop
 // FIXME: avoid render/afterRender getting defined twice
@@ -28,13 +28,12 @@ var SHARED_META = meta(FAKE_PROTO);
 
 
 function _insertElementLater(view, fn) {
-  view._scheduledInsert = run.scheduleOnce('render', view, _insertElement, fn);
+  view._scheduledInsert = run.scheduleOnce('render', null, _insertElement, view, fn);
 }
 
-function _insertElement(fn) {
-  var view = this;
+function _insertElement(view, fn) {
   view._scheduledInsert = null;
-  var el = _createElementForView(view);
+  _render(view);
   fn(view);
 }
 
@@ -43,10 +42,7 @@ function appendTo(view, selector) {
     target.appendChild(view.element);
   });
 
-  var el = _render(view),
-      target = typeof selector === 'string' ? querySelector(selector) : selector;
-
-  return el;
+  var target = typeof selector === 'string' ? querySelector(selector) : selector;
 }
 
 // TODO: figure out the most efficent way of changing tagName
@@ -70,7 +66,7 @@ function _createElementForView(view) {
   if (!view.isVirtual) {
     tagName = view.tagName || 'div';
     el = view.element = view.element || createElement(tagName);
-  
+
     if (view.tagName && el.tagName !== view.tagName.toUpperCase()) {
       el = view.element = transclude(el, view.tagName);
     }
@@ -114,10 +110,10 @@ function _render(_view, _parent) {
       setupAttributeBindings(view);
     }
 
-    if (ret) {
-      run.schedule('render', null, _renderContents, view, el);
-    } else { // only capture the root view's element
-      ret = _renderContents(view, el);
+    var content = _renderContents(view, el);
+
+    if (view._parentView) {
+      view._parentView.element.appendChild(content);
     }
 
     var childViews = view._childViews, // FIXME
@@ -148,7 +144,6 @@ function _render(_view, _parent) {
   });
 
   setupEventDispatcher();
-  return ret;
 }
 
 function _findTemplate(view) {
@@ -176,14 +171,13 @@ function _renderContents(view, el) {
     view.templateOptions.data.view = view;
     if (view.beforeTemplate) { view.beforeTemplate(); }
     var templateFragment = template(view, view.templateOptions);
-    if (!view.isVirtual) {
+    if (view.isVirtual) {
+      el = templateFragment;
+    } else {
       if (templateFragment) {
         if (typeof templateFragment === 'string') { templateFragment = document.createTextNode(templateFragment); }
-
         el.appendChild(templateFragment);
       }
-    } else {
-      el = templateFragment;
     }
     view.templateOptions.data.view = null;
   } else if (view.textContent) { // TODO: bind?

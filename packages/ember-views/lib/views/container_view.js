@@ -193,6 +193,8 @@ var states = cloneStates(EmberViewStates);
 var ContainerView = View.extend(MutableArray, {
   _states: states,
 
+  _placeholderList: null,
+
   init: function() {
     this._super();
 
@@ -204,23 +206,13 @@ var ContainerView = View.extend(MutableArray, {
     var _childViews = this._childViews;
 
     forEach(childViews, function(viewName, idx) {
-      var view;
-
-      if ('string' === typeof viewName) {
-        view = get(this, viewName);
-        view = this.createChildView(view);
-        set(this, viewName, view);
-      } else {
-        view = this.createChildView(viewName);
-      }
-
-      _childViews[idx] = view;
+      _childViews[idx] = MetalView.createChildView(this, viewName);
     }, this);
 
     var currentView = get(this, 'currentView');
     if (currentView) {
       if (!_childViews.length) { _childViews = this._childViews = this._childViews.slice(); }
-      _childViews.push(this.createChildView(currentView));
+      _childViews.push(MetalView.createChildView(this, viewName));
     }
   },
 
