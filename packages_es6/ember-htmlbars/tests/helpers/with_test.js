@@ -4,11 +4,11 @@ import {View as EmberView} from "ember-views/views/view";
 import run from "ember-metal/run_loop";
 import EmberObject from "ember-runtime/system/object";
 import {computed} from "ember-metal/computed";
-import EmberHandlebars from "ember-htmlbars-compiler";
 import {set} from "ember-metal/property_set";
 import ObjectController from "ember-runtime/controllers/object_controller";
 import Container from "ember-runtime/system/container";
 import {A} from "ember-runtime/system/native_array";
+import {compile} from "ember-metal-htmlbars/tests/test_helpers";
 
 var appendView = function(view) {
   run(function() { view.appendTo('#qunit-fixture'); });
@@ -22,7 +22,7 @@ module("Handlebars {{#with}} helper", {
     Ember.lookup = lookup = { Ember: Ember };
 
     view = EmberView.create({
-      template: EmberHandlebars.compile("{{#with person as tom}}{{title}}: {{tom.name}}{{/with}}"),
+      template: compile("{{#with person as tom}}{{title}}: {{tom.name}}{{/with}}"),
       context: {
         title: "Señor Engineer",
         person: { name: "Tom Dale" }
@@ -75,7 +75,7 @@ module("Multiple Handlebars {{with}} helpers with 'as'", {
     Ember.lookup = lookup = { Ember: Ember };
 
     view = EmberView.create({
-      template: EmberHandlebars.compile("Admin: {{#with admin as person}}{{person.name}}{{/with}} User: {{#with user as person}}{{person.name}}{{/with}}"),
+      template: compile("Admin: {{#with admin as person}}{{person.name}}{{/with}} User: {{#with user as person}}{{person.name}}{{/with}}"),
       context: {
         admin: { name: "Tom Dale" },
         user: { name: "Yehuda Katz"}
@@ -99,7 +99,7 @@ test("re-using the same variable with different #with blocks does not override e
 
 test("the scoped variable is not available outside the {{with}} block.", function(){
   run(function() {
-    view.set('template', EmberHandlebars.compile("{{name}}-{{#with other as name}}{{name}}{{/with}}-{{name}}"));
+    view.set('template', compile("{{name}}-{{#with other as name}}{{name}}{{/with}}-{{name}}"));
     view.set('context', {
       name: 'Stef',
       other: 'Yehuda'
@@ -111,7 +111,7 @@ test("the scoped variable is not available outside the {{with}} block.", functio
 
 test("nested {{with}} blocks shadow the outer scoped variable properly.", function(){
   run(function() {
-    view.set('template', EmberHandlebars.compile("{{#with first as ring}}{{ring}}-{{#with fifth as ring}}{{ring}}-{{#with ninth as ring}}{{ring}}-{{/with}}{{ring}}-{{/with}}{{ring}}{{/with}}"));
+    view.set('template', compile("{{#with first as ring}}{{ring}}-{{#with fifth as ring}}{{ring}}-{{#with ninth as ring}}{{ring}}-{{/with}}{{ring}}-{{/with}}{{ring}}{{/with}}"));
     view.set('context', {
       first: 'Limbo',
       fifth: 'Wrath',
@@ -127,7 +127,7 @@ module("Handlebars {{#with}} globals helper", {
 
     lookup.Foo = { bar: 'baz' };
     view = EmberView.create({
-      template: EmberHandlebars.compile("{{#with Foo.bar as qux}}{{qux}}{{/with}}")
+      template: compile("{{#with Foo.bar as qux}}{{qux}}{{/with}}")
     });
 
     appendView(view);
@@ -155,7 +155,7 @@ module("Handlebars {{#with keyword as foo}}");
 
 test("it should support #with view as foo", function() {
   var view = EmberView.create({
-    template: EmberHandlebars.compile("{{#with view as myView}}{{myView.name}}{{/with}}"),
+    template: compile("{{#with view as myView}}{{myView.name}}{{/with}}"),
     name: "Sonics"
   });
 
@@ -175,7 +175,7 @@ test("it should support #with view as foo", function() {
 
 test("it should support #with name as food, then #with foo as bar", function() {
   var view = EmberView.create({
-    template: EmberHandlebars.compile("{{#with name as foo}}{{#with foo as bar}}{{bar}}{{/with}}{{/with}}"),
+    template: compile("{{#with name as foo}}{{#with foo as bar}}{{bar}}{{/with}}{{/with}}"),
     context: { name: "caterpillar" }
   });
 
@@ -197,7 +197,7 @@ module("Handlebars {{#with this as foo}}");
 
 test("it should support #with this as qux", function() {
   var view = EmberView.create({
-    template: EmberHandlebars.compile("{{#with this as person}}{{person.name}}{{/with}}"),
+    template: compile("{{#with this as person}}{{person.name}}{{/with}}"),
     controller: EmberObject.create({ name: "Los Pivots" })
   });
 
@@ -219,7 +219,7 @@ module("Handlebars {{#with foo}} insideGroup");
 
 test("it should render without fail", function() {
   var View = EmberView.extend({
-    template: EmberHandlebars.compile("{{#view view.childView}}{{#with person}}{{name}}{{/with}}{{/view}}"),
+    template: compile("{{#view view.childView}}{{#with person}}{{name}}{{/with}}{{/view}}"),
     controller: EmberObject.create({ person: { name: "Ivan IV Vasilyevich" } }),
     childView: EmberView.extend({
       render: function(){
@@ -263,7 +263,7 @@ test("it should wrap context with object controller", function() {
 
   view = EmberView.create({
     container: container,
-    template: EmberHandlebars.compile('{{#with view.person controller="person"}}{{controllerName}}{{/with}}'),
+    template: compile('{{#with view.person controller="person"}}{{controllerName}}{{/with}}'),
     person: person,
     controller: parentController
   });
@@ -316,7 +316,7 @@ test("it should still have access to original parentController within an {{#each
 
   view = EmberView.create({
     container: container,
-    template: EmberHandlebars.compile('{{#each person in people}}{{#with person controller="person"}}{{controllerName}}{{/with}}{{/each}}'),
+    template: compile('{{#each person in people}}{{#with person controller="person"}}{{controllerName}}{{/with}}{{/each}}'),
     context: { people: people },
     controller: parentController
   });

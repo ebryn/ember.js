@@ -13,7 +13,14 @@ var set = function(obj, key, value) {
 var checkboxView, dispatcher, controller;
 
 import EmberHandlebars from "ember-htmlbars-compiler";
-var compile = EmberHandlebars.compile;
+import { compile, appendTo } from "ember-htmlbars/tests/test_helpers";
+
+
+function append() {
+  run(function() {
+    appendTo(checkboxView, '#qunit-fixture');
+  });
+}
 
 function destroy(view) {
   run(function() {
@@ -139,12 +146,6 @@ module("Ember.Checkbox", {
     });
   }
 });
-
-function append() {
-  run(function() {
-    checkboxView.appendTo('#qunit-fixture');
-  });
-}
 
 test("should begin disabled if the disabled attribute is true", function() {
   checkboxView = Ember.Checkbox.create({});

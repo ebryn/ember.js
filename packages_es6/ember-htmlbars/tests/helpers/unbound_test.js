@@ -6,7 +6,7 @@ import Ember from "ember-metal/core";
 import {get} from "ember-metal/property_get";
 import {set} from "ember-metal/property_set";
 import run from "ember-metal/run_loop";
-import EmberHandlebars from "ember-htmlbars-compiler";
+import {compile} from "ember-metal-htmlbars/tests/test_helpers";
 import EmberError from "ember-metal/error";
 
 var appendView = function(view) {
@@ -21,7 +21,7 @@ module("Handlebars {{#unbound}} helper -- classic single-property usage", {
     Ember.lookup = lookup = { Ember: Ember };
 
     view = EmberView.create({
-      template: Ember.Handlebars.compile("{{unbound foo}} {{unbound bar}}"),
+      template: compile("{{unbound foo}} {{unbound bar}}"),
       context: EmberObject.create({
         foo: "BORK",
         barBinding: 'foo'
@@ -53,7 +53,7 @@ test("it should not re-render if the property changes", function() {
 test("it should throw the helper missing error if multiple properties are provided", function() {
   throws(function() {
       appendView(EmberView.create({
-        template: EmberHandlebars.compile('{{unbound foo bar}}'),
+        template: compile('{{unbound foo bar}}'),
         context: EmberObject.create({
           foo: "BORK",
           bar: 'foo'
@@ -114,7 +114,7 @@ test("should be able to render an unbound helper invocation", function() {
     });
 
     view = EmberView.create({
-      template: Ember.Handlebars.compile('{{unbound repeat foo countBinding="bar"}} {{repeat foo countBinding="bar"}} {{unbound repeat foo count=2}} {{repeat foo count=4}}'),
+      template: compile('{{unbound repeat foo countBinding="bar"}} {{repeat foo countBinding="bar"}} {{unbound repeat foo count=2}} {{repeat foo count=4}}'),
       context: EmberObject.create({
         foo: "X",
         numRepeatsBinding: "bar",
@@ -137,7 +137,7 @@ test("should be able to render an unbound helper invocation", function() {
 
 test("should be able to render an bound helper invocation mixed with static values", function() {
   view = EmberView.create({
-      template: Ember.Handlebars.compile('{{unbound surround prefix value "bar"}} {{surround prefix value "bar"}} {{unbound surround "bar" value suffix}} {{surround "bar" value suffix}}'),
+      template: compile('{{unbound surround prefix value "bar"}} {{surround prefix value "bar"}} {{unbound surround "bar" value suffix}} {{surround "bar" value suffix}}'),
       context: EmberObject.create({
         prefix: "before",
         value: "core",
@@ -157,7 +157,7 @@ test("should be able to render an bound helper invocation mixed with static valu
 
 test("should be able to render unbound forms of multi-arg helpers", function() {
   view = EmberView.create({
-    template: Ember.Handlebars.compile("{{concat foo bar bing}} {{unbound concat foo bar bing}}"),
+    template: compile("{{concat foo bar bing}} {{unbound concat foo bar bing}}"),
     context: EmberObject.create({
       foo: "a",
       bar: "b",
@@ -178,7 +178,7 @@ test("should be able to render unbound forms of multi-arg helpers", function() {
 
 test("should be able to render an unbound helper invocation for helpers with dependent keys", function() {
   view = EmberView.create({
-    template: Ember.Handlebars.compile("{{capitalizeName person}} {{unbound capitalizeName person}} {{concatNames person}} {{unbound concatNames person}}"),
+    template: compile("{{capitalizeName person}} {{unbound capitalizeName person}} {{concatNames person}} {{unbound concatNames person}}"),
     context: EmberObject.create({
       person: EmberObject.create({
         firstName: 'shooby',
@@ -200,7 +200,7 @@ test("should be able to render an unbound helper invocation for helpers with dep
 
 test("should be able to render an unbound helper invocation in #each helper", function() {
   view = EmberView.create({
-    template: Ember.Handlebars.compile(
+    template: compile(
       [ "{{#each person in people}}",
         "{{capitalize person.firstName}} {{unbound capitalize person.firstName}}",
         "{{/each}}"].join("")),
@@ -230,7 +230,7 @@ test("should be able to render an unbound helper invocation with bound hash opti
 
 
     view = EmberView.create({
-      template: Ember.Handlebars.compile("{{capitalizeName person}} {{unbound capitalizeName person}} {{concatNames person}} {{unbound concatNames person}}"),
+      template: compile("{{capitalizeName person}} {{unbound capitalizeName person}} {{concatNames person}} {{unbound concatNames person}}"),
       context: EmberObject.create({
         person: EmberObject.create({
           firstName: 'shooby',

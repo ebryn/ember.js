@@ -10,6 +10,7 @@ import {set as o_set} from "ember-metal/property_set";
 import EmberHandlebars from "ember-htmlbars";
 import EmberObject from "ember-runtime/system/object";
 import {View} from "ember-views/views/view";
+import {compile} from "ember-htmlbars/tests/test_helpers";
 
 import TextField from "ember-htmlbars/controls/text_field";
 var set = function(object, key, value) {
@@ -53,8 +54,6 @@ module("{{input type='text'}}", {
     destroy(textField);
   }
 });
-
-var compile = EmberHandlebars.compile;
 
 test("should insert a text field into DOM", function() {
   equal(textField.$('input').length, 1, "A single text field was inserted");

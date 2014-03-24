@@ -1,8 +1,10 @@
 import run from "ember-metal/run_loop";
 import {View as EmberView} from "ember-views/views/view";
+import {compile} from "ember-htmlbars/tests/test_helpers";
+
 var buildView = function(template, context) {
   return EmberView.create({
-    template: Ember.Handlebars.compile(template),
+    template: compile(template),
     context: (context || {})
   });
 };

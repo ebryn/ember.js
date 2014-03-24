@@ -7,13 +7,12 @@ import TextArea from "ember-htmlbars/controls/text_area";
 import EmberHandlebars from "ember-htmlbars";
 import {get} from "ember-metal/property_get";
 import {set as o_set} from "ember-metal/property_set";
+import { compile } from "ember-htmlbars/tests/test_helpers";
 
 var textArea, controller, TestObject;
 var set = function(object, key, value) {
   run(function() { o_set(object, key, value); });
 };
-
-var compile = EmberHandlebars.compile;
 
 function append() {
   run(function() {

@@ -2,12 +2,11 @@ import EmberObject from "ember-runtime/system/object";
 import run from "ember-metal/run_loop";
 import {View as EmberView} from "ember-views/views/view";
 import ObjectProxy from "ember-runtime/system/object_proxy";
+import {compile} from "ember-htmlbars/tests/test_helpers";
 
 var appendView = function(view) {
   run(function() { view.appendTo('#qunit-fixture'); });
 };
-
-var compile = Ember.Handlebars.compile;
 
 var view;
 

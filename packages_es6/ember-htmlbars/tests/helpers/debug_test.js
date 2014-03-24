@@ -4,6 +4,7 @@ import run from "ember-metal/run_loop";
 import {View as EmberView} from "ember-views/views/view";
 import EmberHandlebars from "ember-htmlbars-compiler";
 import {logHelper} from "ember-htmlbars/helpers/debug";
+import {compile} from "ember-metal-htmlbars/tests/test_helpers";
 
 var originalLookup = Ember.lookup, lookup;
 var originalLog, logCalls;
@@ -49,7 +50,7 @@ test("should be able to log multiple properties", function() {
 
   view = EmberView.create({
     context: context,
-    template: EmberHandlebars.compile('{{log value valueTwo}}')
+    template: compile('{{log value valueTwo}}')
   });
 
   appendView();
@@ -68,7 +69,7 @@ if (Ember.FEATURES.isEnabled("ember-htmlbars-log-primitives")) {
 
     view = EmberView.create({
       context: context,
-      template: EmberHandlebars.compile('{{log value "foo" 0 valueTwo true}}')
+      template: compile('{{log value "foo" 0 valueTwo true}}')
     });
 
     appendView();

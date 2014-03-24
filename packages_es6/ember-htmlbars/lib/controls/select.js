@@ -17,12 +17,13 @@ import {computed} from "ember-metal/computed";
 import {A} from "ember-runtime/system/native_array";
 import {observer} from "ember-metal/mixin";
 import {defineProperty} from "ember-metal/properties";
+import {compile} from "ember-metal-htmlbars";
 
 var indexOf = EnumerableUtils.indexOf,
     indexesOf = EnumerableUtils.indexesOf,
     forEach = EnumerableUtils.forEach,
     replace = EnumerableUtils.replace,
-    precompileTemplate = EmberHandlebars.compile;
+    precompileTemplate = compile;
 
 var SelectOption = View.extend({
   tagName: 'option',

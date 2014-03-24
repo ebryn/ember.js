@@ -12,6 +12,7 @@ import CollectionView from "ember-views/views/collection_view";
 import {A} from "ember-runtime/system/native_array";
 import Container from "ember-runtime/system/container";
 import EmberHandlebars from "ember-htmlbars-compiler";
+import {compile} from "ember-htmlbars/tests/test_helpers";
 
 var trim = jQuery.trim;
 
@@ -51,7 +52,7 @@ test("passing a block to the collection helper sets it as the template for examp
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection TemplateTests.CollectionTestView}} <label></label> {{/collection}}')
+    template: compile('{{#collection TemplateTests.CollectionTestView}} <label></label> {{/collection}}')
   });
 
   run(function() {
@@ -74,7 +75,7 @@ test("collection helper should try to use container to resolve view", function()
   var controller = {container: container};
   view = EmberView.create({
     controller: controller,
-    template: EmberHandlebars.compile('{{#collection "collectionTest"}} <label></label> {{/collection}}')
+    template: compile('{{#collection "collectionTest"}} <label></label> {{/collection}}')
   });
 
   run(function() {
@@ -86,7 +87,7 @@ test("collection helper should try to use container to resolve view", function()
 
 test("collection helper should accept relative paths", function() {
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection view.collection}} <label></label> {{/collection}}'),
+    template: compile('{{#collection view.collection}} <label></label> {{/collection}}'),
     collection: CollectionView.extend({
       tagName: 'ul',
       content: A(['foo', 'bar', 'baz'])
@@ -108,7 +109,7 @@ test("empty views should be removed when content is added to the collection (reg
   });
 
   App.EmptyView = EmberView.extend({
-    template : EmberHandlebars.compile("<td>No Rows Yet</td>")
+    template : compile("<td>No Rows Yet</td>")
   });
 
   App.ListView = CollectionView.extend({
@@ -120,7 +121,7 @@ test("empty views should be removed when content is added to the collection (reg
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection App.ListView contentBinding="App.listController" tagName="table"}} <td>{{view.content.title}}</td> {{/collection}}')
+    template: compile('{{#collection App.ListView contentBinding="App.listController" tagName="table"}} <td>{{view.content.title}}</td> {{/collection}}')
   });
 
   run(function() {
@@ -147,11 +148,11 @@ test("should be able to specify which class should be used for the empty view", 
   });
 
   App.EmptyView = EmberView.extend({
-    template: EmberHandlebars.compile('This is an empty view')
+    template: compile('This is an empty view')
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{collection emptyViewClass="App.EmptyView"}}')
+    template: compile('{{collection emptyViewClass="App.EmptyView"}}')
   });
 
   run(function() {
@@ -172,7 +173,7 @@ test("if no content is passed, and no 'else' is specified, nothing is rendered",
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection "TemplateTests.CollectionTestView"}} <aside></aside> {{/collection}}')
+    template: compile('{{#collection "TemplateTests.CollectionTestView"}} <aside></aside> {{/collection}}')
   });
 
   run(function() {
@@ -189,7 +190,7 @@ test("if no content is passed, and 'else' is specified, the else block is render
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection "TemplateTests.CollectionTestView"}} <aside></aside> {{ else }} <del></del> {{/collection}}')
+    template: compile('{{#collection "TemplateTests.CollectionTestView"}} <aside></aside> {{ else }} <del></del> {{/collection}}')
   });
 
   run(function() {
@@ -206,7 +207,7 @@ test("a block passed to a collection helper defaults to the content property of 
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection "TemplateTests.CollectionTestView"}} <label>{{view.content}}</label> {{/collection}}')
+    template: compile('{{#collection "TemplateTests.CollectionTestView"}} <label>{{view.content}}</label> {{/collection}}')
   });
 
   run(function() {
@@ -228,7 +229,7 @@ test("a block passed to a collection helper defaults to the view", function() {
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection "TemplateTests.CollectionTestView"}} <label>{{view.content}}</label> {{/collection}}')
+    template: compile('{{#collection "TemplateTests.CollectionTestView"}} <label>{{view.content}}</label> {{/collection}}')
   });
 
   run(function() {
@@ -256,7 +257,7 @@ test("should include an id attribute if id is set in the options hash", function
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection "TemplateTests.CollectionTestView" id="baz"}}foo{{/collection}}')
+    template: compile('{{#collection "TemplateTests.CollectionTestView" id="baz"}}foo{{/collection}}')
   });
 
   run(function() {
@@ -272,7 +273,7 @@ test("should give its item views the class specified by itemClass", function() {
     content: A(['foo', 'bar', 'baz'])
   });
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection "TemplateTests.itemClassTestCollectionView" itemClass="baz"}}foo{{/collection}}')
+    template: compile('{{#collection "TemplateTests.itemClassTestCollectionView" itemClass="baz"}}foo{{/collection}}')
   });
 
   run(function() {
@@ -290,7 +291,7 @@ test("should give its item views the classBinding specified by itemClassBinding"
 
   view = EmberView.create({
     isBar: true,
-    template: EmberHandlebars.compile('{{#collection "TemplateTests.itemClassBindingTestCollectionView" itemClassBinding="view.isBar"}}foo{{/collection}}')
+    template: compile('{{#collection "TemplateTests.itemClassBindingTestCollectionView" itemClassBinding="view.isBar"}}foo{{/collection}}')
   });
 
   run(function() {
@@ -313,7 +314,7 @@ test("should give its item views the property specified by itemPropertyBinding",
   view = EmberView.create({
     baz: "baz",
     content: A([EmberObject.create(), EmberObject.create(), EmberObject.create()]),
-    template: EmberHandlebars.compile('{{#collection contentBinding="view.content" tagName="ul" itemViewClass="TemplateTests.itemPropertyBindingTestItemView" itemPropertyBinding="view.baz" preserveContext=false}}{{view.property}}{{/collection}}')
+    template: compile('{{#collection contentBinding="view.content" tagName="ul" itemViewClass="TemplateTests.itemPropertyBindingTestItemView" itemPropertyBinding="view.baz" preserveContext=false}}{{view.property}}{{/collection}}')
   });
 
   run(function() {
@@ -341,7 +342,7 @@ test("should work inside a bound {{#if}}", function() {
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#if view.shouldDisplay}}{{#collection "TemplateTests.ifTestCollectionView"}}{{content.isBaz}}{{/collection}}{{/if}}'),
+    template: compile('{{#if view.shouldDisplay}}{{#collection "TemplateTests.ifTestCollectionView"}}{{content.isBaz}}{{/collection}}{{/if}}'),
     shouldDisplay: true
   });
 
@@ -360,7 +361,7 @@ test("should work inside a bound {{#if}}", function() {
 
 test("should pass content as context when using {{#each}} helper", function() {
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#each view.releases}}Mac OS X {{version}}: {{name}} {{/each}}'),
+    template: compile('{{#each view.releases}}Mac OS X {{version}}: {{name}} {{/each}}'),
 
     releases: A([
                 { version: '10.7',
@@ -384,7 +385,7 @@ test("should re-render when the content object changes", function() {
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection TemplateTests.RerenderTest}}{{view.content}}{{/collection}}')
+    template: compile('{{#collection TemplateTests.RerenderTest}}{{view.content}}{{/collection}}')
   });
 
   run(function() {
@@ -410,7 +411,7 @@ test("select tagName on collection helper automatically sets child tagName to op
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection TemplateTests.RerenderTest tagName="select"}}{{view.content}}{{/collection}}')
+    template: compile('{{#collection TemplateTests.RerenderTest tagName="select"}}{{view.content}}{{/collection}}')
   });
 
   run(function() {
@@ -427,7 +428,7 @@ test("tagName works in the #collection helper", function() {
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection TemplateTests.RerenderTest tagName="ol"}}{{view.content}}{{/collection}}')
+    template: compile('{{#collection TemplateTests.RerenderTest tagName="ol"}}{{view.content}}{{/collection}}')
   });
 
   run(function() {
@@ -458,7 +459,7 @@ test("should render nested collections", function() {
   });
 
   view = EmberView.create({
-    template: EmberHandlebars.compile('{{#collection TemplateTests.OuterList class="outer"}}{{content}}{{#collection TemplateTests.InnerList class="inner"}}{{content}}{{/collection}}{{/collection}}')
+    template: compile('{{#collection TemplateTests.OuterList class="outer"}}{{content}}{{#collection TemplateTests.InnerList class="inner"}}{{content}}{{/collection}}{{/collection}}')
   });
 
   run(function() {
@@ -485,7 +486,7 @@ test("should render multiple, bound nested collections (#68)", function() {
     });
 
     TemplateTests.OuterListItem = EmberView.extend({
-      template: EmberHandlebars.compile('{{#collection TemplateTests.InnerList class="inner"}}{{content}}{{/collection}}{{content}}'),
+      template: compile('{{#collection TemplateTests.InnerList class="inner"}}{{content}}{{/collection}}{{content}}'),
       innerListContent: computed(function() {
         return A([1,2,3]);
       })
@@ -498,7 +499,7 @@ test("should render multiple, bound nested collections (#68)", function() {
     });
 
     view = EmberView.create({
-      template: EmberHandlebars.compile('{{collection TemplateTests.OuterList class="outer"}}')
+      template: compile('{{collection TemplateTests.OuterList class="outer"}}')
     });
   });
 
@@ -526,13 +527,13 @@ test("should allow view objects to be swapped out without throwing an error (#78
       datasetBinding: 'TemplateTests.datasetController.dataset',
       readyBinding: 'dataset.ready',
       itemsBinding: 'dataset.items',
-      template: EmberHandlebars.compile("{{#if view.ready}}{{collection TemplateTests.CollectionView}}{{else}}Loading{{/if}}")
+      template: compile("{{#if view.ready}}{{collection TemplateTests.CollectionView}}{{else}}Loading{{/if}}")
     });
 
     TemplateTests.CollectionView = CollectionView.extend({
       contentBinding: 'parentView.items',
       tagName: 'ul',
-      template: EmberHandlebars.compile("{{view.content}}")
+      template: compile("{{view.content}}")
     });
 
     view = TemplateTests.ReportingView.create();
@@ -580,11 +581,11 @@ test("context should be content", function() {
   ]);
 
   App.AnItemView = EmberView.extend({
-    template: EmberHandlebars.compile("Greetings {{name}}")
+    template: compile("Greetings {{name}}")
   });
 
   App.AView = EmberView.extend({
-    template: EmberHandlebars.compile('{{collection contentBinding="App.items" itemViewClass="App.AnItemView"}}')
+    template: compile('{{collection contentBinding="App.items" itemViewClass="App.AnItemView"}}')
   });
 
   run(function() {

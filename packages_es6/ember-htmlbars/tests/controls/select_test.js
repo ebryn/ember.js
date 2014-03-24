@@ -8,6 +8,7 @@ import {computed} from "ember-metal/computed";
 import Namespace from "ember-runtime/system/namespace";
 import ArrayController from "ember-runtime/controllers/array_controller";
 import ArrayProxy from "ember-runtime/system/array_proxy";
+import { compile } from "ember-htmlbars/tests/test_helpers";
 
 var map = EnumerableUtils.map,
     trim = jQuery.trim;
@@ -702,7 +703,7 @@ test("works from a template with bindings", function() {
 
   view = EmberView.create({
     app: application,
-    template: Ember.Handlebars.compile(
+    template: compile(
       '{{view Ember.Select viewName="select"' +
       '                    contentBinding="view.app.peopleController"' +
       '                    optionLabelPath="content.fullName"' +
@@ -741,7 +742,7 @@ test("upon content change, the DOM should reflect the selection (#481)", functio
 
   view = EmberView.create({
     user: userOne,
-    template: Ember.Handlebars.compile(
+    template: compile(
       '{{view Ember.Select viewName="select"' +
       '    contentBinding="view.user.options"' +
       '    selectionBinding="view.user.selectedOption"}}'
@@ -777,7 +778,7 @@ test("upon content change with Array-like content, the DOM should reflect the se
 
   view = EmberView.create({
     proxy: proxy,
-    template: Ember.Handlebars.compile(
+    template: compile(
       '{{view Ember.Select viewName="select"' +
       '    contentBinding="view.proxy"' +
       '    selectionBinding="view.proxy.selectedOption"}}'
@@ -805,7 +806,7 @@ function testValueBinding(templateString) {
   view = EmberView.create({
     collection: Ember.A([{name: 'Wes', value: 'w'}, {name: 'Gordon', value: 'g'}]),
     val: 'g',
-    template: Ember.Handlebars.compile(templateString)
+    template: compile(templateString)
   });
 
   run(function() {

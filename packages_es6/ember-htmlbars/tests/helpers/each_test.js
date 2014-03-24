@@ -11,14 +11,14 @@ import {A} from "ember-runtime/system/native_array";
 import {Controller as EmberController} from "ember-runtime/controllers/controller";
 import ObjectController from "ember-runtime/controllers/object_controller";
 import Container from "ember-runtime/system/container";
-
+import {compile} from "ember-metal-htmlbars/tests/test_helpers";
 import {get} from "ember-metal/property_get";
 import {set} from "ember-metal/property_set";
 
 var people, view;
 var template, templateMyView;
 var templateFor = function(template) {
-  return EmberHandlebars.compile(template);
+  return compile(template);
 };
 
 var originalLookup = Ember.lookup, lookup;
@@ -38,7 +38,7 @@ module("the #each helper", {
 
     templateMyView = templateFor("{{name}}");
     lookup.MyView = EmberView.extend({
-        template: templateMyView
+      template: templateMyView
     });
 
     append(view);

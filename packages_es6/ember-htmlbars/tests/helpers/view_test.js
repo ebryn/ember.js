@@ -2,6 +2,7 @@
 import {View as EmberView} from "ember-views/views/view";
 import run from "ember-metal/run_loop";
 import jQuery from "ember-views/system/jquery";
+import {compile} from "ember-htmlbars/tests/test_helpers";
 
 var view, originalLookup;
 
@@ -35,13 +36,13 @@ test("View lookup - App.FuView", function() {
     App: {
       FuView: viewClass({
         elementId: "fu",
-        template: Ember.Handlebars.compile("bro")
+        template: compile("bro")
       })
     }
   };
 
   view = viewClass({
-    template: Ember.Handlebars.compile("{{view App.FuView}}")
+    template: compile("{{view App.FuView}}")
   }).create();
 
   run(view, 'appendTo', '#qunit-fixture');
@@ -54,13 +55,13 @@ test("View lookup - 'App.FuView'", function() {
     App: {
       FuView: viewClass({
         elementId: "fu",
-        template: Ember.Handlebars.compile("bro")
+        template: compile("bro")
       })
     }
   };
 
   view = viewClass({
-    template: Ember.Handlebars.compile("{{view 'App.FuView'}}")
+    template: compile("{{view 'App.FuView'}}")
   }).create();
 
   run(view, 'appendTo', '#qunit-fixture');
@@ -71,7 +72,7 @@ test("View lookup - 'App.FuView'", function() {
 test("View lookup - 'fu'", function() {
   var FuView = viewClass({
     elementId: "fu",
-    template: Ember.Handlebars.compile("bro")
+    template: compile("bro")
   });
 
   var container = {
@@ -79,7 +80,7 @@ test("View lookup - 'fu'", function() {
   };
 
   view = EmberView.extend({
-    template: Ember.Handlebars.compile("{{view 'fu'}}"),
+    template: compile("{{view 'fu'}}"),
     container: container
   }).create();
 
@@ -96,7 +97,7 @@ test("View lookup - 'fu'", function() {
 
 test("id bindings downgrade to one-time property lookup", function() {
   view = EmberView.extend({
-    template: Ember.Handlebars.compile("{{#view Ember.View id=view.meshuggah}}{{view.parentView.meshuggah}}{{/view}}"),
+    template: compile("{{#view Ember.View id=view.meshuggah}}{{view.parentView.meshuggah}}{{/view}}"),
     meshuggah: 'stengah'
   }).create();
 
@@ -122,7 +123,7 @@ test("mixing old and new styles of property binding fires a warning, treats valu
   };
 
   view = EmberView.extend({
-    template: Ember.Handlebars.compile("{{#view Ember.View borfBinding=view.snork}}<p id='lol'>{{view.borf}}</p>{{/view}}"),
+    template: compile("{{#view Ember.View borfBinding=view.snork}}<p id='lol'>{{view.borf}}</p>{{/view}}"),
     snork: "nerd"
   }).create();
 

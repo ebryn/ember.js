@@ -6,6 +6,7 @@ import {View as EmberView} from "ember-views/views/view";
 import EmberHandlebars from "ember-htmlbars-compiler";
 import ArrayProxy from "ember-runtime/system/array_proxy";
 import {A} from "ember-runtime/system/native_array";
+import {compile} from "ember-metal-htmlbars/tests/test_helpers";
 
 var trim = jQuery.trim;
 
@@ -28,9 +29,10 @@ module("EmberHandlebars - group flag", {
 function createGroupedView(template, context) {
   var options = {
     context: context,
-    template: EmberHandlebars.compile(template),
-    templateData: {insideGroup: true, keywords: {}}
+    template: compile(template)
   };
+  options.data.insideGroup = true;
+  
   run(function() {
     view = EmberView.create(options);
   });
