@@ -430,6 +430,7 @@ test("View should update when a property changes and no bind helper is used", fu
 });
 
 test("View should update when the property used with the #with helper changes", function() {
+  debugger;
   container.register('template:foo', compile('<h1 id="first">{{#with view.content}}{{wham}}{{/with}}</h1>'));
 
   view = EmberView.create({

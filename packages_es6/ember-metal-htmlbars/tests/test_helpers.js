@@ -66,7 +66,8 @@ export function triggerEvent(el, name, data) {
 }
 
 export function appendTo(view, sel) {
-  return run(View, View.appendTo, view, sel);
+  run(View, View.appendTo, view, sel);
+  return view.element;
 }
 
 import { defaultOptions } from "ember-metal-htmlbars";

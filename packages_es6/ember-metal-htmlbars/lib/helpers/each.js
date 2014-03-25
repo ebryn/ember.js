@@ -3,7 +3,6 @@ import EnumerableUtils from "ember-metal/enumerable_utils";
 import run from "ember-metal/run_loop";
 import { sendEvent, addListener, removeListener } from "ember-metal/events";
 import { appendChild, createChildView, render, remove } from "ember-metal-views";
-import { PlaceholderList } from "htmlbars/runtime/placeholder_list";
 
 export function each(params, options) {
   var view = options.data.view,
@@ -11,7 +10,7 @@ export function each(params, options) {
       eachView = Object.create(eachViewPrototype);
 
   eachView.itemTemplate = options.render;
-  eachView.element = eachView._placeholder = new PlaceholderList(options.placeholder);
+  eachView._placeholder = options.placeholder;
   eachView.templateOptions = view.templateOptions;
   eachView._parentView = view;
   eachView.context = A(params[0].value());
@@ -58,7 +57,7 @@ var eachViewPrototype = {
 
     var spliceArgs = childViews ? [start, removed] : [], // TODO: new Array(len) this
         frags = new Array(added),
-        placeholderList = this._placeholder;
+        placeholder = this._placeholder;
 
     for (idx = start; idx < start+added; idx++) {
       var item = content[idx];
@@ -73,7 +72,7 @@ var eachViewPrototype = {
       this.childViews = spliceArgs;
     }
 
-    placeholderList.replace(start, removed, frags);
+    placeholder.replace(start, removed, frags);
   }
 };
 
@@ -136,7 +135,7 @@ var SimpleObservableArrayMixin = Mixin.create({
 });
 
 function A(arr) {
-  if (typeof arr === 'undefined') { arr = []; }
+  if (arr == null) { arr = []; }
   return SimpleObservableArrayMixin.detect(arr) ? arr : SimpleObservableArrayMixin.apply(arr);
 }
 

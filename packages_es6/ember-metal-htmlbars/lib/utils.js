@@ -1,6 +1,7 @@
 import { merge } from "htmlbars/utils";
 import LazyValue from "bound-templates/lazy-value";
 import { get } from "ember-metal/property_get";
+import { set } from "ember-metal/property_set";
 import { addObserver, removeObserver } from "ember-metal/observer";
 
 export function EmberObserverLazyValue(obj, path) {
@@ -18,6 +19,11 @@ EmberObserverLazyValue.prototype = Object.create(LazyValue.prototype); // TODO: 
 merge(EmberObserverLazyValue.prototype, {
   valueFn: function() {
     return get(this.obj, this.path);
+  },
+
+  setValue: function(value, sender) {
+    set(this.obj, this.path, value);
+    return value;
   },
 
   updateObject: function(newObj) {

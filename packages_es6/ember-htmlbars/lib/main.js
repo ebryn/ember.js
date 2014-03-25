@@ -13,7 +13,7 @@ import {normalizePath, template, makeBoundHelper, registerBoundHelper,
 import "ember-htmlbars/string"; // side effect of extending StringUtils
 
 import resolvePaths from "ember-htmlbars/helpers/shared";
-import {bind, _triageMustacheHelper, resolveHelper, bindHelper, boundIfHelper, unboundIfHelper, withHelper, ifHelper, unlessHelper, bindAttrHelper, bindAttrHelperDeprecated, bindClasses} from "ember-htmlbars/helpers/binding";
+import {bind, _triageMustacheHelper, resolveHelper, bindHelper, boundIfHelper, unboundIfHelper, withHelper, ifHelper, unlessHelper, bindClasses} from "ember-htmlbars/helpers/binding";
 
 import collectionHelper from "ember-htmlbars/helpers/collection";
 import {ViewHelper, viewHelper} from "ember-htmlbars/helpers/view";
@@ -21,8 +21,8 @@ import unboundHelper from "ember-htmlbars/helpers/unbound";
 import {logHelper, debuggerHelper} from "ember-htmlbars/helpers/debug";
 import {EachView, GroupedEach, eachHelper} from "ember-htmlbars/helpers/each";
 
-import templateHelper from "ember-htmlbars/helpers/template";
-import partialHelper from "ember-htmlbars/helpers/partial";
+// import templateHelper from "ember-htmlbars/helpers/template";
+// import partialHelper from "ember-htmlbars/helpers/partial";
 import yieldHelper from "ember-htmlbars/helpers/yield";
 import locHelper from "ember-htmlbars/helpers/loc";
 
@@ -86,31 +86,99 @@ Ember.TextField = TextField;
 Ember.TextSupport = TextSupport;
 
 // register helpers
-EmberHandlebars.registerHelper('helperMissing', helperMissingHelper);
-EmberHandlebars.registerHelper('blockHelperMissing', blockHelperMissingHelper);
-EmberHandlebars.registerHelper('bind', bindHelper);
-EmberHandlebars.registerHelper('boundIf', boundIfHelper);
-EmberHandlebars.registerHelper('_triageMustache', _triageMustacheHelper);
-EmberHandlebars.registerHelper('unboundIf', unboundIfHelper);
-EmberHandlebars.registerHelper('with', withHelper);
-EmberHandlebars.registerHelper('if', ifHelper);
-EmberHandlebars.registerHelper('unless', unlessHelper);
-EmberHandlebars.registerHelper('bind-attr', bindAttrHelper);
-EmberHandlebars.registerHelper('bindAttr', bindAttrHelperDeprecated);
-EmberHandlebars.registerHelper('collection', collectionHelper);
-EmberHandlebars.registerHelper("log", logHelper);
-EmberHandlebars.registerHelper("debugger", debuggerHelper);
-EmberHandlebars.registerHelper("each", eachHelper);
-EmberHandlebars.registerHelper("loc", locHelper);
-EmberHandlebars.registerHelper("partial", partialHelper);
-EmberHandlebars.registerHelper("template", templateHelper);
-EmberHandlebars.registerHelper("yield", yieldHelper);
-EmberHandlebars.registerHelper("view", viewHelper);
-EmberHandlebars.registerHelper("unbound", unboundHelper);
-EmberHandlebars.registerHelper("input", inputHelper);
-EmberHandlebars.registerHelper("textarea", textareaHelper);
+// EmberHandlebars.registerHelper('helperMissing', helperMissingHelper);
+// EmberHandlebars.registerHelper('blockHelperMissing', blockHelperMissingHelper);
+// EmberHandlebars.registerHelper('bind', bindHelper);
+// EmberHandlebars.registerHelper('boundIf', boundIfHelper);
+// EmberHandlebars.registerHelper('_triageMustache', _triageMustacheHelper);
+// EmberHandlebars.registerHelper('unboundIf', unboundIfHelper);
+// EmberHandlebars.registerHelper('with', withHelper);
+// EmberHandlebars.registerHelper('if', ifHelper);
+// EmberHandlebars.registerHelper('unless', unlessHelper);
+// EmberHandlebars.registerHelper('bind-attr', bindAttrHelper);
+// EmberHandlebars.registerHelper('bindAttr', bindAttrHelperDeprecated);
+// EmberHandlebars.registerHelper('collection', collectionHelper);
+// EmberHandlebars.registerHelper("log", logHelper);
+// EmberHandlebars.registerHelper("debugger", debuggerHelper);
+// EmberHandlebars.registerHelper("each", eachHelper);
+// EmberHandlebars.registerHelper("loc", locHelper);
+// EmberHandlebars.registerHelper("partial", partialHelper);
+// EmberHandlebars.registerHelper("template", templateHelper);
+// EmberHandlebars.registerHelper("yield", yieldHelper);
+// EmberHandlebars.registerHelper("view", viewHelper);
+// EmberHandlebars.registerHelper("unbound", unboundHelper);
+// EmberHandlebars.registerHelper("input", inputHelper);
+// EmberHandlebars.registerHelper("textarea", textareaHelper);
+
+import merge from "ember-metal/merge";
+import { compile, defaultOptions } from "ember-metal-htmlbars";
+import CollectionView from "ember-views";
+
+// Copy defaultOptions from metal-htmlbars
+defaultOptions = merge({}, defaultOptions);
+
+function partialHelper(params, options) {
+  var view = options.data.view,
+      container = view.container,
+      templateName = params[0],
+      template = container.lookupFactory("template:_" + templateName);
+  // if (!template) { container.lookupFactory("template:" + templateName); }
+  template(view, options);
+}
+
+function bindAttrHelper(element, path, params, options, helpers) {
+  debugger;
+  var hash = options.hash,
+      key, value, stream;
+
+  for (key in hash) {
+    stream = value = hash[key];
+    if (typeof value === 'string') {
+      stream = helpers.STREAM_FOR(options.data.view, value);
+    }
+
+    stream.onNotify(function(stream) {
+      element.setAttribute(key, stream.value());
+    });
+
+    element.setAttribute(key, stream.value());
+  }
+}
+
+// Merge in additional helpers
+defaultOptions.helpers = merge({
+  input: inputHelper,
+  textarea: textareaHelper,
+  boundIf: defaultOptions.helpers['if'],
+  bind: function(params, options) {
+    var lazyValue = options.helpers.STREAM_FOR(options.data.view, params[0]),
+        placeholder = options.placeholder;
+    
+    placeholder.replace(lazyValue.value());
+    lazyValue.onNotify(function(lazyValue) {
+      placeholder.replace(lazyValue.value());
+    });
+  },
+  collection: function(params, options) {
+    if (!params[0]) { params[0] = CollectionView; }
+    options.helpers.view(params, options);
+  },
+  loc: function(params, options) {
+    console.log("TODO: implement loc");
+  },
+  partial: partialHelper,
+  template: partialHelper,
+  'bind-attr': bindAttrHelper,
+  bindAttr: bindAttrHelper
+}, defaultOptions.helpers)
+
+// HTMLBARSTODO: do this another way - probably meta?
+Ember.CoreView.reopen({
+  templateOptions: defaultOptions
+});
 
 // run load hooks
 runLoadHooks('Ember.Handlebars', EmberHandlebars);
 
 export default EmberHandlebars;
+export { compile, defaultOptions };

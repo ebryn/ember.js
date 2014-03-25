@@ -7,6 +7,7 @@ import {compile} from "ember-htmlbars/tests/test_helpers";
 var view, originalLookup;
 
 var container = {
+  lookup: function() {},
   lookupFactory: function() { }
 };
 
@@ -76,6 +77,7 @@ test("View lookup - 'fu'", function() {
   });
 
   var container = {
+    lookup: function() {},
     lookupFactory: lookupFactory
   };
 

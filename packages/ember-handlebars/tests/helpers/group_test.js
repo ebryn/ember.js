@@ -1,5 +1,5 @@
 /*jshint newcap:false*/
-
+/*
 import run from "ember-metal/run_loop";
 import jQuery from "ember-views/system/jquery";
 import { View as EmberView } from "ember-views/views/view";
@@ -279,3 +279,4 @@ test("should not escape HTML in triple mustaches", function() {
   appendView();
   equal(view.$('b').length, 1, "creates an element");
 });
+*/

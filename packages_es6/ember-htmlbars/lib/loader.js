@@ -4,7 +4,7 @@ import ComponentLookup from "ember-htmlbars/component_lookup";
 import jQuery from "ember-views/system/jquery";
 import EmberError from "ember-metal/error";
 import {onLoad} from "ember-runtime/system/lazy_load";
-
+import {compile} from "ember-metal-htmlbars";
 import EmberHandlebars from "ember-htmlbars-compiler";
 
 /**
@@ -36,14 +36,14 @@ function bootstrap(ctx) {
     // Get a reference to the script tag
     var script = jQuery(this);
 
-    var compile = (script.attr('type') === 'text/x-raw-handlebars') ?
+    var compileFn = (script.attr('type') === 'text/x-raw-handlebars') ?
                   jQuery.proxy(Handlebars.compile, Handlebars) :
-                  jQuery.proxy(EmberHandlebars.compile, EmberHandlebars),
+                  compile,
       // Get the name of the script, used by Ember.View's templateName property.
       // First look for data-template-name attribute, then fall back to its
       // id if no name is found.
       templateName = script.attr('data-template-name') || script.attr('id') || 'application',
-      template = compile(script.html());
+      template = compileFn(script.html());
 
     // Check if template of same name already exists
     if (Ember.TEMPLATES[templateName] !== undefined) {

@@ -36,6 +36,7 @@ import {
   addListener,
   removeListener
 } from "ember-metal/events";
+import { set } from "ember-metal/property_set";
 
 var REQUIRED,
     a_map = map,
@@ -282,6 +283,13 @@ function detectBinding(obj, key, value, m) {
   }
 }
 
+function setupLazyValueBinding(obj, key, lazyValue) {
+  set(obj, key, lazyValue.value());
+  lazyValue.onNotify(function(lazyValue) {
+    set(obj, key, lazyValue.value());
+  });
+}
+
 function connectBindings(obj, m) {
   // TODO Mixin.apply(instance) should disconnect binding if exists
   var bindings = m.bindings, key, binding, to;
@@ -293,6 +301,9 @@ function connectBindings(obj, m) {
         if (binding instanceof Binding) {
           binding = binding.copy(); // copy prototypes' instance
           binding.to(to);
+        } else if (binding.isLazyValue) {
+          setupLazyValueBinding(obj, to, binding);
+          continue;
         } else { // binding is string path
           binding = new Binding(to, binding);
         }

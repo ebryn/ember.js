@@ -2471,7 +2471,7 @@ define("htmlbars/compiler/fragment_opcode",
 
     FragmentOpcodeCompiler.prototype.attribute = function(attribute) {
       var name = attribute[0], value = attribute[1];
-      if (value.length === 1 && typeof value[0] === 'string') {
+      if (value && value.length === 1 && typeof value[0] === 'string') {
         this.opcode('setAttribute', [name, value[0]]);
       }
     };
@@ -2773,7 +2773,7 @@ define("htmlbars/compiler/hydration_opcode",
     HydrationOpcodeCompiler.prototype.attribute = function(attribute) {
       var name = attribute[0], value = attribute[1];
 
-      if (value.length === 0 || (value.length === 1 && typeof value[0] === 'string')) {
+      if (!value || value.length === 0 || (value.length === 1 && typeof value[0] === 'string')) {
         return;
       }
 

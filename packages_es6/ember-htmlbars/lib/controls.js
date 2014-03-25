@@ -158,8 +158,8 @@ var helpers = EmberHandlebars.helpers;
   @for Ember.Handlebars.helpers
   @param {Hash} options
 */
-function inputHelper(options) {
-  Ember.assert('You can only pass attributes to the `input` helper, not arguments', arguments.length < 2);
+function inputHelper(params, options) {
+  Ember.assert('You can only pass attributes to the `input` helper, not arguments', params.length === 0);
 
   var hash = options.hash,
       types = options.hashTypes,
@@ -171,11 +171,11 @@ function inputHelper(options) {
 
   if (inputType === 'checkbox') {
     Ember.assert("{{input type='checkbox'}} does not support setting `value=someBooleanValue`; you must use `checked=someBooleanValue` instead.", options.hashTypes.value !== 'ID');
-    return helpers.view.call(this, Checkbox, options);
+    return options.helpers.view([Checkbox], options);
   } else {
     if (inputType) { hash.type = inputType; }
     hash.onEvent = onEvent || 'enter';
-    return helpers.view.call(this, TextField, options);
+    return options.helpers.view([TextField], options);
   }
 }
 
@@ -335,13 +335,13 @@ function inputHelper(options) {
   @for Ember.Handlebars.helpers
   @param {Hash} options
 */
-function textareaHelper(options) {
-  Ember.assert('You can only pass attributes to the `textarea` helper, not arguments', arguments.length < 2);
+function textareaHelper(params, options) {
+  Ember.assert('You can only pass attributes to the `textarea` helper, not arguments', params.length === 0);
 
   var hash = options.hash,
       types = options.hashTypes;
 
-  return helpers.view.call(this, TextArea, options);
+  return options.helpers.view([TextArea], options);
 }
 
 export {inputHelper, textareaHelper}

@@ -67,7 +67,7 @@ define("bound-templates/lazy-value",
         return this;
       },
 
-      notify: function(sender) {
+      notify: function(sender, key) {
         var cache = this.cache,
             parent,
             subscribers;
@@ -135,8 +135,13 @@ define("bound-templates/runtime",
       if (helper) {
         streamifyArgs(context, params, options, helpers);
         options.placeholder = placeholder; // FIXME: this kinda sucks
+        options.helpers = helpers; // FIXME: this also sucks
         lazyValue = helper(params, options);
       } else {
+        if (params.length > 0 || (typeof options.hash === 'object' && Object.keys(options.hash).length > 0)) {
+          throw new Error("Missing helper: " + path);
+          console.assert(false, "Missing helper: " + path);
+        }
         lazyValue = helpers.STREAM_FOR(context, path);
       }
       if (lazyValue) {
@@ -180,6 +185,7 @@ define("bound-templates/runtime",
 
       if (helper) {
         streamifyArgs(context, params, options, helpers);
+        options.data = {view: context};
         return helper(element, path, params, options, helpers);
       } else {
         return helpers.STREAM_FOR(context, path);

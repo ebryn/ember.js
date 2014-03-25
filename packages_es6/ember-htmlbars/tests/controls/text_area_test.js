@@ -33,7 +33,7 @@ module("{{textarea}}", {
     };
 
     textArea = View.extend({
-      controller: controller,
+      context: controller,
       template: compile('{{textarea disabled=disabled value=val}}')
     }).create();
 
