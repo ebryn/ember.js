@@ -1763,10 +1763,8 @@ var View = CoreView.extend({
     @method createElement
     @return {Ember.View} receiver
   */
-  createElement: function() {
-    MetalView.render(this);
-
-    return this;
+  createElement: function(insert) {
+    return MetalView.render(this, insert);
   },
 
   /**
@@ -2199,7 +2197,7 @@ var View = CoreView.extend({
   */
   destroy: function() {
     return MetalView.destroy(this);
-    
+
     var childViews = this._childViews,
         // get parentView before calling super because it'll be destroyed
         nonVirtualParentView = get(this, 'parentView'),

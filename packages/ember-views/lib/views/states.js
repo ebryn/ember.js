@@ -1,6 +1,7 @@
 import { create } from "ember-metal/platform";
 import merge from "ember-metal/merge";
 import run from "ember-metal/run_loop";
+
 var MetalView = requireModule('ember-metal-views');
 
 export function cloneStates(from) {
