@@ -1,6 +1,6 @@
 import { EmberObserverLazyValue } from "ember-metal-htmlbars/utils";
 import { get } from "ember-metal/property_get";
-import { LazyValue } from "bound-templates";
+import LazyValue from "bound-templates/lazy-value";
 
 var VIEW_KEYWORD_REGEX = /^view\./;
 

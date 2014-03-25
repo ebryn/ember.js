@@ -44,6 +44,8 @@ export function view(params, options) {
       } else {
         viewClassOrName = parentView.container.lookupFactory('view:' + viewClassOrName);
       }
+    } else if (viewClassOrName.isLazyValue) {
+      viewClassOrName = viewClassOrName.value();
     }
     childView = appendChild(parentView, viewClassOrName, hash);
   }

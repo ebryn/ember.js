@@ -37,7 +37,7 @@ module("{{input type='checkbox'}}", {
     };
 
     checkboxView = EmberView.extend({
-      controller: controller,
+      context: controller,
       template: compile('{{input type="checkbox" disabled=disabled tabindex=tab name=name checked=val}}')
     }).create();
 
@@ -80,7 +80,7 @@ test("checkbox checked property is updated", function() {
 module("{{input type='checkbox'}} - prevent value= usage", {
   setup: function() {
     checkboxView = EmberView.extend({
-      controller: controller,
+      context: controller,
       template: compile('{{input type="checkbox" disabled=disabled tabindex=tab name=name value=val}}')
     }).create();
   },
@@ -105,7 +105,7 @@ module("{{input type='checkbox'}} - static values", {
     };
 
     checkboxView = EmberView.extend({
-      controller: controller,
+      context: controller,
       template: compile('{{input type="checkbox" disabled=true tabindex=6 name="hello" checked=false}}')
     }).create();
 

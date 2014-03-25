@@ -43,7 +43,7 @@ module("{{input type='text'}}", {
     };
 
     textField = View.extend({
-      controller: controller,
+      context: controller,
       template: compile('{{input type="text" disabled=disabled value=val placeholder=place name=name maxlength=max size=size tabindex=tab}}')
     }).create();
 
@@ -110,7 +110,7 @@ module("{{input type='text'}} - static values", {
     controller = {};
 
     textField = View.extend({
-      controller: controller,
+      context: controller,
       template: compile('{{input type="text" disabled=true value="hello" placeholder="Enter some text" name="some-name" maxlength=30 size=30 tabindex=5}}')
     }).create();
 
@@ -159,7 +159,7 @@ module("{{input}} - default type", {
     controller = {};
 
     textField = View.extend({
-      controller: controller,
+      context: controller,
       template: compile('{{input}}')
     }).create();
 
