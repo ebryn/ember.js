@@ -83,6 +83,22 @@ function appendToPlaceholder(placeholder, content)
   return placeholder.placeholders[index];
 }
 
+function createChildPlaceholder(parentView, content) {
+  var placeholder = childViewsPlaceholder(parentView);
+  return appendToPlaceholder(placeholder, content);
+}
+
+function childViewsPlaceholder(parentView) {
+  if (parentView.isVirtual) {
+    return parentView._placeholder;
+  }
+  var placeholder = parentView._childViewsPlaceholder;
+  if (!placeholder) {
+    placeholder = parentView._childViewsPlaceholder = new Placeholder(parentView.element, null, null);
+  }
+  return placeholder;
+}
+
 function _render(_view) {
   var views = [_view],
       idx = 0,
@@ -110,28 +126,14 @@ function _render(_view) {
       setupAttributeBindings(view);
     }
 
-    if (!view._placeholder && view._parentView) {
-      var parentView = view._parentView;
-      var placeholder;
-      if (parentView.isVirtual) {
-        placeholder = parentView._placeholder;
-      } else {
-        placeholder = parentView._contentPlaceholder;
-        if (!placeholder) {
-          placeholder = parentView._contentPlaceholder = new Placeholder(parentView.element, null, null);
-        }
-      }
-      view._placeholder = appendToPlaceholder(placeholder, el);
-    }
-
     var content = _renderContents(view, el);
     if (view === _view) {
       ret = content; // hold off inserting the root view
     } else {
-      if (view.isVirtual) {
+      if (view._placeholder) {
         view._placeholder.update(content);
       } else {
-        view._placeholder.update(el);
+        view._placeholder = createChildPlaceholder(view._parentView, content);
       }
     }
 
