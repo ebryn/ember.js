@@ -372,15 +372,25 @@ function remove(_view, shouldDestroy) {
     return;
   }
 
+  var parentView = _view._parentView;
+  if (parentView) {
+    // TODO we need a flag or separate hook
+    if (parentView.removeChild) {
+      _view._parentView = null;
+      parentView.removeChild(_view);
+      // parentView will call remove()
+      return;
+    }
+    // TODO: remove from parentView._childViews;
+    _view._parentView = null;
+  }
+
   var removeQueue = [], destroyQueue = [],
     idx, len, view, staticChildren,
     childViews, i, l;
 
   if (shouldDestroy) {
     destroyQueue.push(_view);
-    if (_view._parentView && _view._parentView.removeChild) {
-      _view._parentView.removeChild(_view);
-    }
   } else {
     removeQueue.push(_view);
   }

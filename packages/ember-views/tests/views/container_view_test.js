@@ -253,12 +253,12 @@ test("views that are removed from a ContainerView should have their child views 
     container.appendTo('#qunit-fixture');
   });
 
-  equal(get(view, 'childViews.length'), 1, "precond - renders one child view");
+  equal(view._childViews.length, 1, "precond - renders one child view");
   run(function() {
     debugger
     container.removeObject(view);
   });
-  equal(get(view, 'childViews.length'), 0, "child views are cleared when removed from container view");
+  equal(view._childViews.length, 0, "child views are cleared when removed from container view");
   equal(container.$().html(),'', "the child view is removed from the DOM");
 });
 
@@ -270,7 +270,7 @@ test("if a ContainerView starts with an empy currentView, nothing is displayed",
   });
 
   equal(container.$().text(), '', "has a empty contents");
-  equal(get(container, 'childViews.length'), 0, "should not have any child views");
+  equal(get(container, 'length'), 0, "should not have any child views");
 });
 
 test("if a ContainerView starts with a currentView, it is rendered as a child view", function() {
@@ -356,7 +356,7 @@ test("if a ContainerView starts with no currentView and then one is set, the Con
   });
 
   equal(container.$().text(), '', "has a empty contents");
-  equal(get(container, 'childViews.length'), 0, "should not have any child views");
+  equal(get(container, 'length'), 0, "should not have any child views");
 
   run(function() {
     set(container, 'currentView', mainView);
@@ -407,7 +407,7 @@ test("if a ContainerView starts with a currentView and then is set to null, the 
   });
 
   equal(container.$().text(), '', "has a empty contents");
-  equal(get(container, 'childViews.length'), 0, "should not have any child views");
+  equal(get(container, 'length'), 0, "should not have any child views");
 });
 
 test("if a ContainerView starts with a currentView and then is set to null, the ContainerView is updated and the previous currentView is destroyed", function() {
@@ -448,7 +448,7 @@ test("if a ContainerView starts with a currentView and then is set to null, the 
   equal(mainView.isDestroyed, true, 'should destroy the previous currentView.');
 
   equal(container.$().text(), '', "has a empty contents");
-  equal(get(container, 'childViews.length'), 0, "should not have any child views");
+  equal(container._childViews.length, 0, "should not have any child views");
 });
 
 test("if a ContainerView starts with a currentView and then a different currentView is set, the old view is destroyed and the new one is added", function() {
@@ -756,7 +756,7 @@ test("if a containerView appends a child in its didInsertElement event, the didI
     root.pushObject(container);
   });
 
-  equal(container.get('childViews').get('length'), 1 , "containerView should only have a child");
+  equal(container._childViews.length, 1 , "containerView should only have a child");
   equal(counter, 1 , "didInsertElement should be fired once");
 
   run(function() {

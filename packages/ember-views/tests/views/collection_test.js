@@ -557,7 +557,7 @@ test("a array_proxy that backs an sorted array_controller that backs a collectio
 
   equal(container.get('content.length'), 3, 'ArrayController should have 3 entries');
   equal(container.get('content.content.length'), 3, 'RecordArray should have 3 entries');
-  equal(container.get('childViews.length'), 3, 'CollectionView should have 3 entries');
+  equal(container.get('length'), 3, 'CollectionView should have 3 entries');
 
   run(function() {
     container.destroy();
