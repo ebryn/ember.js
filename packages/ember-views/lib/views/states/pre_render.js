@@ -6,10 +6,10 @@ import merge from "ember-metal/merge";
 @module ember
 @submodule ember-views
 */
-var preRender = create(_default);
+var prerender = create(_default);
 
-merge(preRender, {
-  // a view leaves the preRender state once its element has been
+merge(prerender, {
+  // a view leaves the prerender state once its element has been
   // created (createElement).
   insertElement: function(view, fn) {
     view.createElement();
@@ -42,4 +42,4 @@ merge(preRender, {
   }
 });
 
-export default preRender;
+export default prerender;

@@ -139,7 +139,7 @@ var CoreView = EmberObject.extend(Evented, ActionHandler, {
 
   init: function() {
     this._super();
-    this.transitionTo('preRender');
+    this.transitionTo('prerender');
     this._isVisible = get(this, 'isVisible');
 
     deprecateProperty(this, 'states', '_states');
@@ -268,23 +268,12 @@ var CoreView = EmberObject.extend(Evented, ActionHandler, {
     return typeOf(this[name]) === 'function' || this._super(name);
   },
 
-  destroy: function() {
-    var parent = this._parentView;
-
+  destroy: function(viewDestroyed) {
     if (!this._super()) { return; }
 
-    // destroy the element -- this will avoid each child view destroying
-    // the element over and over again...
-    if (!this.removedFromDOM) { this.destroyElement(); }
-
-    // remove from parent if found. Don't call removeFromParent,
-    // as removeFromParent will try to remove the element from
-    // the DOM again.
-    if (parent) { parent.removeChild(this); }
-
-    this.transitionTo('destroying', false);
-
-    return this;
+    if (!viewDestroyed) {
+      return MetalView.destroy(this);
+    }
   },
 
   clearRenderedChildren: Ember.K,
@@ -1724,15 +1713,9 @@ var View = CoreView.extend({
     @return {Ember.View} receiver
   */
   remove: function() {
-    // What we should really do here is wait until the end of the run loop
-    // to determine if the element has been re-appended to a different
-    // element.
-    // In the interim, we will just re-render if that happens. It is more
-    // important than elements get garbage collected.
-    if (!this.removedFromDOM) { this.destroyElement(); }
-    this.invokeRecursively(function(view) {
-      if (view.clearRenderedChildren) { view.clearRenderedChildren(); }
-    });
+    if (this.isRendered) {
+      MetalView.remove(this);
+    }
   },
 
   elementId: null,
@@ -1763,8 +1746,8 @@ var View = CoreView.extend({
     @method createElement
     @return {Ember.View} receiver
   */
-  createElement: function(insert) {
-    return MetalView.render(this, insert);
+  createElement: function() {
+    return MetalView.render(this);
   },
 
   /**
@@ -2188,43 +2171,6 @@ var View = CoreView.extend({
   },
 
   /**
-    You must call `destroy` on a view to destroy the view (and all of its
-    child views). This will remove the view from any parent node, then make
-    sure that the DOM element managed by the view can be released by the
-    memory manager.
-
-    @method destroy
-  */
-  destroy: function() {
-    return MetalView.destroy(this);
-
-    var childViews = this._childViews,
-        // get parentView before calling super because it'll be destroyed
-        nonVirtualParentView = get(this, 'parentView'),
-        viewName = this.viewName,
-        childLen, i;
-
-    if (!this._super()) { return; }
-
-    childLen = childViews.length;
-    for (i=childLen-1; i>=0; i--) {
-      childViews[i].removedFromDOM = true;
-    }
-
-    // remove from non-virtual parent view if viewName was specified
-    if (viewName && nonVirtualParentView) {
-      nonVirtualParentView.set(viewName, null);
-    }
-
-    childLen = childViews.length;
-    for (i=childLen-1; i>=0; i--) {
-      childViews[i].destroy();
-    }
-
-    return this;
-  },
-
-  /**
     Instantiates a view to be added to the childViews array during view
     initialization. You generally will not call this method directly unless
     you are overriding `createChildViews()`. Note that this method will
@@ -2420,8 +2366,8 @@ var View = CoreView.extend({
   Describe how the specified actions should behave in the various
   states that a view can exist in. Possible states:
 
-  * preRender: when a view is first instantiated, and after its
-    element was destroyed, it is in the preRender state
+  * prerender: when a view is first instantiated, and after its
+    element was destroyed, it is in the prerender state
   * inBuffer: once a view has been rendered, but before it has
     been inserted into the DOM, it is in the inBuffer state
   * hasElement: the DOM representation of the view is created,

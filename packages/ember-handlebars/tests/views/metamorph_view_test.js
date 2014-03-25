@@ -171,7 +171,7 @@ test("replacing a Metamorph should invalidate childView elements", function() {
     CustomView: EmberView.extend({
       init: function() {
         this._super();
-        // This will be called in preRender
+        // This will be called in prerender
         // We want it to cache a null value
         // Hopefully it will be invalidated when `show` is toggled
         this.get('element');

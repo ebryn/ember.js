@@ -30,7 +30,7 @@ merge(hasElement, {
 
   setElement: function(view, value) {
     if (value === null) {
-      view.transitionTo('preRender');
+      view.transitionTo('prerender');
     } else {
       throw new EmberError("You cannot set an element to a non-null value when the element is already in the DOM.");
     }
@@ -51,7 +51,7 @@ merge(hasElement, {
 
   // once the view is already in the DOM, destroying it removes it
   // from the DOM, nukes its element, and puts it back into the
-  // preRender state if inDOM.
+  // prerender state if inDOM.
 
   destroyElement: function(view) {
     view._notifyWillDestroyElement();

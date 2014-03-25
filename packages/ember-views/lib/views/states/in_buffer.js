@@ -47,11 +47,11 @@ merge(inBuffer, {
 
   // when a view is rendered in a buffer, destroying the
   // element will simply destroy the buffer and put the
-  // state back into the preRender state.
+  // state back into the prerender state.
   destroyElement: function(view) {
     view.clearBuffer();
     var viewCollection = view._notifyWillDestroyElement();
-    viewCollection.transitionTo('preRender', false);
+    viewCollection.transitionTo('prerender', false);
 
     return view;
   },
@@ -75,7 +75,7 @@ merge(inBuffer, {
 
   setElement: function(view, value) {
     if (value === null) {
-      view.transitionTo('preRender');
+      view.transitionTo('prerender');
     } else {
       view.clearBuffer();
       view.transitionTo('hasElement');

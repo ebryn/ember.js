@@ -279,7 +279,7 @@ var ContainerView = View.extend(MutableArray, {
 
     if (removed > 0) {
       var changedViews = views.slice(start, start+removed);
-      // transition to preRender before clearing parentView
+      // transition to prerender before clearing parentView
       this.currentState.childViewsWillChange(this, views, start, removed);
       this.initializeViews(changedViews, null, null);
     }
@@ -380,8 +380,8 @@ merge(states.hasElement, {
       childView = childViews[i];
 
       if (!childView._placeholder) {
-        childView._placeholder = MetalView.render(childView, function (content) {
-          MetalView.insertChildContent(view, i, content);
+        MetalView.render(childView, function (content) {
+          return MetalView.insertChildContent(view, i, content);
         });
       }
     }

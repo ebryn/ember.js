@@ -255,6 +255,7 @@ test("views that are removed from a ContainerView should have their child views 
 
   equal(get(view, 'childViews.length'), 1, "precond - renders one child view");
   run(function() {
+    debugger
     container.removeObject(view);
   });
   equal(get(view, 'childViews.length'), 0, "child views are cleared when removed from container view");

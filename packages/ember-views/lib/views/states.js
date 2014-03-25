@@ -8,7 +8,7 @@ export function cloneStates(from) {
   var into = {};
 
   into._default = {};
-  into.preRender = create(into._default);
+  into.prerender = create(into._default);
   into.destroying = create(into._default);
   into.inBuffer = create(into._default);
   into.hasElement = create(into._default);
@@ -36,17 +36,12 @@ var states = {
   _default: {
     destroyElement: function(view) {
       MetalView.remove(view);
-      if (view._scheduledInsert) {
-        run.cancel(view._scheduledInsert);
-        view._scheduledInsert = null;
-      }
-      view.transitionTo('preRender');
       return view;
     }
   }
 };
 
-states.preRender = merge({
+states.prerender = merge({
   getElement: function() { return null; },
 
   insertElement: function(view, callback) {
@@ -94,8 +89,8 @@ states.hasElement = merge({
     if (!view.element) { view.createElement(); }
     callback.call(view);
   },
-  empty: states.preRender.empty,
-  appendChild: states.preRender.appendChild,
+  empty: states.prerender.empty,
+  appendChild: states.prerender.appendChild,
   rerender: Ember.K
 }, states._default);
 

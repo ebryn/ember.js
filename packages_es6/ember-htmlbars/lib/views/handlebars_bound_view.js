@@ -34,7 +34,7 @@ function SimpleHandlebarsView(path, pathRoot, isEscaped, templateData) {
   this.templateData = templateData;
 
   this.morph = Metamorph();
-  this.state = 'preRender';
+  this.state = 'prerender';
   this.updateId = null;
   this._parentView = null;
   this.buffer = null;
@@ -107,7 +107,7 @@ SimpleHandlebarsView.prototype = {
 
   rerender: function() {
     switch(this.state) {
-      case 'preRender':
+      case 'prerender':
       case 'destroyed':
         break;
       case 'inBuffer':

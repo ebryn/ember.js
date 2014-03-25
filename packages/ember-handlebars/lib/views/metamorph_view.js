@@ -51,7 +51,7 @@ var DOMManager = {
   replace: function(view) {
     var morph = view.morph;
 
-    view.transitionTo('preRender');
+    view.transitionTo('prerender');
 
     run.schedule('render', this, function renderMetamorphView() {
       if (view.isDestroying) { return; }

@@ -109,7 +109,7 @@ test("should not dispatch events to views not inDOM", function() {
   var $element = view.$();
 
   run(function() {
-    view.set('element', null); // Force into preRender
+    view.set('element', null); // Force into prerender
   });
 
   $element.trigger('mousedown');
