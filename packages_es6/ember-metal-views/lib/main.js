@@ -372,22 +372,9 @@ function remove(_view, shouldDestroy) {
     return;
   }
 
-  var parentView = _view._parentView;
-  if (parentView) {
-    // TODO we need a flag or separate hook
-    if (parentView.removeChild) {
-      _view._parentView = null;
-      parentView.removeChild(_view);
-      // parentView will call remove()
-      return;
-    }
-    // TODO: remove from parentView._childViews;
-    _view._parentView = null;
-  }
-
   var removeQueue = [], destroyQueue = [],
     idx, len, view, staticChildren,
-    childViews, i, l;
+    childViews, i, l, parentView;
 
   if (shouldDestroy) {
     destroyQueue.push(_view);
@@ -425,9 +412,7 @@ function remove(_view, shouldDestroy) {
     if (childViews) {
       for (i=0,l=childViews.length; i<l; i++) {
         destroyQueue.push(childViews[i]);
-        childViews[i]._parentView = null;
       }
-      view._childViews = null;
     }
   }
 
@@ -452,6 +437,16 @@ function remove(_view, shouldDestroy) {
     }
     if (view.destroy) {
       view.destroy(true);
+    }
+    parentView = view._parentView;
+    view._parentView = null;
+    view._childViews = null;
+    if (parentView && !parentView.isDestroying) {
+      if (parentView.removeChild) {
+        parentView.removeChild(view);
+      } else {
+        // TODO: we need to do for metal views
+      }
     }
   }
 }
