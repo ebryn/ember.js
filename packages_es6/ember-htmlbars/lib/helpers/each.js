@@ -28,7 +28,7 @@ import {on} from "ember-metal/events";
 
 import {handlebarsGet} from "ember-htmlbars/ext";
 
-var EachView = CollectionView.extend(_Metamorph, {
+var EachView = CollectionView.extend({
   init: function() {
     var itemController = get(this, 'itemController');
     var binding;
@@ -140,10 +140,10 @@ function _addMetamorphCheck() {
 }
 
 // until ember-debug is es6ed
-var runInDebug = function(f){f()};
-runInDebug( function() {
-  _addMetamorphCheck();
-});
+// var runInDebug = function(f){f()};
+// runInDebug( function() {
+//   _addMetamorphCheck();
+// });
 
 var GroupedEach = EmberHandlebars.GroupedEach = function(context, path, options) {
   var self = this,
@@ -420,7 +420,15 @@ GroupedEach.prototype = {
   @param [options.itemController] {String} name of a controller to be created for each item
   @param [options.groupedRows] {boolean} enable normal item-by-item rendering when inside a `#group` helper
 */
-function eachHelper(path, options) {
+function eachHelper(params, options) {
+  var items = params[0],
+      templateOptions = {data: options.data, helpers: options.helpers};
+  options.hash.content = items;
+  if (!options.hash.itemViewClass) {
+    options.hash.itemViewClass = {isView: true, template: options.render, templateOptions: templateOptions};
+  }
+  return options.helpers.view([CollectionView], options);
+
   var ctx;
 
   if (arguments.length === 4) {

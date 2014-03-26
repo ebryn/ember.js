@@ -351,9 +351,9 @@ var CollectionView = ContainerView.extend({
         itemViewClass = get(itemViewClass) || itemViewClass;
       }
 
-      Ember.assert(fmt("itemViewClass must be a subclass of Ember.View, not %@",
-                       [itemViewClass]),
-                       'string' === typeof itemViewClass || View.detect(itemViewClass));
+      // Ember.assert(fmt("itemViewClass must be a subclass of Ember.View, not %@",
+      //                  [itemViewClass]),
+      //                  'string' === typeof itemViewClass || View.detect(itemViewClass));
 
       for (idx = start; idx < start+added; idx++) {
         item = content.objectAt(idx);

@@ -296,6 +296,7 @@ function createChildView(view, childView, attrs) {
     // attrs.template = attemplate;
     // attrs._context = context;
     attrs._parentView = view;
+    attrs.container = view.container;
     // attrs._placeholder = placeholder;
     // container
     // template data?
@@ -304,6 +305,7 @@ function createChildView(view, childView, attrs) {
   } else if (typeof childView === 'string') {
     var fullName = 'view:' + childView;
     var View = view.container.lookupFactory(fullName);
+    attrs.container = view.container;
 
     // Ember.assert("Could not find view: '" + fullName + "'", !!View);
     // attrs.templateData = get(this, 'templateData');
@@ -317,6 +319,7 @@ function createChildView(view, childView, attrs) {
     // }
     // view.template = template;
     // view._context = context;
+    childView.container = view.container;
     childView._parentView = view;
     // view._placeholder = placeholder;
     // Ember.setProperties(view, attrs);

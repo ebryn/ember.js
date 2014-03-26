@@ -169,7 +169,8 @@ defaultOptions.helpers = merge({
   partial: partialHelper,
   template: partialHelper,
   'bind-attr': bindAttrHelper,
-  bindAttr: bindAttrHelper
+  bindAttr: bindAttrHelper,
+  each: eachHelper
 }, defaultOptions.helpers)
 
 // HTMLBARSTODO: do this another way - probably meta?

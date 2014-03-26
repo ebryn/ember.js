@@ -2344,7 +2344,7 @@ test("should update bound values after view's parent is removed and then re-appe
   var parentView = ContainerView.create({
     childViews: ['testView'],
 
-    controller: controller,
+    context: controller,
 
     testView: EmberView.create({
       template: compile("{{#if showStuff}}{{boundValue}}{{else}}Not true.{{/if}}")

@@ -4,27 +4,33 @@ import run from "ember-metal/run_loop";
 import { sendEvent, addListener, removeListener } from "ember-metal/events";
 import { appendChild, createChildView, render, remove } from "ember-metal-views";
 
+
 export function each(params, options) {
-  var view = options.data.view,
-      hash = options.hash,
-      eachView = Object.create(eachViewPrototype);
+  var items = params[0];
 
-  eachView.itemTemplate = options.render;
-  eachView._placeholder = options.placeholder;
-  eachView.templateOptions = view.templateOptions;
-  eachView._parentView = view;
-  eachView.context = A(params[0].value());
-  eachView.arrayStream = new ArrayObserverStream();
-  eachView.arrayStream.subscribe(function(value) {
-    run.schedule('render', eachView, 'arrayDidChange', value.obj, value.start, value.removed, value.added);
-  });
-  eachView.contextDidChange();
+  options.helpers.view([])
 
-  appendChild(view, eachView);
 
-  params[0].onNotify(function(sender) {
-    eachView.arrayStream.updateObj(sender.value());
-  });
+  // var view = options.data.view,
+  //     hash = options.hash,
+  //     eachView = Object.create(eachViewPrototype);
+
+  // eachView.itemTemplate = options.render;
+  // eachView._placeholder = options.placeholder;
+  // eachView.templateOptions = view.templateOptions;
+  // eachView._parentView = view;
+  // eachView.context = A(params[0].value());
+  // eachView.arrayStream = new ArrayObserverStream();
+  // eachView.arrayStream.subscribe(function(value) {
+  //   run.schedule('render', eachView, 'arrayDidChange', value.obj, value.start, value.removed, value.added);
+  // });
+  // eachView.contextDidChange();
+
+  // appendChild(view, eachView);
+
+  // params[0].onNotify(function(sender) {
+  //   eachView.arrayStream.updateObj(sender.value());
+  // });
 }
 
 var eachViewPrototype = {

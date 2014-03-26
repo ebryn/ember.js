@@ -17,7 +17,7 @@ var defaultOptions = {
   helpers: merge({
     STREAM_FOR: STREAM_FOR,
     view: view,
-    each: each,
+    // each: each,
     'with': withHelper,
     log: log,
     unbound: unbound,

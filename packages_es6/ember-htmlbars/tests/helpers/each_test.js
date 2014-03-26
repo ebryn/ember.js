@@ -513,7 +513,7 @@ test("it works with the controller keyword", function() {
 
   run(function() { view.destroy(); }); // destroy existing view
   view = EmberView.create({
-    controller: controller,
+    context: controller,
     template: templateFor("{{#view}}{{#each controller}}{{this}}{{/each}}{{/view}}")
   });
 
@@ -554,7 +554,7 @@ test("#each accepts a name binding and does not change the context", function() 
     template: templateFor("{{#each item in view.items}}{{name}}{{/each}}"),
     title: "My Cool Each Test",
     items: A([obj]),
-    controller: controller
+    context: controller
   });
 
   append(view);
@@ -579,7 +579,7 @@ test("#each accepts 'this' as the right hand side", function() {
   view = EmberView.create({
     template: templateFor("{{#each item in this}}{{view.title}} {{item.name}}{{/each}}"),
     title: "My Cool Each Test",
-    controller: A([{ name: 1 }, { name: 2 }])
+    context: A([{ name: 1 }, { name: 2 }])
   });
 
   append(view);
@@ -591,7 +591,7 @@ test("views inside #each preserve the new context", function() {
   var controller = A([ { name: "Adam" }, { name: "Steve" } ]);
 
   view = EmberView.create({
-    controller: controller,
+    context: controller,
     template: templateFor('{{#each controller}}{{#view}}{{name}}{{/view}}{{/each}}')
   });
 
@@ -606,7 +606,7 @@ test("controller is assignable inside an #each", function() {
   });
 
   view = EmberView.create({
-    controller: controller,
+    context: controller,
     template: templateFor('{{#each personController in this}}{{#view controllerBinding="personController"}}{{name}}{{/view}}{{/each}}')
   });
 
@@ -628,7 +628,7 @@ test("single-arg each defaults to current context", function() {
 
 test("single-arg each will iterate over controller if present", function() {
   view = EmberView.create({
-    controller: A([ { name: "Adam" }, { name: "Steve" } ]),
+    context: A([ { name: "Adam" }, { name: "Steve" } ]),
     template: templateFor('{{#each}}{{name}}{{/each}}')
   });
 
@@ -639,7 +639,7 @@ test("single-arg each will iterate over controller if present", function() {
 
 test("it asserts when the morph tags disagree on their parentage", function() {
   view = EmberView.create({
-    controller: A(['Cyril', 'David']),
+    context: A(['Cyril', 'David']),
     template: templateFor('<table>{{#each}}<tr><td>{{this}}</td></tr>{{/each}}</table>')
   });
 
@@ -650,7 +650,7 @@ test("it asserts when the morph tags disagree on their parentage", function() {
 
 test("it doesn't assert when the morph tags have the same parent", function() {
   view = EmberView.create({
-    controller: A(['Cyril', 'David']),
+    context: A(['Cyril', 'David']),
     template: templateFor('<table><tbody>{{#each}}<tr><td>{{this}}</td></tr>{{/each}}<tbody></table>')
   });
 
