@@ -10,6 +10,7 @@ import log from "ember-metal-htmlbars/helpers/log";
 import unbound from "ember-metal-htmlbars/helpers/unbound";
 import ifHelper from "ember-metal-htmlbars/helpers/if";
 import unlessHelper from "ember-metal-htmlbars/helpers/unless";
+import LazyValue from "bound-templates/lazy-value";
 
 var defaultOptions = {
   data: {view: null},
@@ -17,13 +18,31 @@ var defaultOptions = {
   helpers: merge({
     STREAM_FOR: STREAM_FOR,
     view: view,
-    // each: each,
+    each: each,
     'with': withHelper,
     log: log,
     unbound: unbound,
     'if': ifHelper,
-    unless: unlessHelper
+    unless: unlessHelper,
+    async: function(params, options) {
+      var promiseLazyValue = params[0],
+          promise = promiseLazyValue.value();
+
+      var lv = new LazyValue(function() {
+        return value;
+      });
+
+      var value;
+      promise.then(function(resolvedValue) {
+        value = resolvedValue;
+        lv.notify();
+      });
+
+      return lv;
+    }
   }, runtime)
 };
+
+Ember.htmlbarsCompile = compile;
 
 export { compile, defaultOptions };

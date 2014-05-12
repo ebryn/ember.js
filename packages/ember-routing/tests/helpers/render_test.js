@@ -19,7 +19,7 @@ import EmberArrayController from "ember-runtime/controllers/array_controller";
 import EmberRouter from "ember-routing/system/router";
 import HashLocation from "ember-routing/location/hash_location";
 
-import EmberHandlebars from "ember-handlebars";
+// import EmberHandlebars from "ember-handlebars";
 import EmberView from "ember-routing/ext/view";
 import jQuery from "ember-views/system/jquery";
 

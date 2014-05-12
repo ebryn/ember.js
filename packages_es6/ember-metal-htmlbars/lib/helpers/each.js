@@ -7,8 +7,8 @@ import { appendChild, createChildView, render, remove } from "ember-metal-views"
 
 export function each(params, options) {
   var items = params[0];
-
-  options.helpers.view([])
+  options.hash.content = items;
+  return options.helpers.collection([], options);
 
 
   // var view = options.data.view,

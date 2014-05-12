@@ -11,8 +11,8 @@ import EmberObject from "ember-runtime/system/object";
 import keys from "ember-runtime/keys";
 import { isSimpleClick } from "ember-views/system/utils";
 import EmberComponent from "ember-views/views/component";
-import EmberHandlebars from "ember-handlebars";
-import { viewHelper } from "ember-handlebars/helpers/view";
+// import EmberHandlebars from "ember-handlebars";
+// import { viewHelper } from "ember-handlebars/helpers/view";
 import EmberRouter from "ember-routing/system/router";
 import {
   resolveParams,
@@ -28,7 +28,7 @@ import {
 
 var slice = [].slice;
 
-requireModule('ember-handlebars');
+// requireModule('ember-handlebars');
 
 var numberOfContextsAcceptedByHandler = function(handler, handlerInfos) {
   var req = 0;
@@ -406,7 +406,7 @@ var LinkView = Ember.LinkView = EmberComponent.extend({
     @property router
   **/
   router: computed(function() {
-    return get(this, 'controller').container.lookup('router:main');
+    return this.container.lookup('router:main');
   }),
 
   /**
@@ -888,10 +888,11 @@ if (Ember.FEATURES.isEnabled("ember-routing-linkto-target-attribute")) {
   @return {String} HTML string
   @see {Ember.LinkView}
 */
-function linkToHelper(name) {
-  var options = slice.call(arguments, -1)[0],
-      params = slice.call(arguments, 0, -1),
-      hash = options.hash;
+function linkToHelper(params, options) {
+  // var options = slice.call(arguments, -1)[0],
+  //     params = slice.call(arguments, 0, -1),
+  var hash = options.hash,
+      viewHelper = options.helpers.view;
 
   if (params[params.length - 1] instanceof QueryParams) {
     hash.queryParamsObject = params.pop();
@@ -899,29 +900,29 @@ function linkToHelper(name) {
 
   hash.disabledBinding = hash.disabledWhen;
 
-  if (!options.fn) {
+  if (!options.render) {
     var linkTitle = params.shift();
     var linkType = options.types.shift();
     var context = this;
     if (linkType === 'ID') {
       options.linkTextPath = linkTitle;
-      options.fn = function() {
+      options.render = function() {
         return EmberHandlebars.getEscaped(context, linkTitle, options);
       };
     } else {
-      options.fn = function() {
+      options.render = function() {
         return linkTitle;
       };
     }
   }
 
   hash.parameters = {
-    context: this,
+    context: options.data.view,
     options: options,
     params: params
   };
 
-  return viewHelper.call(this, LinkView, options);
+  return viewHelper([LinkView], options);
 }
 
 

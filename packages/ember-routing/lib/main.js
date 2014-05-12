@@ -10,8 +10,10 @@ Ember Routing
 @requires ember-views
 */
 
-import EmberHandlebars from "ember-handlebars";
+// import EmberHandlebars from "ember-handlebars";
 import Ember from "ember-metal/core";
+
+import Htmlbars from "ember-htmlbars";
 
 // ES6TODO: Cleanup modules with side-effects below
 import "ember-routing/ext/run_loop";
@@ -51,6 +53,7 @@ import {
   ActionHelper,
   actionHelper
 } from "ember-routing/helpers/action";
+import merge from "ember-metal/merge";
 
 Ember.Location = EmberLocation;
 Ember.AutoLocation = AutoLocation;
@@ -69,13 +72,19 @@ Ember.LinkView = LinkView;
 Router.resolveParams = resolveParams;
 Router.resolvePaths = resolvePaths;
 
-EmberHandlebars.ActionHelper = ActionHelper;
-EmberHandlebars.OutletView = OutletView;
+// EmberHandlebars.ActionHelper = ActionHelper;
+// EmberHandlebars.OutletView = OutletView;
 
-EmberHandlebars.registerHelper('render', renderHelper);
-EmberHandlebars.registerHelper('action', actionHelper);
-EmberHandlebars.registerHelper('outlet', outletHelper);
-EmberHandlebars.registerHelper('link-to', linkToHelper);
-EmberHandlebars.registerHelper('linkTo', deprecatedLinkToHelper);
+// EmberHandlebars.registerHelper('render', renderHelper)
+// EmberHandlebars.registerHelper('action', actionHelper);
+// EmberHandlebars.registerHelper('outlet', outletHelper);
+// EmberHandlebars.registerHelper('link-to', linkToHelper);
+// EmberHandlebars.registerHelper('linkTo', deprecatedLinkToHelper);
+
+import { defaultOptions } from "ember-htmlbars";
+
+defaultOptions.helpers = merge({
+  'link-to': linkToHelper
+}, defaultOptions.helpers);
 
 export default Ember;

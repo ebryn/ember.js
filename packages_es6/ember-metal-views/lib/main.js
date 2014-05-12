@@ -125,6 +125,8 @@ function _render(_view, insert) {
     view = views[idx];
     if (!view[META_KEY]) { view[META_KEY] = SHARED_META; }
 
+    if (view.content) { view.context = view.content; } // CollectionView hack
+
     if (view.context) { // if the view has a context explicitly set, set _context so we know it
       view._context = view.context;
     } else if (view._parentView) { // the view didn't have a context explicitly set, so propagate the parent's context
@@ -148,10 +150,12 @@ function _render(_view, insert) {
       ret = content; // hold off inserting the root view
     } else {
       if (view._placeholder) {
-        view._placeholder.update(content);
+        if (content) {
+          view._placeholder.update(content);
+        }
       } else {
         placeholder = createChildPlaceholder(view._parentView, content);
-        console.assert(placeholder instanceof Placeholder);
+        console.assert(!(placeholder instanceof Placeholder));
         view._placeholder = placeholder;
       }
     }
@@ -255,7 +259,7 @@ function _renderContents(view, el) {
   } else if (view.innerHTML) { // TODO: bind?
     el.innerHTML = view.innerHTML;
   } else if (view.render) {
-    view.render(fakeBufferFor(el));
+    el = view.render(fakeBufferFor(el)); // should we use the return value?
   }
 
   return el;
@@ -484,5 +488,7 @@ function contextDidChange(view) {
 
 var createElementForView = _createElementForView;
 var render = _render;
+
+Ember.htmlbarsAppendTo = appendTo;
 
 export { reset, events, appendTo, render, createChildView, appendChild, remove, destroy, createElementForView, insertChildContent };

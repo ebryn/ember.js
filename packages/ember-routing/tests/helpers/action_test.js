@@ -9,7 +9,7 @@ import { Controller as EmberController } from "ember-runtime/controllers/control
 import EmberObjectController from "ember-runtime/controllers/object_controller";
 import EmberArrayController from "ember-runtime/controllers/array_controller";
 
-import EmberHandlebars from "ember-handlebars";
+// import EmberHandlebars from "ember-handlebars";
 import { View as EmberView } from "ember-views/views/view";
 import EmberComponent from "ember-views/views/component";
 import jQuery from "ember-views/system/jquery";

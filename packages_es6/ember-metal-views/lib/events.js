@@ -1,4 +1,5 @@
 import { addEventListener, removeEventListener } from "ember-metal-views/dom";
+import { sendEvent } from "ember-metal/events";
 
 // Hash lookup by view ID for event delegation
 var views = {},
@@ -14,11 +15,8 @@ function findContainingView(el) {
 }
 
 function tryToDispatchEvent(view, type, event) {
-  try {
-    view[type](event);
-  } catch(e) {
-
-  }
+  if (view[type]) { view[type](event); }
+  sendEvent(view, type, [event]);
 }
 
 function eventHandler(event) {

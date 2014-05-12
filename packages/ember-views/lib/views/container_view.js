@@ -212,7 +212,7 @@ var ContainerView = View.extend(MutableArray, {
     var currentView = get(this, 'currentView');
     if (currentView) {
       if (!_childViews.length) { _childViews = this._childViews = this._childViews.slice(); }
-      _childViews.push(MetalView.createChildView(this, viewName));
+      _childViews.push(MetalView.createChildView(this, currentView));
     }
   },
 

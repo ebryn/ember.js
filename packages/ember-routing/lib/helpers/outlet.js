@@ -3,8 +3,8 @@ import { get } from "ember-metal/property_get";
 import { set } from "ember-metal/property_set";
 import { onLoad } from "ember-runtime/system/lazy_load";
 import ContainerView from "ember-views/views/container_view";
-import { _Metamorph } from "ember-handlebars/views/metamorph_view";
-import { viewHelper } from "ember-handlebars/helpers/view";
+// import { _Metamorph } from "ember-handlebars/views/metamorph_view";
+// import { viewHelper } from "ember-handlebars/helpers/view";
 
 // requireModule('ember-handlebars');
 
@@ -18,8 +18,9 @@ import { viewHelper } from "ember-handlebars/helpers/view";
   @submodule ember-routing
   */
 
-var OutletView = ContainerView.extend(_Metamorph);
+var OutletView = ContainerView; //.extend(_Metamorph);
 export { OutletView };
+
 /**
   The `outlet` helper is a placeholder that the router will fill in with
   the appropriate template based on the current state of the application.

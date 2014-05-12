@@ -3,7 +3,28 @@ import {map} from "ember-metal/array";
 import {onLoad} from "ember-runtime/system/lazy_load";
 import {ControllerMixin} from "ember-runtime/controllers/controller";
 import EmberRouter from "ember-routing/system/router";
-import {resolveParams as handlebarsResolve, handlebarsGet} from "ember-handlebars/ext";
+// import {resolveParams as handlebarsResolve, handlebarsGet} from "ember-handlebars/ext";
+
+function handlebarsResolve(context, params, options) {
+  var resolvedParams = [], types = options.types, param, type;
+
+  for (var i=0, l=params.length; i<l; i++) {
+    param = params[i];
+    type = types[i];
+
+    // if (type === 'ID') {
+    //   resolvedParams.push(handlebarsGet(context, param, options));
+    // } else {
+      resolvedParams.push(param);
+    // }
+  }
+
+  return resolvedParams;
+}
+
+function handlebarsGet() {
+  debugger;
+}
 
 export function resolveParams(context, params, options) {
   return map.call(resolvePaths(context, params, options), function(path, i) {

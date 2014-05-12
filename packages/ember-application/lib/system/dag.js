@@ -1,3 +1,5 @@
+requireModule('ember-runtime');
+requireModule('ember-views');
 import EmberError from "ember-metal/error";
 
 function visit(vertex, fn, visited, path) {

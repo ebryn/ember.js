@@ -6,9 +6,9 @@ import run from "ember-metal/run_loop";
 import { isSimpleClick } from "ember-views/system/utils";
 import EmberRouter from "ember-routing/system/router";
 
-import EmberHandlebars from "ember-handlebars";
-import { handlebarsGet } from "ember-handlebars/ext";
-import { viewHelper } from "ember-handlebars/helpers/view";
+// import EmberHandlebars from "ember-handlebars";
+// import { handlebarsGet } from "ember-handlebars/ext";
+// import { viewHelper } from "ember-handlebars/helpers/view";
 import {
   resolveParams,
   resolvePath
@@ -16,13 +16,17 @@ import {
 
 // requireModule('ember-handlebars');
 
+function handlebarsGet() {
+  debugger;
+}
+
 /**
 @module ember
 @submodule ember-routing
 */
 
-var SafeString = EmberHandlebars.SafeString;
-var a_slice = Array.prototype.slice;
+var SafeString = Handlebars.SafeString,
+    a_slice = Array.prototype.slice;
 
 function args(options, actionName) {
   var ret = [];

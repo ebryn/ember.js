@@ -1241,6 +1241,8 @@ var View = CoreView.extend({
 
     this.rerender();
 
+    this.set('context', this.get('controller')); // FIXME
+
     this.forEachChildView(function(view) {
       propertyDidChange(view, 'controller');
     });

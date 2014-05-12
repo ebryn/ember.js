@@ -1,3 +1,5 @@
+requireModule('ember-routing');
+
 /**
 @module ember
 @submodule ember-application
@@ -271,7 +273,7 @@ var Application = Namespace.extend(DeferredMixin, {
 
     this.scheduleInitialize();
 
-    Ember.libraries.registerCoreLibrary('Handlebars', EmberHandlebars.VERSION);
+    // Ember.libraries.registerCoreLibrary('Handlebars', EmberHandlebars.VERSION);
     Ember.libraries.registerCoreLibrary('jQuery', jQuery().jquery);
 
     if ( Ember.LOG_VERSION ) {
@@ -869,8 +871,8 @@ Application.reopenClass({
     // Custom resolver authors may want to register their own ContainerDebugAdapter with this key
 
     // ES6TODO: resolve this via import once ember-application package is ES6'ed
-    if (!ContainerDebugAdapter) { ContainerDebugAdapter = requireModule('ember-extension-support/container_debug_adapter')['default']; }
-    container.register('container-debug-adapter:main', ContainerDebugAdapter);
+    // if (!ContainerDebugAdapter) { ContainerDebugAdapter = requireModule('ember-extension-support/container_debug_adapter')['default']; }
+    // container.register('container-debug-adapter:main', ContainerDebugAdapter);
 
     return container;
   }

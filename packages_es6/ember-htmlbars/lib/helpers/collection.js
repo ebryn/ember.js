@@ -10,7 +10,6 @@ import {inspect} from "ember-metal/utils";
     // emberDeprecate = Ember.deprecate;
 
 import EmberHandlebars from "ember-htmlbars-compiler";
-var helpers = EmberHandlebars.helpers;
 
 import EmberStringUtils from "ember-runtime/system/string";
 var fmt = EmberStringUtils.fmt;
@@ -144,8 +143,10 @@ var alias = computed.alias;
   @return {String} HTML string
   @deprecated Use `{{each}}` helper instead.
 */
-function collectionHelper(path, options) {
+function collectionHelper(paths, options) {
   Ember.deprecate("Using the {{collection}} helper without specifying a class has been deprecated as the {{each}} helper now supports the same functionality.", path !== 'collection');
+
+  var path = paths[0];
 
   // If no path is provided, treat path param as options.
   if (path && path.data && path.data.isRenderData) {
@@ -156,7 +157,7 @@ function collectionHelper(path, options) {
     Ember.assert("You cannot pass more than one argument to the collection helper", arguments.length === 2);
   }
 
-  var fn = options.fn;
+  var fn = options.render;
   var data = options.data;
   var inverse = options.inverse;
   var view = options.data.view;
@@ -223,7 +224,7 @@ function collectionHelper(path, options) {
 
   if (fn) {
     itemHash.template = fn;
-    delete options.fn;
+    delete options.render;
   }
 
   var emptyViewClass;
@@ -243,9 +244,15 @@ function collectionHelper(path, options) {
   }
 
   var viewOptions = ViewHelper.propertiesFromHTMLOptions({ data: data, hash: itemHash }, this);
+  if (!viewOptions.tagName) {
+    viewOptions.isVirtual = true;
+  }
+  if (!hash.tagName) {
+    options.hash.isVirtual = true;
+  }
   hash.itemViewClass = itemViewClass.extend(viewOptions);
 
-  return helpers.view.call(this, collectionClass, options);
+  return options.helpers.view([collectionClass], options);
 }
 
 export default collectionHelper;

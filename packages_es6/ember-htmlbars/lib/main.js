@@ -147,22 +147,22 @@ function bindAttrHelper(element, path, params, options, helpers) {
 
 // Merge in additional helpers
 defaultOptions.helpers = merge({
+  debugger: function() {
+    debugger;
+  },
   input: inputHelper,
   textarea: textareaHelper,
   boundIf: defaultOptions.helpers['if'],
   bind: function(params, options) {
     var lazyValue = options.helpers.STREAM_FOR(options.data.view, params[0]),
         placeholder = options.placeholder;
-    
+
     placeholder.replace(lazyValue.value());
     lazyValue.onNotify(function(lazyValue) {
       placeholder.replace(lazyValue.value());
     });
   },
-  collection: function(params, options) {
-    if (!params[0]) { params[0] = CollectionView; }
-    options.helpers.view(params, options);
-  },
+  collection: collectionHelper,
   loc: function(params, options) {
     console.log("TODO: implement loc");
   },
@@ -170,7 +170,45 @@ defaultOptions.helpers = merge({
   template: partialHelper,
   'bind-attr': bindAttrHelper,
   bindAttr: bindAttrHelper,
-  each: eachHelper
+  outlet: function(params, options) {
+    var property = params[0] || "main",
+        outletSource,
+        container,
+        viewName,
+        viewClass,
+        viewFullName;
+
+    // if (property && property.data && property.data.isRenderData) {
+    //   options = property;
+    //   property = 'main';
+    // }
+
+    container = options.data.view.container;
+
+    outletSource = options.data.view;
+    while (!Ember.get(outletSource, 'template.isTop')) {
+      outletSource = Ember.get(outletSource, '_parentView');
+    }
+
+    if (!options.hash) { options.hash = {}; }
+    // provide controller override
+    viewName = options.hash.view;
+
+    if (viewName) {
+      viewFullName = 'view:' + viewName;
+      Ember.assert("Using a quoteless view parameter with {{outlet}} is not supported. Please update to quoted usage '{{outlet \"" + viewName + "\"}}.", options.hashTypes.view !== 'ID');
+      Ember.assert("The view name you supplied '" + viewName + "' did not resolve to a view.", container.has(viewFullName));
+    }
+
+    var OutletView = Ember.ContainerView.extend({isVirtual: true});
+    viewClass = viewName ? container.lookupFactory(viewFullName) : options.hash.viewClass || OutletView;
+
+    Ember.set(options.data.view, 'outletSource', outletSource);
+    options.hash.currentViewBinding = 'parentView.outletSource._outlets.' + property;
+
+    return options.helpers.view([viewClass], options);
+  }
+  // each: eachHelper
 }, defaultOptions.helpers)
 
 // HTMLBARSTODO: do this another way - probably meta?

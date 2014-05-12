@@ -6,7 +6,7 @@ import "ember-handlebars";
 import "ember-views";
 import "ember-routing";
 import "ember-application";
-import "ember-extension-support";
+// import "ember-extension-support";
 
 // do this to ensure that Ember.Test is defined properly on the global
 // if it is present.

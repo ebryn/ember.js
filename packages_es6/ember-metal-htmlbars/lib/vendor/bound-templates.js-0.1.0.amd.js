@@ -1,4 +1,4 @@
-define("bound-templates", 
+define("bound-templates",
   ["htmlbars/compiler","bound-templates/lazy-value","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -6,13 +6,15 @@ define("bound-templates",
     var LazyValue = __dependency2__.LazyValue;
 
     function compile(string, options) {
-      return htmlbarsCompile(string, options);
+      var template = htmlbarsCompile(string, options);
+      template.isTop = true; // FIXME
+      return template;
     }
 
     __exports__.compile = compile;__exports__.LazyValue = LazyValue;
   });
 
-define("bound-templates/lazy-value", 
+define("bound-templates/lazy-value",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -103,7 +105,7 @@ define("bound-templates/lazy-value",
     __exports__["default"] = LazyValue;
   });
 
-define("bound-templates/runtime", 
+define("bound-templates/runtime",
   ["bound-templates/lazy-value","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -136,6 +138,7 @@ define("bound-templates/runtime",
         streamifyArgs(context, params, options, helpers);
         options.placeholder = placeholder; // FIXME: this kinda sucks
         options.helpers = helpers; // FIXME: this also sucks
+        options.data = {view: context}; // FIXME: this also sucks
         lazyValue = helper(params, options);
       } else {
         if (params.length > 0 || (typeof options.hash === 'object' && Object.keys(options.hash).length > 0)) {

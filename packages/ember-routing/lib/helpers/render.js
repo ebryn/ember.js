@@ -7,10 +7,14 @@ import {
   generateControllerFactory,
   generateController
 } from "ember-routing/system/controller_for";
-import { handlebarsGet } from "ember-handlebars/ext";
-import { viewHelper } from "ember-handlebars/helpers/view";
+// import { handlebarsGet } from "ember-handlebars/ext";
+// import { viewHelper } from "ember-handlebars/helpers/view";
 
-import "ember-handlebars/helpers/view";
+function handlebarsGet() {
+  debugger;
+}
+
+// import "ember-handlebars/helpers/view";
 
 // requireModule('ember-handlebars');
 

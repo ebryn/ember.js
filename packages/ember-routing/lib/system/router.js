@@ -15,7 +15,7 @@ import Evented from "ember-runtime/mixins/evented";
 import EmberRouterDSL from "ember-routing/system/dsl";
 import { View as EmberView } from "ember-views/views/view";
 import EmberLocation from "ember-routing/location/api";
-import { _MetamorphView } from "ember-handlebars/views/metamorph_view";
+// import { _MetamorphView } from "ember-handlebars/views/metamorph_view";
 
 // requireModule("ember-handlebars");
 // requireModule("ember-runtime");
@@ -37,7 +37,8 @@ var Transition = requireModule("router/transition").Transition;
 var slice = [].slice;
 var forEach = EnumerableUtils.forEach;
 
-var DefaultView = _MetamorphView;
+var _MetamorphView = EmberView,
+    DefaultView = _MetamorphView;
 
 /**
   The `Ember.Router` class manages the application state and URLs. Refer to
