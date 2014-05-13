@@ -50,8 +50,8 @@ import {
 } from "ember-metal/property_events";
 
 import {
-  cloneStates /*,
-  states */
+  cloneStates,
+  states
 } from "ember-views/views/states";
 import jQuery from "ember-views/system/jquery";
 import "ember-views/system/ext";  // for the side effect of extending Ember.run.queues

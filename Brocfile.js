@@ -143,6 +143,11 @@ var vendoredPackages = {
   'backburner':       vendoredPackage('backburner'),
   'router':           vendoredPackage('router'),
   'route-recognizer': vendoredPackage('route-recognizer'),
+  'placeholder':      vendoredPackage('placeholder'),
+  'bound-templates':  vendoredPackage('bound-templates'),
+  'htmlbars':         vendoredPackage('htmlbars'),
+  'handlebars':       vendoredPackage('handlebars'),
+  'simple-html-tokenizer':       vendoredPackage('simple-html-tokenizer'),
 };
 
 var emberHandlebarsCompiler = pickFiles('packages/ember-handlebars-compiler/lib', {

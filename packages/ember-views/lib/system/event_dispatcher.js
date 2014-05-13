@@ -30,7 +30,7 @@ var ActionHelper;
   @private
   @extends Ember.Object
 */
-export default EmberObject.extend();
+export default EmberObject.extend({setup: Ember.K});
 
 var Derp = EmberObject.extend({
   /**

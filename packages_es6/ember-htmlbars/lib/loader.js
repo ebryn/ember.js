@@ -79,13 +79,13 @@ function registerComponentLookup(container) {
 
 onLoad('Ember.Application', function(Application) {
   Application.initializer({
-    name: 'domTemplates',
+    name: 'domTemplates2',
     initialize: _bootstrap
   });
 
   Application.initializer({
-    name: 'registerComponentLookup',
-    after: 'domTemplates',
+    name: 'registerComponentLookup2',
+    after: 'domTemplates2',
     initialize: registerComponentLookup
   });
 });
