@@ -17,8 +17,8 @@ var replace = require('broccoli-replace');
 var calculateVersion = require('./lib/calculate-version');
 
 var env = process.env.BROCCOLI_ENV || 'test';
-var disableJSHint = !!process.env.NO_JSHINT || false;
-var disableDefeatureify = !!process.env.NO_DEFEATUREIFY || env === 'test' || false;
+var disableJSHint = !!process.env.NO_JSHINT || true;
+var disableDefeatureify = !!process.env.NO_DEFEATUREIFY || env === 'test' || true;
 
 var generateTemplateCompiler = require('./lib/broccoli-ember-template-compiler-generator');
 var inlineTemplatePrecompiler = require('./lib/broccoli-ember-inline-template-precompiler');
