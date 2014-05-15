@@ -13,7 +13,7 @@ function streamFor(view, path) {
   // Ideally:
   // Ember.addObserver(view, 'context.' + path, this, 'streamPropertyDidChange');
 
-  if (path === '') { // handle {{this}}
+  if (path === '' || (view._keyword && view._keyword === path)) { // handle {{this}}
     // TODO: possible optimization: reuse the context observer that already exists.
     //       this would require us to return some other type of stream object.
     stream = new EmberObserverLazyValue(view, 'context');

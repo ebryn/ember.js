@@ -133,6 +133,11 @@ function _render(_view, insert) {
       view.context = view._parentView.context;
     }
 
+    // inherit keyword from the parent
+    if (!view._keyword && view._parentView) {
+      view._keyword = view._parentView._keyword;
+    }
+
     if (!view.isVirtual) {
       el = _createElementForView(view);
 

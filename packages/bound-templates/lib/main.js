@@ -112,6 +112,13 @@ define("bound-templates/runtime",
     var LazyValue = __dependency1__["default"];
 
     function streamifyArgs(context, params, options, helpers) {
+
+      // FIXME: This is megahacky to get `{{#each foo in bar}}` working
+      if (params.length === 3 && params[1] === "in") {
+        options.hash._keyword = params[0];
+        params.splice(0, 3, params[2]);
+      }
+
       // Convert ID params to streams
       for (var i = 0, l = params.length; i < l; i++) {
         if (options.types[i] === 'id') {
