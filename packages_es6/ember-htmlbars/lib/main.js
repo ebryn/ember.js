@@ -170,7 +170,7 @@ defaultOptions.helpers = merge({
   template: partialHelper,
   'bind-attr': bindAttrHelper,
   bindAttr: bindAttrHelper,
-  outlet: function(params, options) {
+  outlet2: function(params, options) {
     var property = params[0] || "main",
         outletSource,
         container,

@@ -18,7 +18,7 @@ import ContainerView from "ember-views/views/container_view";
   @submodule ember-routing
   */
 
-var OutletView = ContainerView; //.extend(_Metamorph);
+var OutletView = ContainerView.extend({isVirtual: true});
 export { OutletView };
 
 /**
@@ -84,17 +84,18 @@ export { OutletView };
     that holds the view for this outlet
   @return {String} HTML string
 */
-export function outletHelper(property, options) {
+export function outletHelper(params, options) {
   var outletSource;
   var container;
   var viewName;
   var viewClass;
   var viewFullName;
+  var property = params[0] || "main";
 
-  if (property && property.data && property.data.isRenderData) {
-    options = property;
-    property = 'main';
-  }
+  // if (property && property.data && property.data.isRenderData) {
+  //   options = property;
+  //   property = 'main';
+  // }
 
   container = options.data.view.container;
 
@@ -104,6 +105,7 @@ export function outletHelper(property, options) {
   }
 
   // provide controller override
+  if (!options.hash) { options.hash = {}; }
   viewName = options.hash.view;
 
   if (viewName) {
@@ -115,7 +117,7 @@ export function outletHelper(property, options) {
   viewClass = viewName ? container.lookupFactory(viewFullName) : options.hash.viewClass || OutletView;
 
   options.data.view.set('outletSource', outletSource);
-  options.hash.currentViewBinding = '_view.outletSource._outlets.' + property;
+  options.hash.currentViewBinding = 'parentView.outletSource._outlets.' + property;
 
-  return viewHelper.call(this, viewClass, options);
+  return options.helpers.view([viewClass], options);
 }

@@ -19,12 +19,12 @@ function streamFor(view, path) {
     stream = new EmberObserverLazyValue(view, 'context');
   } else if (VIEW_KEYWORD_REGEX.test(path)) {
     stream = new EmberObserverLazyValue(view, path.slice(5));
-  } else if (view.context) {
-    stream = new EmberObserverLazyValue(view.context, path);
+  // } else if (view.context) {
+  //   stream = new EmberObserverLazyValue(view.context, path);
   } else {
     stream = new EmberObserverLazyValue(view, 'context.'+path);
   }
-  
+
   streams[path] = stream;
   return stream;
 }

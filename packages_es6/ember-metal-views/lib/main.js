@@ -155,7 +155,6 @@ function _render(_view, insert) {
         }
       } else {
         placeholder = createChildPlaceholder(view._parentView, content);
-        console.assert(!(placeholder instanceof Placeholder));
         view._placeholder = placeholder;
       }
     }
@@ -196,8 +195,6 @@ function _render(_view, insert) {
     }
 
     placeholder = insert(ret);
-
-    console.assert(placeholder instanceof Placeholder);
 
     _view._placeholder = placeholder;
 

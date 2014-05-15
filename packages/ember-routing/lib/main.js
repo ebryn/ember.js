@@ -84,7 +84,8 @@ Router.resolvePaths = resolvePaths;
 import { defaultOptions } from "ember-htmlbars";
 
 defaultOptions.helpers = merge({
-  'link-to': linkToHelper
+  'link-to': linkToHelper,
+  outlet: outletHelper
 }, defaultOptions.helpers);
 
 export default Ember;

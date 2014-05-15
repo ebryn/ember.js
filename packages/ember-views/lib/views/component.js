@@ -105,7 +105,7 @@ var a_slice = Array.prototype.slice;
 var Component = View.extend(TargetActionSupport, ComponentTemplateDeprecation, {
   init: function() {
     this._super();
-    set(this, 'context', this);
+    // set(this, 'context', this); // FIXME: derp
     set(this, 'controller', this);
   },
 
@@ -132,16 +132,16 @@ var Component = View.extend(TargetActionSupport, ComponentTemplateDeprecation, {
   @deprecated
   @property template
   */
-  template: computed(function(key, value) {
-    if (value !== undefined) { return value; }
+  // template: computed(function(key, value) {
+  //   if (value !== undefined) { return value; }
 
-    var templateName = get(this, 'templateName'),
-        template = this.templateForName(templateName, 'template');
+  //   var templateName = get(this, 'templateName'),
+  //       template = this.templateForName(templateName, 'template');
 
-    Ember.assert("You specified the templateName " + templateName + " for " + this + ", but it did not exist.", !templateName || template);
+  //   Ember.assert("You specified the templateName " + templateName + " for " + this + ", but it did not exist.", !templateName || template);
 
-    return template || get(this, 'defaultTemplate');
-  }).property('templateName'),
+  //   return template || get(this, 'defaultTemplate');
+  // }).property('templateName'),
 
   /**
   Specifying a components `templateName` is deprecated without also
