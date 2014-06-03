@@ -2,8 +2,6 @@ import { set } from "ember-metal/property_set";
 import { appendChild } from "ember-metal-views";
 
 function withHelper(params, options) {
-  debugger;
-
   var contextStream = params[0],
       newContext = contextStream.value(),
       parentView = options.data.view,

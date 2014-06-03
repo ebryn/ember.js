@@ -12,11 +12,11 @@ function handlebarsResolve(context, params, options) {
     param = params[i];
     type = types[i];
 
-    // if (type === 'ID') {
-    //   resolvedParams.push(handlebarsGet(context, param, options));
-    // } else {
+    if (param && param.isLazyValue) {
+      resolvedParams.push(param.value());
+    } else {
       resolvedParams.push(param);
-    // }
+    }
   }
 
   return resolvedParams;
@@ -27,6 +27,14 @@ function handlebarsGet() {
 }
 
 export function resolveParams(context, params, options) {
+  return map.call(params, function(param, i) {
+    if (param && param.isLazyValue) {
+      return param.value();
+    } else {
+      return param;
+    }
+  });
+
   return map.call(resolvePaths(context, params, options), function(path, i) {
     if (null === path) {
       // Param was string/number, not a path, so just return raw string/number.
