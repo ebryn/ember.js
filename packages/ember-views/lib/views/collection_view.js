@@ -269,7 +269,10 @@ var CollectionView = ContainerView.extend({
     @method destroy
   */
   destroy: function(viewDestroyed) {
-    if (!this._super(viewDestroyed)) { return; }
+    if (!this._super(viewDestroyed)) {
+      // FIXME: what the hell is going on here?!
+      // return;
+    }
 
     var content = get(this, 'content');
     if (content) { content.removeArrayObserver(this); }
