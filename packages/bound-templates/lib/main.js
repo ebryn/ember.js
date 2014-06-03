@@ -132,13 +132,14 @@ define("bound-templates/runtime",
     function CONTENT(placeholder, path, context, params, options, helpers) {
       // TODO: just set escaped on the placeholder in HTMLBars
       placeholder.escaped = options.escaped;
+      options.placeholder = placeholder; // FIXME: this kinda sucks
+      options.helpers = helpers; // FIXME: this also sucks
+      options.data = {view: context}; // FIXME: this also sucks
+
       var lazyValue;
-      var helper = helpers.LOOKUP_HELPER(path);
+      var helper = helpers.LOOKUP_HELPER(path, options);
       if (helper) {
         streamifyArgs(context, params, options, helpers);
-        options.placeholder = placeholder; // FIXME: this kinda sucks
-        options.helpers = helpers; // FIXME: this also sucks
-        options.data = {view: context}; // FIXME: this also sucks
         lazyValue = helper(params, options);
       } else {
         if (params.length > 0 || (typeof options.hash === 'object' && Object.keys(options.hash).length > 0)) {

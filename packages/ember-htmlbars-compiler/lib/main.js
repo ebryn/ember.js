@@ -128,9 +128,9 @@ EmberHandlebars.helper = function(name, value) {
   @param {Function} ViewClass view class constructor
 */
 EmberHandlebars.makeViewHelper = function(ViewClass) {
-  return function(options) {
-    Ember.assert("You can only pass attributes (such as name=value) not bare values to a helper for a View found in '" + ViewClass.toString() + "'", arguments.length < 2);
-    return EmberHandlebars.helpers.view.call(this, ViewClass, options);
+  return function(params, options) {
+    Ember.assert("You can only pass attributes (such as name=value) not bare values to a helper for a View found in '" + ViewClass.toString() + "'", params.length === 0);
+    return options.helpers.view([ViewClass], options);
   };
 };
 
@@ -264,7 +264,7 @@ EmberHandlebars.Compiler.prototype.mustache = function(mustache) {
   @for Ember.Handlebars
   @static
   @param {String} string The template to precompile
-  @param {Boolean} asObject optional parameter, defaulting to true, of whether or not the 
+  @param {Boolean} asObject optional parameter, defaulting to true, of whether or not the
                             compiled template should be returned as an Object or a String
 */
 EmberHandlebars.precompile = function(string, asObject) {

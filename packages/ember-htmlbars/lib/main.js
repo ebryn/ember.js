@@ -145,8 +145,10 @@ function bindAttrHelper(element, path, params, options, helpers) {
   }
 }
 
+import { resolveHelper } from "ember-htmlbars/helpers/binding";
+
 // Merge in additional helpers
-defaultOptions.helpers = merge({
+defaultOptions.helpers = merge(defaultOptions.helpers, {
   debugger: function() {
     debugger;
   },
@@ -207,9 +209,18 @@ defaultOptions.helpers = merge({
     options.hash.currentViewBinding = 'parentView.outletSource._outlets.' + property;
 
     return options.helpers.view([viewClass], options);
+  },
+  LOOKUP_HELPER: function(name, options) {
+    var helper = this[name];
+    if (!helper) { helper = this.helperMissing(name, options); }
+    return helper;
+  },
+  helperMissing: function(name, options) {
+    return resolveHelper(options.data.view.container, name);
   }
+
   // each: eachHelper
-}, defaultOptions.helpers)
+})
 
 // HTMLBARSTODO: do this another way - probably meta?
 Ember.CoreView.reopen({

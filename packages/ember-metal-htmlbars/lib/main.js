@@ -44,5 +44,6 @@ var defaultOptions = {
 };
 
 Ember.htmlbarsCompile = compile;
+Ember.LazyValue = LazyValue;
 
 export { compile, defaultOptions };
