@@ -20,8 +20,18 @@ function tryToDispatchEvent(view, type, event) {
 }
 
 function eventHandler(event) {
-  var view = findContainingView(event.target);
+  var target = event.target,
+      view = findContainingView(target);
   if (view) { tryToDispatchEvent(view, events[event.type], event); }
+
+  if (target.nodeType === 1 /* ELEMENT_NODE */ && target.hasAttribute('data-ember-action')) {
+    var actionId = target.getAttribute('data-ember-action'),
+        actionInfo = registeredActions[actionId];
+
+    if (event.type === actionInfo.type) {
+      actionInfo.handler(event);
+    }
+  }
 }
 
 var events = {
@@ -93,4 +103,10 @@ function teardownView(view) {
   delete views[view.elementId];
 }
 
-export { lookupView, setupView, teardownView, events, setupEventDispatcher, reset, _views };
+var registeredActions = {};
+
+function registerAction(id, eventName, callback) {
+  registeredActions[id] = {type: eventName, handler: callback};
+}
+
+export { lookupView, setupView, teardownView, events, setupEventDispatcher, reset, _views, registerAction };

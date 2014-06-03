@@ -82,10 +82,24 @@ Router.resolvePaths = resolvePaths;
 // EmberHandlebars.registerHelper('linkTo', deprecatedLinkToHelper);
 
 import { defaultOptions } from "ember-htmlbars";
+import { registerAction } from "ember-metal-views/events";
+
+var actionGuid = 0;
 
 defaultOptions.helpers = merge({
   'link-to': linkToHelper,
-  outlet: outletHelper
+  outlet: outletHelper,
+  action: function(element, path, params, options, helpers) {
+    var actionName = params[0],
+        actionId = actionGuid++,
+        view = options.data.view;
+
+    element.setAttribute('data-ember-action', actionId);
+
+    registerAction(actionId, 'click', function() {
+      alert('derp');
+    });
+  }
 }, defaultOptions.helpers);
 
 export default Ember;
