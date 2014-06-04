@@ -6,14 +6,13 @@ import { fmt } from "ember-runtime/system/string";
 import EmberHandlebars from "ember-handlebars-compiler";
 var helpers = EmberHandlebars.helpers;
 
+import { resolveHelper } from 'ember-handlebars/helpers/binding';
+import { SimpleHandlebarsView } from 'ember-handlebars/views/handlebars_bound_view';
+
 import { get } from "ember-metal/property_get";
 import { isGlobalPath } from "ember-metal/binding";
 import EmberError from "ember-metal/error";
 import { IS_BINDING } from "ember-metal/mixin";
-
-// late bound via requireModule because of circular dependencies.
-var resolveHelper,
-    SimpleHandlebarsView;
 
 import isEmpty from 'ember-metal/is_empty';
 
@@ -183,8 +182,6 @@ export function resolveHash(context, hash, options) {
   @param {Hash} options
 */
 export function helperMissingHelper(path) {
-  if (!resolveHelper) { resolveHelper = requireModule('ember-handlebars/helpers/binding')['resolveHelper']; } // ES6TODO: stupid circular dep
-
   var error, view = "";
 
   var options = arguments[arguments.length - 1];
@@ -217,8 +214,6 @@ export function helperMissingHelper(path) {
   @param {Hash} options
 */
 export function blockHelperMissingHelper(path) {
-  if (!resolveHelper) { resolveHelper = requireModule('ember-handlebars/helpers/binding')['resolveHelper']; } // ES6TODO: stupid circular dep
-
   var options = arguments[arguments.length - 1];
 
   Ember.assert("`blockHelperMissing` was invoked without a helper name, which " +
@@ -377,8 +372,6 @@ export function registerBoundHelper(name, fn) {
   @since 1.2.0
 */
 function makeBoundHelper(fn) {
-  if (!SimpleHandlebarsView) { SimpleHandlebarsView = requireModule('ember-handlebars/views/handlebars_bound_view')['SimpleHandlebarsView']; } // ES6TODO: stupid circular dep
-
   var dependentKeys = slice.call(arguments, 1);
 
   function helper() {
