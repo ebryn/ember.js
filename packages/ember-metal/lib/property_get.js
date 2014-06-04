@@ -6,8 +6,6 @@ import Ember from "ember-metal/core";
 import { META_KEY } from "ember-metal/utils";
 import EmberError from "ember-metal/error";
 
-var get;
-
 var MANDATORY_SETTER = Ember.ENV.MANDATORY_SETTER;
 
 var IS_GLOBAL_PATH = /^([A-Z$]|([0-9][A-Z$])).*[\.]/;
