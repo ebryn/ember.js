@@ -5,6 +5,10 @@
 @submodule ember-metal
 */
 
+var globalObject = typeof global !== 'undefined' ? global :
+                   typeof window !== 'undefined' ? window :
+                   this;
+
 /**
   All Ember methods and functions are defined inside of this namespace. You
   generally should not add new properties to this namespace as it may be
@@ -28,13 +32,13 @@
 if ('undefined' === typeof Ember) {
   // Create core object. Make it act like an instance of Ember.Namespace so that
   // objects assigned to it are given a sane string representation.
-  Ember = {};
+  var Ember = globalObject.Ember = {};
 }
 
 // Default imports, exports and lookup to the global object;
-var imports = Ember.imports = Ember.imports || this;
-var exports = Ember.exports = Ember.exports || this;
-var lookup  = Ember.lookup  = Ember.lookup  || this;
+var imports = Ember.imports = Ember.imports || globalObject;
+var exports = Ember.exports = Ember.exports || globalObject;
+var lookup  = Ember.lookup  = Ember.lookup  || globalObject;
 
 // aliases needed to keep minifiers from removing the global context
 exports.Em = exports.Ember = Ember;
