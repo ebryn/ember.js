@@ -13,7 +13,7 @@ var SafeString = EmberHandlebars.SafeString;
 import Ember from "ember-metal/core"; // Ember.K
 var K = Ember.K;
 
-var Metamorph = requireModule('metamorph');
+import Metamorph from 'metamorph';
 
 import EmberError from "ember-metal/error";
 import { get } from "ember-metal/property_get";

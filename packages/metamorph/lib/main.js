@@ -1,7 +1,3 @@
-define("metamorph",
-  [],
-  function() {
-    "use strict";
     // ==========================================================================
     // Project:   metamorph
     // Copyright: ©2014 Tilde, Inc. All rights reserved.
@@ -475,5 +471,4 @@ define("metamorph",
       }
     };
 
-    return Metamorph;
-  });
+export default Metamorph;
