@@ -3,7 +3,7 @@
 /**
  * Use this to compile ember using the es6-module-transpiler like so:
  *
- *   $ compile-modules convert -f export-variable -r ember-resolver.js -I packages_es6 -o ember.js ember-application
+ *   $ compile-modules convert -f export-variable -r ember-resolver.js -I packages -o ember.js ember-application
  */
 
 var Path = require('path');
