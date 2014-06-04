@@ -14,8 +14,7 @@ function onEnd(current, next) {
   run.currentRunLoop = next;
 }
 
-// ES6TODO: should Backburner become es6?
-var Backburner = requireModule('backburner').Backburner;
+import { Backburner } from 'backburner';
 var backburner = new Backburner(['sync', 'actions', 'destroy'], {
   sync: {
     before: beginPropertyChanges,
