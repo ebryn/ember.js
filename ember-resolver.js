@@ -8,9 +8,9 @@
 
 var Path = require('path');
 
-var transpiler = require('/Users/donovan/Development/es6-module-transpiler/lib');
+var transpiler = require('/Users/ebryn/Dev/es6-module-transpiler/lib');
 var FileResolver = transpiler.FileResolver;
-var utils = require('/Users/donovan/Development/es6-module-transpiler/lib/utils');
+var utils = require('/Users/ebryn/Dev/es6-module-transpiler/lib/utils');
 
 /**
  * Provides resolution of absolute paths from module import sources in the

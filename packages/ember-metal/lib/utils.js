@@ -382,12 +382,12 @@ var EmberArray;
 function isArray(obj) {
   var modulePath, type;
 
-  if (typeof EmberArray === "undefined") {
-    modulePath = 'ember-runtime/mixins/array';
-    if (Ember.__loader.registry[modulePath]) {
-      EmberArray = Ember.__loader.require(modulePath)['default'];
-    }
-  }
+  // if (typeof EmberArray === "undefined") {
+  //   modulePath = 'ember-runtime/mixins/array';
+  //   if (Ember.__loader.registry[modulePath]) {
+  //     EmberArray = Ember.__loader.require(modulePath)['default'];
+  //   }
+  // }
 
   if (!obj || obj.setInterval) { return false; }
   if (Array.isArray && Array.isArray(obj)) { return true; }
@@ -694,12 +694,12 @@ function typeOf(item) {
   var ret, modulePath;
 
   // ES6TODO: Depends on Ember.Object which is defined in runtime.
-  if (typeof EmberObject === "undefined") {
-    modulePath = 'ember-runtime/system/object';
-    if (Ember.__loader.registry[modulePath]) {
-      EmberObject = Ember.__loader.require(modulePath)['default'];
-    }
-  }
+  // if (typeof EmberObject === "undefined") {
+  //   modulePath = 'ember-runtime/system/object';
+  //   if (Ember.__loader.registry[modulePath]) {
+  //     EmberObject = Ember.__loader.require(modulePath)['default'];
+  //   }
+  // }
 
   ret = (item === null || item === undefined) ? String(item) : TYPE_MAP[toString.call(item)] || 'object';
 

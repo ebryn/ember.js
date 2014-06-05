@@ -696,7 +696,7 @@ var Application = Namespace.extend(DeferredMixin, {
 
     if (!Ember.testing) {
       // Eagerly name all classes that are already loaded
-      Ember.Namespace.processAll();
+      Namespace.processAll();
       Ember.BOOTED = true;
     }
 

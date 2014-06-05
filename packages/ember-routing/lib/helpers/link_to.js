@@ -28,8 +28,6 @@ import {
 
 var slice = [].slice;
 
-requireModule('ember-handlebars');
-
 var numberOfContextsAcceptedByHandler = function(handler, handlerInfos) {
   var req = 0;
   for (var i = 0, l = handlerInfos.length; i < l; i++) {
