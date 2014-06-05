@@ -5,6 +5,7 @@ import run from "ember-metal/run_loop";
 import ObjectProxy from "ember-runtime/system/object_proxy";
 import PromiseProxyMixin from "ember-runtime/mixins/promise_proxy";
 import EmberRSVP from "ember-runtime/ext/rsvp";
+import { onerrorDefault } from "ember-runtime/ext/rsvp";
 var RSVP = requireModule("rsvp"); // jshint ignore:line
 
 var ObjectPromiseProxy;

@@ -1,6 +1,3 @@
-define("route-recognizer",
-  ["exports"],
-  function(__exports__) {
     "use strict";
     var specials = [
       '/', '.', '*', '+', '?', '|',
@@ -525,7 +522,7 @@ define("route-recognizer",
       }
     };
 
-    __exports__["default"] = RouteRecognizer;
+    export default RouteRecognizer;
 
     function Target(path, matcher, delegate) {
       this.path = path;
@@ -626,4 +623,3 @@ define("route-recognizer",
         else { this.add(route); }
       }, this);
     };
-  });

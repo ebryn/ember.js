@@ -31,8 +31,8 @@ import { _MetamorphView } from "ember-handlebars/views/metamorph_view";
 // requireModule("ember-runtime");
 // requireModule("ember-views");
 
-var Router = requireModule("router")['default'];
-var Transition = requireModule("router/transition").Transition;
+import Router from "router";
+import { Transition } from "router/transition";
 
 var slice = [].slice;
 var forEach = EnumerableUtils.forEach;
