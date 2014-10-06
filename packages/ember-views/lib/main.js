@@ -26,8 +26,10 @@ import {
 
 import CoreView from "ember-views/views/core_view";
 import View from "ember-views/views/view";
+import CoreContainerView from "ember-views/views/core_container_view";
 import ContainerView from "ember-views/views/container_view";
 import CollectionView from "ember-views/views/collection_view";
+import MagicCollectionView from "ember-views/views/magic_collection_view";
 import Component from "ember-views/views/component";
 
 import EventDispatcher from "ember-views/system/event_dispatcher";
@@ -87,8 +89,10 @@ Ember.SelectOptgroup = SelectOptgroup;
 
 Ember.TextSupport = TextSupport;
 Ember.ComponentLookup = ComponentLookup;
+Ember.CoreContainerView = CoreContainerView;
 Ember.ContainerView = ContainerView;
 Ember.CollectionView = CollectionView;
+Ember.MagicCollectionView = MagicCollectionView;
 Ember.Component = Component;
 Ember.EventDispatcher = EventDispatcher;
 // END EXPORTS

@@ -85,7 +85,17 @@ EmberRenderer.prototype.destroyView = function destroyView(view) {
 };
 
 EmberRenderer.prototype.childViews = function childViews(view) {
-  return view._childViews;
+  if (view._firstChild) {
+    // TODO: enable the renderer to loop over our linked list instead of generating an array AOT
+    var views = [], current = view._firstChild;
+    while (current) {
+      views.push(current);
+      current = current._nextSibling;
+    }
+    return views;
+  } else {
+    return view._childViews;
+  }
 };
 
 Renderer.prototype.willCreateElement = function (view) {
