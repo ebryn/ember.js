@@ -3,6 +3,7 @@ import { DOMHelper } from "morph";
 import Stream from "ember-metal/streams/stream";
 
 import { bindHelper } from "ember-htmlbars/helpers";
+import { viewHelper } from "ember-htmlbars/helpers/view";
 
 export var defaultEnv = {
   dom: new DOMHelper(),
@@ -15,6 +16,8 @@ export var defaultEnv = {
   },
 
   helpers: {
-    bindHelper: bindHelper
+    bindHelper: bindHelper,
+    view: viewHelper
   }
 };
+
