@@ -19,6 +19,125 @@ import {
   default as _MetamorphView,
   _Metamorph
 } from "ember-views/views/metamorph_view";
+import { ViewKeywordSupport, ViewStreamSupport, ViewContextSupport, ViewChildViewsSupport, TemplateRenderingSupport } from "ember-views/views/view";
+import Evented from "ember-runtime/mixins/evented";
+import { IS_BINDING } from "ember-metal/mixin";
+import { bind } from "ember-metal/binding";
+import { defineProperty } from "ember-metal/properties";
+import { computed } from "ember-metal/computed";
+
+function noop() {}
+
+function DefaultEachItemView(attrs) {
+  this.isView = true;
+  this.tagName = '';
+  this.isVirtual = true;
+
+  ViewKeywordSupport.apply(this);
+  ViewStreamSupport.apply(this);
+  ViewChildViewsSupport.apply(this);
+  ViewContextSupport.apply(this);
+  TemplateRenderingSupport.apply(this);
+  Evented.apply(this);
+
+  var bindings;
+
+  for (var key in attrs) {
+    if (!attrs.hasOwnProperty(key)) { continue; }
+    if (IS_BINDING.test(key)) {
+      if (!bindings) { bindings = []; }
+      bindings.push(key);
+    }
+    set(this, key, attrs[key]);
+  }
+
+  for (var i = 0, l = (bindings && bindings.length || 0); i < l; i++) {
+    bind(this, bindings[i].slice(0, -7), attrs[bindings[i]]);
+  }
+
+  defineProperty(this, 'parentView', computed('_parentView', function() {
+    var parent = this._parentView;
+
+    if (parent && parent.isVirtual) {
+      return get(parent, 'parentView');
+    } else {
+      return parent;
+    }
+  }));
+
+  this.init();
+}
+
+DefaultEachItemView.isClass = true;
+DefaultEachItemView.isMethod = false;
+DefaultEachItemView.isViewClass = true;
+
+DefaultEachItemView.prototype = {
+  currentState: {
+    appendChild: function(view, childView, options) {
+      var buffer = view.buffer;
+      var _childViews = view._childViews;
+
+      childView = view.createChildView(childView, options);
+      if (!_childViews.length) { _childViews = view._childViews = _childViews.slice(); }
+      _childViews.push(childView);
+
+      if (!childView._morph) {
+        buffer.pushChildView(childView);
+      }
+
+      view.propertyDidChange('childViews');
+
+      return childView;
+    }
+  },
+
+  propertyDidChange: noop,
+
+  _wrapAsScheduled: Ember.View.proto()._wrapAsScheduled,
+
+  remove: Ember.View.proto().remove,
+
+  destroy: function() {
+    // TODO: EmberObject#destroy stuff?
+
+    if (!this.removedFromDOM && this._renderer) {
+      this._renderer.remove(this, true);
+    }
+
+    // remove from parent if found. Don't call removeFromParent,
+    // as removeFromParent will try to remove the element from
+    // the DOM again.
+    var parent = this._parentView;
+    if (parent) { parent.removeChild(this); }
+
+    this._transitionTo('destroying', false);
+
+    return this;
+  },
+
+  destroyElement: function() {
+    var state = this._state;
+    if (state === 'destroying') {
+      throw 'destroyElement'; // TODO
+    }
+    if (this._renderer) {
+      this._renderer.remove(this, false);
+    }
+    return this;
+  },
+
+  _transitionTo: function(state) {
+    this._state = state;
+  }
+};
+
+DefaultEachItemView.create = function(attrs) {
+  return new DefaultEachItemView(attrs);
+};
+
+window.DefaultEachItemView = DefaultEachItemView;
+>>>>>>> WIP on metal view for each helper
 
 export default CollectionView.extend(_Metamorph, {
 
@@ -76,7 +195,7 @@ export default CollectionView.extend(_Metamorph, {
     addObserver(this, 'content', null, '_contentDidChange');
   },
 
-  itemViewClass: _MetamorphView,
+  itemViewClass: DefaultEachItemView,
   emptyViewClass: _MetamorphView,
 
   createChildView: function(_view, attrs) {
