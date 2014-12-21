@@ -3,7 +3,7 @@
     "features-stripped-test": null,
     "ember-routing-named-substates": true,
     "ember-metal-injected-properties": true,
-    "mandatory-setter": "development-only",
+    "mandatory-setter": false,
     "ember-htmlbars": true,
     "ember-htmlbars-block-params": true,
     "ember-htmlbars-component-generation": null,

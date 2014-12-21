@@ -55,16 +55,6 @@ function DefaultEachItemView(attrs) {
     bind(this, bindings[i].slice(0, -7), attrs[bindings[i]]);
   }
 
-  defineProperty(this, 'parentView', computed('_parentView', function() {
-    var parent = this._parentView;
-
-    if (parent && parent.isVirtual) {
-      return get(parent, 'parentView');
-    } else {
-      return parent;
-    }
-  }));
-
   this.init();
 }
 
@@ -131,6 +121,16 @@ DefaultEachItemView.prototype = {
     this._state = state;
   }
 };
+
+defineProperty(DefaultEachItemView.prototype, 'parentView', computed('_parentView', function() {
+  var parent = this._parentView;
+
+  if (parent && parent.isVirtual) {
+    return get(parent, 'parentView');
+  } else {
+    return parent;
+  }
+}));
 
 DefaultEachItemView.create = function(attrs) {
   return new DefaultEachItemView(attrs);
