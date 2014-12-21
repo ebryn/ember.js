@@ -1311,26 +1311,6 @@ var View = CoreView.extend(ViewStreamSupport, ViewKeywordSupport, ViewContextSup
   },
 
   /**
-    Renders the view again. This will work regardless of whether the
-    view is already in the DOM or not. If the view is in the DOM, the
-    rendering process will be deferred to give bindings a chance
-    to synchronize.
-
-    If children were added during the rendering process using `appendChild`,
-    `rerender` will remove them, because they will be added again
-    if needed by the next `render`.
-
-    In general, if the display of your view changes, you should modify
-    the DOM element directly instead of manually calling `rerender`, which can
-    be slow.
-
-    @method rerender
-  */
-  rerender: function() {
-    return this.currentState.rerender(this);
-  },
-
-  /**
     Iterates over the view's `classNameBindings` array, inserts the value
     of the specified property into the `classNames` array, then creates an
     observer to update the view's element if the bound property ever changes
@@ -2125,17 +2105,6 @@ var View = CoreView.extend(ViewStreamSupport, ViewKeywordSupport, ViewContextSup
     this.one('willClearRender', function() {
       removeObserver(root, path, target, scheduledObserver);
     });
-  },
-
-  _wrapAsScheduled: function(fn) {
-    var view = this;
-    var stateCheckedFn = function() {
-      view.currentState.invokeObserver(this, fn);
-    };
-    var scheduledFn = function() {
-      run.scheduleOnce('render', this, stateCheckedFn);
-    };
-    return scheduledFn;
   }
 });
 

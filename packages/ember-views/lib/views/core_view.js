@@ -13,6 +13,7 @@ import { get } from "ember-metal/property_get";
 import { computed } from "ember-metal/computed";
 
 import { typeOf } from "ember-metal/utils";
+import run from 'ember-metal/run_loop';
 
 function K() { return this; }
 
@@ -142,6 +143,37 @@ var CoreView = EmberObject.extend(Evented, ActionHandler, {
     this._transitionTo('destroying', false);
 
     return this;
+  },
+
+  _wrapAsScheduled: function(fn) {
+    var view = this;
+    var stateCheckedFn = function() {
+      view.currentState.invokeObserver(this, fn);
+    };
+    var scheduledFn = function() {
+      run.scheduleOnce('render', this, stateCheckedFn);
+    };
+    return scheduledFn;
+  },
+
+  /**
+    Renders the view again. This will work regardless of whether the
+    view is already in the DOM or not. If the view is in the DOM, the
+    rendering process will be deferred to give bindings a chance
+    to synchronize.
+
+    If children were added during the rendering process using `appendChild`,
+    `rerender` will remove them, because they will be added again
+    if needed by the next `render`.
+
+    In general, if the display of your view changes, you should modify
+    the DOM element directly instead of manually calling `rerender`, which can
+    be slow.
+
+    @method rerender
+  */
+  rerender: function() {
+    return this.currentState.rerender(this);
   },
 
   clearRenderedChildren: K,
