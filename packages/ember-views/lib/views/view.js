@@ -416,6 +416,22 @@ var ViewChildViewsSupport = Mixin.create({
   }
 });
 
+var ViewStateSupport = Mixin.create({
+  transitionTo: function(state, children) {
+    Ember.deprecate("Ember.View#transitionTo has been deprecated, it is for internal use only");
+    this._transitionTo(state, children);
+  },
+
+  _transitionTo: function(state, children) {
+    var priorState = this.currentState;
+    var currentState = this.currentState = this._states[state];
+    this._state = state;
+
+    if (priorState && priorState.exit) { priorState.exit(this); }
+    if (currentState.enter) { currentState.enter(this); }
+  }
+});
+
 /**
   `Ember.View` is the class in Ember responsible for encapsulating templates of
   HTML content, combining templates with data to render as sections of a page's
@@ -1003,7 +1019,7 @@ var ViewChildViewsSupport = Mixin.create({
   @namespace Ember
   @extends Ember.CoreView
 */
-var View = CoreView.extend(ViewStreamSupport, ViewKeywordSupport, ViewContextSupport, ViewChildViewsSupport, {
+var View = CoreView.extend(ViewStreamSupport, ViewKeywordSupport, ViewContextSupport, ViewChildViewsSupport, ViewStateSupport, {
 
   concatenatedProperties: ['classNames', 'classNameBindings', 'attributeBindings'],
 
@@ -2076,20 +2092,6 @@ var View = CoreView.extend(ViewStreamSupport, ViewKeywordSupport, ViewContextSup
     return false;
   },
 
-  transitionTo: function(state, children) {
-    Ember.deprecate("Ember.View#transitionTo has been deprecated, it is for internal use only");
-    this._transitionTo(state, children);
-  },
-
-  _transitionTo: function(state, children) {
-    var priorState = this.currentState;
-    var currentState = this.currentState = this._states[state];
-    this._state = state;
-
-    if (priorState && priorState.exit) { priorState.exit(this); }
-    if (currentState.enter) { currentState.enter(this); }
-  },
-
   // .......................................................
   // EVENT HANDLING
   //
@@ -2228,4 +2230,4 @@ View.applyAttributeBindings = function(elem, name, initialValue) {
 
 export default View;
 
-export { ViewKeywordSupport, ViewStreamSupport, ViewContextSupport, ViewChildViewsSupport };
+export { ViewKeywordSupport, ViewStreamSupport, ViewContextSupport, ViewChildViewsSupport, ViewStateSupport };
