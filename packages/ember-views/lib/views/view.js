@@ -1568,7 +1568,10 @@ var View = CoreView.extend({
 
     @event willDestroyElement
   */
-  willDestroyElement: K,
+  willDestroyElement: function() {
+    this._destroyStreamBindings();
+    this._destroyContextStream();
+  },
 
   /**
     Called when the parentView property has changed.
@@ -2064,7 +2067,6 @@ var View = CoreView.extend({
   _getBindingForStream: function(pathOrStream) {
     if (this._streamBindings === undefined) {
       this._streamBindings = create(null);
-      this.one('willDestroyElement', this, this._destroyStreamBindings);
     }
 
     var path = pathOrStream;
@@ -2103,17 +2105,20 @@ var View = CoreView.extend({
     if (this._contextStream === undefined) {
       this._baseContext = new KeyStream(this, 'context');
       this._contextStream = new ContextStream(this);
-      this.one('willDestroyElement', this, this._destroyContextStream);
     }
 
     return this._contextStream;
   },
 
   _destroyContextStream: function() {
-    this._baseContext.destroy();
-    this._baseContext = undefined;
-    this._contextStream.destroy();
-    this._contextStream = undefined;
+    if (this._baseContext) {
+      this._baseContext.destroy();
+      this._baseContext = undefined;
+    }
+    if (this._contextStream) {
+      this._contextStream.destroy();
+      this._contextStream = undefined;
+    }
   },
 
   _unsubscribeFromStreamBindings: function() {
