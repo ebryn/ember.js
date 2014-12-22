@@ -19,6 +19,7 @@ function KeyStream(source, key) {
   this.source = source;
   this.obj = undefined;
   this.key = key;
+  this.isUnbound = false;
 
   if (isStream(source)) {
     source.subscribe(this._didChange, this);
@@ -33,11 +34,11 @@ merge(KeyStream.prototype, {
     var nextObj = read(this.source);
 
     if (nextObj !== prevObj) {
-      if (prevObj && typeof prevObj === 'object') {
+      if (!this.isUnbound && prevObj && typeof prevObj === 'object') {
         removeObserver(prevObj, this.key, this, this._didChange);
       }
 
-      if (nextObj && typeof nextObj === 'object') {
+      if (!this.isUnbound && nextObj && typeof nextObj === 'object') {
         addObserver(nextObj, this.key, this, this._didChange);
       }
 
@@ -86,7 +87,7 @@ merge(KeyStream.prototype, {
         this.source.unsubscribe(this._didChange, this);
       }
 
-      if (this.obj && typeof this.obj === 'object') {
+      if (!this.isUnbound && this.obj && typeof this.obj === 'object') {
         removeObserver(this.obj, this.key, this, this._didChange);
       }
 

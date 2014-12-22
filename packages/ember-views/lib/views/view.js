@@ -2104,6 +2104,7 @@ var View = CoreView.extend({
   _getContextStream: function() {
     if (this._contextStream === undefined) {
       this._baseContext = new KeyStream(this, 'context');
+      this._baseContext.isUnbound = true;
       this._contextStream = new ContextStream(this);
     }
 
