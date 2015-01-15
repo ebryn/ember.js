@@ -83,7 +83,7 @@ export function withHelper(params, hash, options, env) {
     _morph: options.morph,
     withValue: params[0],
     preserveContext: preserveContext,
-    previousContext: this.get('context'),
+    previousContext: Ember.get(this, 'context'),
     controllerName: hash.controller,
     mainTemplate: options.template,
     inverseTemplate: options.inverse,

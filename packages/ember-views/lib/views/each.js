@@ -42,7 +42,9 @@ function DefaultEachItemView(attrs) {
       if (!bindings) { bindings = []; }
       bindings.push(key);
     }
-    set(this, key, attrs[key]);
+    this[key] = attrs[key];
+    // this might need to be:
+    // set(this, key, attrs[key]);
   }
 
   for (var i = 0, l = (bindings && bindings.length || 0); i < l; i++) {
