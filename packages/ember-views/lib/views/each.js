@@ -28,17 +28,11 @@ import { computed } from "ember-metal/computed";
 
 function noop() {}
 
+// Reminder: avoid reading off of `this` while instantiating
 function DefaultEachItemView(attrs) {
   this.isView = true;
   this.tagName = '';
   this.isVirtual = true;
-
-  ViewKeywordSupport.apply(this);
-  ViewStreamSupport.apply(this);
-  ViewChildViewsSupport.apply(this);
-  ViewContextSupport.apply(this);
-  TemplateRenderingSupport.apply(this);
-  Evented.apply(this);
 
   var bindings;
 
@@ -63,6 +57,7 @@ DefaultEachItemView.isMethod = false;
 DefaultEachItemView.isViewClass = true;
 
 DefaultEachItemView.prototype = {
+  // TODO: remove this
   currentState: {
     appendChild: function(view, childView, options) {
       var buffer = view.buffer;
@@ -121,6 +116,13 @@ DefaultEachItemView.prototype = {
     this._state = state;
   }
 };
+
+ViewKeywordSupport.apply(DefaultEachItemView.prototype);
+ViewStreamSupport.apply(DefaultEachItemView.prototype);
+ViewChildViewsSupport.apply(DefaultEachItemView.prototype);
+ViewContextSupport.apply(DefaultEachItemView.prototype);
+TemplateRenderingSupport.apply(DefaultEachItemView.prototype);
+Evented.apply(DefaultEachItemView.prototype);
 
 defineProperty(DefaultEachItemView.prototype, 'parentView', computed('_parentView', function() {
   var parent = this._parentView;
