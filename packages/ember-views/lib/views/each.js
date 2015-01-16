@@ -153,7 +153,6 @@ DefaultEachItemView.create = function(attrs) {
 };
 
 window.DefaultEachItemView = DefaultEachItemView;
->>>>>>> WIP on metal view for each helper
 
 export default CollectionView.extend(_Metamorph, {
 
