@@ -48,11 +48,23 @@ function DefaultEachItemView(attrs) {
     }
     // this[key] = attrs[key];
     // this might need to be:
-    set(this, key, attrs[key]);
+    if (meta.descs && meta.descs[key]) {
+      set(this, key, attrs[key]);
+      console.log(key);
+    } else {
+      this[key] = attrs[key];
+    }
   }
 
+  var binding;
+
   for (var i = 0, l = (bindings && bindings.length || 0); i < l; i++) {
-    bind(this, bindings[i].slice(0, -7), attrs[bindings[i]]);
+    binding = attrs[bindings[i]];
+    if (typeof binding === 'string') {
+      bind(this, bindings[i].slice(0, -7), binding);
+    } else {
+      binding.to(bindings[i].slice(0, -7)).connect(this);
+    }
   }
 
   this.init();
