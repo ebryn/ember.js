@@ -170,7 +170,7 @@ var Component = View.extend(TargetActionSupport, ComponentTemplateDeprecation, {
     if (template) {
       Ember.assert("A Component must have a parent view in order to yield.", parentView);
 
-      view.appendChild(View, {
+      view.appendChild(window.DefaultEachItemView, {
         isVirtual: true,
         tagName: '',
         template: template,
