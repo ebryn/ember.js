@@ -25,11 +25,15 @@ import { IS_BINDING } from "ember-metal/mixin";
 import { bind } from "ember-metal/binding";
 import { defineProperty } from "ember-metal/properties";
 import { computed } from "ember-metal/computed";
+import { meta as metaFor } from "ember-metal/utils";
 
 function noop() {}
 
 // Reminder: avoid reading off of `this` while instantiating
 function DefaultEachItemView(attrs) {
+  var meta = this.__ember_meta__ = metaFor(this);
+  var proto = meta.proto;
+  meta.proto = this;
   this.isView = true;
   this.tagName = '';
   this.isVirtual = true;
@@ -42,9 +46,9 @@ function DefaultEachItemView(attrs) {
       if (!bindings) { bindings = []; }
       bindings.push(key);
     }
-    this[key] = attrs[key];
+    // this[key] = attrs[key];
     // this might need to be:
-    // set(this, key, attrs[key]);
+    set(this, key, attrs[key]);
   }
 
   for (var i = 0, l = (bindings && bindings.length || 0); i < l; i++) {
@@ -52,6 +56,7 @@ function DefaultEachItemView(attrs) {
   }
 
   this.init();
+  meta.proto = proto;
 }
 
 DefaultEachItemView.isClass = true;
@@ -76,6 +81,10 @@ DefaultEachItemView.prototype = {
       view.propertyDidChange('childViews');
 
       return childView;
+    },
+
+    invokeObserver: function(target, observer) {
+      observer.call(target);
     }
   },
 
@@ -118,6 +127,9 @@ DefaultEachItemView.prototype = {
     this._state = state;
   }
 };
+
+DefaultEachItemView.prototype.__ember_meta__ = metaFor(DefaultEachItemView.prototype);
+DefaultEachItemView.prototype.__ember_meta__.proto = DefaultEachItemView.prototype;
 
 ViewKeywordSupport.apply(DefaultEachItemView.prototype);
 ViewStreamSupport.apply(DefaultEachItemView.prototype);
