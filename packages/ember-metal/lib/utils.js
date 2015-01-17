@@ -288,10 +288,9 @@ export function guidFor(obj) {
 // META
 //
 function Meta(obj) {
-  this.descs = {};
-  this.watching = {};
-  this.cache = {};
-  this.cacheMeta = {};
+  this.watching = undefined;
+  this.cache = undefined;
+  this.cacheMeta = undefined;
   this.source = obj;
   this.deps = undefined;
   this.listeners = undefined;
@@ -303,7 +302,7 @@ function Meta(obj) {
 }
 
 Meta.prototype = {
-  chainWatchers: null
+  chainWatchers: null // FIXME
 };
 
 if (!canDefineNonEnumerableProperties) {
@@ -371,7 +370,7 @@ function meta(obj, writable) {
     obj['__ember_meta__'] = ret;
 
     // make sure we don't accidentally try to create constructor like desc
-    ret.descs.constructor = null;
+    // ret.descs.constructor = null;
 
   } else if (ret.source !== obj) {
     if (obj.__defineNonEnumerable) {
@@ -381,10 +380,9 @@ function meta(obj, writable) {
     }
 
     ret = o_create(ret);
-    ret.descs     = o_create(ret.descs);
-    ret.watching  = o_create(ret.watching);
-    ret.cache     = {};
-    ret.cacheMeta = {};
+    ret.watching  = ret.watching ? o_create(ret.watching) : {};
+    ret.cache     = undefined;
+    ret.cacheMeta = undefined;
     ret.source    = obj;
 
     if (Ember.FEATURES.isEnabled('mandatory-setter')) {

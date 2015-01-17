@@ -1082,7 +1082,7 @@ test("Defaulting to params hash as the model should not result in that params ob
   App.OtherRoute = Ember.Route.extend({
     model: function(p, trans) {
       var m = Ember.meta(trans.params.application);
-      ok(!m.watching.woot, "A meta object isn't constructed for this params POJO");
+      ok(!(m.watching && m.watching.woot), "A meta object isn't constructed for this params POJO");
     }
   });
 

@@ -68,7 +68,8 @@ var get = function get(obj, keyName) {
   }
 
   var meta = obj['__ember_meta__'];
-  var desc = meta && meta.descs[keyName];
+  var possibleDesc = obj[keyName];
+  var desc = (possibleDesc !== null && typeof possibleDesc === 'object' && possibleDesc.isDescriptor) ? possibleDesc : undefined;
   var ret;
 
   if (desc === undefined && isPath(keyName)) {
@@ -79,7 +80,7 @@ var get = function get(obj, keyName) {
     return desc.get(obj, keyName);
   } else {
     if (Ember.FEATURES.isEnabled('mandatory-setter')) {
-      if (hasPropertyAccessors && meta && meta.watching[keyName] > 0) {
+      if (hasPropertyAccessors && meta && meta.watching && meta.watching[keyName] > 0) {
         ret = meta.values[keyName];
       } else {
         ret = obj[keyName];

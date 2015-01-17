@@ -20,10 +20,14 @@ export function watchKey(obj, keyName, meta) {
   var watching = m.watching;
 
   // activate watching first time
+  if (!watching) {
+    watching = m.watching = {};
+  }
   if (!watching[keyName]) {
     watching[keyName] = 1;
 
-    var desc = m.descs[keyName];
+    var possibleDesc = obj[keyName];
+    var desc = (possibleDesc !== null && typeof possibleDesc === 'object' && possibleDesc.isDescriptor) ? possibleDesc : undefined;
     if (desc && desc.willWatch) { desc.willWatch(obj, keyName); }
 
     if ('function' === typeof obj.willWatchProperty) {
@@ -47,6 +51,10 @@ if (Ember.FEATURES.isEnabled('mandatory-setter')) {
     var configurable = descriptor ? descriptor.configurable : true;
     var isWritable = descriptor ? descriptor.writable : true;
     var hasValue = descriptor ? 'value' in descriptor : true;
+    var possibleDesc = descriptor && descriptor.value;
+    var isDescriptor = possibleDesc !== null && typeof possibleDesc === 'object' && possibleDesc.isDescriptor;
+
+    if (isDescriptor) { return; }
 
     // this x in Y deopts, so keeping it in this function is better;
     if (configurable && isWritable && hasValue && keyName in obj) {
@@ -65,10 +73,11 @@ export function unwatchKey(obj, keyName, meta) {
   var m = meta || metaFor(obj);
   var watching = m.watching;
 
-  if (watching[keyName] === 1) {
+  if (watching && watching[keyName] === 1) {
     watching[keyName] = 0;
 
-    var desc = m.descs[keyName];
+    var possibleDesc = obj[keyName];
+    var desc = (possibleDesc !== null && typeof possibleDesc === 'object' && possibleDesc.isDescriptor) ? possibleDesc : undefined;
     if (desc && desc.didUnwatch) { desc.didUnwatch(obj, keyName); }
 
     if ('function' === typeof obj.didUnwatchProperty) {
@@ -76,7 +85,7 @@ export function unwatchKey(obj, keyName, meta) {
     }
 
     if (Ember.FEATURES.isEnabled('mandatory-setter')) {
-      if (hasPropertyAccessors && keyName in obj) {
+      if (!desc && hasPropertyAccessors && keyName in obj) {
         o_defineProperty(obj, keyName, {
           configurable: true,
           enumerable: Object.prototype.propertyIsEnumerable.call(obj, keyName),
@@ -94,7 +103,7 @@ export function unwatchKey(obj, keyName, meta) {
         });
       }
     }
-  } else if (watching[keyName] > 1) {
+  } else if (watching && watching[keyName] > 1) {
     watching[keyName]--;
   }
 }

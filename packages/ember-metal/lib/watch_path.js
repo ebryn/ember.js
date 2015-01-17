@@ -25,6 +25,9 @@ export function watchPath(obj, keyPath, meta) {
   var m = meta || metaFor(obj);
   var watching = m.watching;
 
+  if (!watching) {
+    watching = m.watching = {};
+  }
   if (!watching[keyPath]) { // activate watching first time
     watching[keyPath] = 1;
     chainsFor(obj, m).add(keyPath);

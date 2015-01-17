@@ -50,7 +50,7 @@ export { watch };
 
 export function isWatching(obj, key) {
   var meta = obj['__ember_meta__'];
-  return (meta && meta.watching[key]) > 0;
+  return (meta && meta.watching && meta.watching[key]) > 0;
 }
 
 watch.flushPending = flushPendingChains;

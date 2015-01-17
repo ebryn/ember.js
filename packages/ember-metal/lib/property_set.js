@@ -41,7 +41,9 @@ var set = function set(obj, keyName, value, tolerant) {
   }
 
   var meta = obj['__ember_meta__'];
-  var desc = meta && meta.descs[keyName];
+  var possibleDesc = obj[keyName];
+  var desc = (possibleDesc !== null && typeof possibleDesc === 'object' && possibleDesc.isDescriptor) ? possibleDesc : undefined;
+
   var isUnknown, currentValue;
 
   if (desc === undefined && isPath(keyName)) {
@@ -51,7 +53,7 @@ var set = function set(obj, keyName, value, tolerant) {
   Ember.assert("You need to provide an object and key to `set`.", !!obj && keyName !== undefined);
   Ember.assert('calling set on destroyed object', !obj.isDestroyed);
 
-  if (desc !== undefined) {
+  if (desc) {
     desc.set(obj, keyName, value);
   } else {
 
@@ -66,7 +68,7 @@ var set = function set(obj, keyName, value, tolerant) {
     // `setUnknownProperty` method exists on the object
     if (isUnknown && 'function' === typeof obj.setUnknownProperty) {
       obj.setUnknownProperty(keyName, value);
-    } else if (meta && meta.watching[keyName] > 0) {
+    } else if (meta && meta.watching && meta.watching[keyName] > 0) {
       if (meta.proto !== obj) {
         if (Ember.FEATURES.isEnabled('mandatory-setter')) {
           if (hasPropertyAccessors) {
