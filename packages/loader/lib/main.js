@@ -1,6 +1,10 @@
 var define, requireModule, require, requirejs, Ember;
 var mainContext = this;
 
+window.EmberENV = {
+  _ENABLE_LEGACY_VIEW_SUPPORT: true
+}
+
 (function() {
   var isNode = typeof window === 'undefined' &&
     typeof process !== 'undefined' && {}.toString.call(process) === '[object process]';
